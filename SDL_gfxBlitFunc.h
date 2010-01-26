@@ -36,10 +36,11 @@ extern    "C" {
 #endif
 
 
-SDL_GFXBLITFUNC_SCOPE int  SDL_gfxBlitRGBA(SDL_Surface * src, SDL_Rect * srcrect, SDL_Surface * dst, SDL_Rect * dstrect);
+SDL_GFXBLITFUNC_SCOPE int SDL_gfxBlitRGBA(SDL_Surface * src, SDL_Rect * srcrect, SDL_Surface * dst, SDL_Rect * dstrect);
 
-SDL_GFXBLITFUNC_SCOPE  int SDL_gfxSetAlpha(SDL_Surface * src, Uint8 a);
+SDL_GFXBLITFUNC_SCOPE int SDL_gfxSetAlpha(SDL_Surface * src, Uint8 a);
 
+SDL_GFXBLITFUNC_SCOPE int SDL_gfxMultiplyAlpha(SDL_Surface * src, Uint8 a);
 
 /* -------- Macros */
 

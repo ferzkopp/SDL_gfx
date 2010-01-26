@@ -215,3 +215,35 @@ int SDL_gfxSetAlpha(SDL_Surface *src, Uint8 a)
          return 0;
         } 
 }
+
+/* Helper function that multiplies the alpha channel in a 32bit surface */
+
+int SDL_gfxMultiplyAlpha(SDL_Surface *src, Uint8 a)
+{
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+	Uint16 alpha_offset = 0;
+#else
+	Uint16 alpha_offset = 3;
+#endif
+	Uint16 i, j;
+	/* Check if we have a 32bit surface */
+	if ( (src) && (src->format) && (src->format->BytesPerPixel==4) && (a!=255) ) {
+	 /* Lock and process */
+  	 if ( SDL_LockSurface(src) == 0 ) {
+	  Uint8 *pixels = (Uint8 *)src->pixels;
+	  Uint16 row_skip = (src->pitch - (4*src->w));
+	  pixels += alpha_offset;
+	  for ( i=0; i<src->h; i++ ) {
+		 for ( j=0; j<src->w; j++  ) {
+		  *pixels = (Uint8)(((int)(*pixels)*a)>>8);
+		  pixels += 4;
+		 }
+		 pixels += row_skip;
+          }
+          SDL_UnlockSurface(src);
+	 }
+	 return 1;
+        } else {
+         return 0;
+        } 
+}
