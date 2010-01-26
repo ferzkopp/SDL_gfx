@@ -44,7 +44,7 @@ case "$target" in
     *-*-cygwin* | *-*-mingw32*)
         MATHLIB=""
         ;;
-    *-*-beos*)
+    *-*-beos* | *-*-haiku*)
         MATHLIB=""
         ;;
     *-*-darwin*)
