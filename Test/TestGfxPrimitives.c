@@ -16,7 +16,11 @@
 
 #include "SDL.h"
 
-#include "SDL/SDL_gfxPrimitives.h"
+#ifdef WIN32
+	#include "SDL_gfxPrimitives.h"
+#else
+	#include "SDL/SDL_gfxPrimitives.h"
+#endif
 
 #define WIDTH	640
 #define HEIGHT	480
@@ -102,13 +106,13 @@ void ClearScreen(SDL_Surface *screen, char *title)
  SDL_FillRect (screen, NULL, color);
 
  /* Draw the colored area */
- stepx=1.0/(WIDTH/2);
- stepy=1.0/((HEIGHT-80)/2);
+ stepx=1.0f/(WIDTH/2);
+ stepy=1.0f/((HEIGHT-80)/2);
  fx=0.0;
  for (x=WIDTH/2; x<WIDTH; x++) {
   fy=0.0;
   for (y=(HEIGHT-40)/2+60; y<HEIGHT; y++) {
-   fxy=1.0-fx*fy;
+   fxy=1.0f-fx*fy;
    pixelRGBA(screen,x,y,(int)(128.0*fx*fx),(int)(128.0*fxy*fxy),(int)(128.0*fy*fy),255);
    fy += stepy;
   }
@@ -142,7 +146,7 @@ void TestPixel(SDL_Surface *screen)
  char r,g,b;
  
  /* Create random points */
- srand(time(NULL));
+ srand((int)time(NULL));
  InitRandomPoints();
  
  /* Draw A=255 */
@@ -222,7 +226,7 @@ void TestHline(SDL_Surface *screen)
  char r,g,b;
  
  /* Create random points */
- srand(time(NULL));
+ srand((int)time(NULL));
  InitRandomPoints();
  
  /* Draw A=255 */
@@ -303,7 +307,7 @@ void TestVline(SDL_Surface *screen)
  char r,g,b;
  
  /* Create random points */
- srand(time(NULL));
+ srand((int)time(NULL));
  InitRandomPoints();
  
  /* Draw A=255 */
@@ -384,7 +388,7 @@ void TestRectangle(SDL_Surface *screen)
  char r,g,b;
  
  /* Create random points */
- srand(time(NULL));
+ srand((int)time(NULL));
  InitRandomPoints();
  
  /* Draw A=255 */
@@ -465,7 +469,7 @@ void TestBoxTwo(SDL_Surface *screen)
  char r,g,b;
  
  /* Create random points */
- srand(time(NULL));
+ srand((int)time(NULL));
  InitRandomPoints();
 
  /* Draw A=255 */
@@ -546,7 +550,7 @@ void TestBox(SDL_Surface *screen)
  char r,g,b;
  
  /* Create random points */
- srand(time(NULL));
+ srand((int)time(NULL));
  InitRandomPoints();
  
  /* Draw A=255 */
@@ -627,7 +631,7 @@ void TestLine(SDL_Surface *screen)
  char r,g,b;
  
  /* Create random points */
- srand(time(NULL));
+ srand((int)time(NULL));
  InitRandomPoints();
  
  /* Draw A=255 */
@@ -709,7 +713,7 @@ void TestAALine(SDL_Surface *screen)
  char r,g,b;
  
  /* Create random points */
- srand(time(NULL));
+ srand((int)time(NULL));
  InitRandomPoints();
  
  /* Draw A=255 */
@@ -790,7 +794,7 @@ void TestCircle(SDL_Surface *screen)
  char r,g,b;
  
  /* Create random points */
- srand(time(NULL));
+ srand((int)time(NULL));
  InitRandomPoints();
  
  /* Draw A=255 */
@@ -870,7 +874,7 @@ void TestAACircle(SDL_Surface *screen)
  char r,g,b;
  
  /* Create random points */
- srand(time(NULL));
+ srand((int)time(NULL));
  InitRandomPoints();
  
  /* Draw A=255 */
@@ -950,7 +954,7 @@ void TestFilledCircle(SDL_Surface *screen)
  char r,g,b;
  
  /* Create random points */
- srand(time(NULL));
+ srand((int)time(NULL));
  InitRandomPoints();
  
  /* Draw A=255 */
@@ -1030,7 +1034,7 @@ void TestEllipse(SDL_Surface *screen)
  char r,g,b;
  
  /* Create random points */
- srand(time(NULL));
+ srand((int)time(NULL));
  InitRandomPoints();
  
  /* Draw A=255 */
@@ -1110,7 +1114,7 @@ void TestAAEllipse(SDL_Surface *screen)
  char r,g,b;
  
  /* Create random points */
- srand(time(NULL));
+ srand((int)time(NULL));
  InitRandomPoints();
  
  /* Draw A=255 */
@@ -1190,7 +1194,7 @@ void TestFilledEllipse(SDL_Surface *screen)
  char r,g,b;
  
  /* Create random points */
- srand(time(NULL));
+ srand((int)time(NULL));
  InitRandomPoints();
  
  /* Draw A=255 */
@@ -1270,7 +1274,7 @@ void TestArc(SDL_Surface *screen)
  char r,g,b;
  
  /* Create random points */
- srand(time(NULL));
+ srand((int)time(NULL));
  InitRandomPoints();
  
  /* Draw A=255 */
@@ -1350,7 +1354,7 @@ void TestPie(SDL_Surface *screen)
  char r,g,b;
  
  /* Create random points */
- srand(time(NULL));
+ srand((int)time(NULL));
  InitRandomPoints();
  
  /* Draw A=255 */
@@ -1430,7 +1434,7 @@ void TestFilledPie(SDL_Surface *screen)
  char r,g,b;
  
  /* Create random points */
- srand(time(NULL));
+ srand((int)time(NULL));
  InitRandomPoints();
  
  /* Draw A=255 */
@@ -1510,7 +1514,7 @@ void TestPolygon(SDL_Surface *screen)
  char r,g,b;
  
  /* Create random points */
- srand(time(NULL));
+ srand((int)time(NULL));
  InitRandomPoints();
  
  /* Draw A=255 */
@@ -1557,7 +1561,7 @@ void BenchmarkPolygon(SDL_Surface *screen)
  char titletext[256];
 
  /* Create random points */
- srand(time(NULL));
+ srand((int)time(NULL));
  InitRandomPoints();
  
  /* Draw A=255 */
@@ -1598,7 +1602,7 @@ void TestAAPolygon(SDL_Surface *screen)
  char r,g,b;
  
  /* Create random points */
- srand(time(NULL));
+ srand((int)time(NULL));
  InitRandomPoints();
  
  /* Draw A=255 */
@@ -1645,7 +1649,7 @@ void BenchmarkAAPolygon(SDL_Surface *screen)
  char titletext[256];
 
  /* Create random points */
- srand(time(NULL));
+ srand((int)time(NULL));
  InitRandomPoints();
  
  /* Draw A=255 */
@@ -1687,7 +1691,7 @@ void TestFilledPolygon(SDL_Surface *screen)
  char r,g,b;
  
  /* Create random points */
- srand(time(NULL));
+ srand((int)time(NULL));
  InitRandomPoints();
  
  /* Draw A=255 */
@@ -1734,7 +1738,7 @@ void BenchmarkFilledPolygon(SDL_Surface *screen)
  char titletext[256];
 
  /* Create random points */
- srand(time(NULL));
+ srand((int)time(NULL));
  InitRandomPoints();
  
  /* Draw A=255 */
@@ -1772,12 +1776,12 @@ void BenchmarkFilledPolygon(SDL_Surface *screen)
 void TestTexturedPolygon(SDL_Surface *screen)
 {
  int i;
- 
- /* Create random points */
- srand(time(NULL));
- InitRandomPoints();
  SDL_Surface *texture;
 
+ /* Create random points */
+ srand((int)time(NULL));
+ InitRandomPoints();
+ 
  /* Load texture surface */
  texture = SDL_LoadBMP("texture.bmp");
  
@@ -1824,7 +1828,7 @@ void BenchmarkTexturedPolygon(SDL_Surface *screen)
  texture = SDL_LoadBMP("texture.bmp");
 
  /* Create random points */
- srand(time(NULL));
+ srand((int)time(NULL));
  InitRandomPoints();
  
  /* Draw A=255 */
@@ -1866,7 +1870,7 @@ void TestBezier(SDL_Surface *screen)
  char r,g,b;
  
  /* Create random points */
- srand(time(NULL));
+ srand((int)time(NULL));
  InitRandomPoints();
  
  /* Draw A=255 */
@@ -1913,7 +1917,7 @@ void BenchmarkBezier(SDL_Surface *screen)
  char titletext[256];
 
  /* Create random points */
- srand(time(NULL));
+ srand((int)time(NULL));
  InitRandomPoints();
  
  /* Draw A=255 */
