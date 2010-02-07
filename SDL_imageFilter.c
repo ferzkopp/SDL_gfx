@@ -24,6 +24,11 @@ him for his work.
 
 static int SDL_imageFilterUseMMX = 1;
 
+/* Detect GCC */
+#if defined(__GNUC__)
+#define GCC__
+#endif
+
 /* MMX detection routine (with override flag) */
 
 unsigned int cpuFlags()
