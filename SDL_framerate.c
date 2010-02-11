@@ -9,10 +9,12 @@ LGPL (c) A. Schiffler
 
 #include "SDL_framerate.h"
 
-/* 
-Initialize the framerate manager
-*/
+/*!
+\brief Initialize the framerate manager.
 
+Initialize the framerate manager, set default framerate of 30Hz and
+reset delay interpolation.
+*/
 void SDL_initFramerate(FPSmanager * manager)
 {
 	/*
@@ -24,10 +26,11 @@ void SDL_initFramerate(FPSmanager * manager)
 	manager->lastticks = SDL_GetTicks();
 }
 
-/* 
-Set the framerate in Hz 
-*/
+/*!
+\brief Set the framerate in Hz 
 
+Sets a new framerate for the manager and reset delay interpolation.
+*/
 int SDL_setFramerate(FPSmanager * manager, int rate)
 {
 	if ((rate >= FPS_LOWER_LIMIT) && (rate <= FPS_UPPER_LIMIT)) {
@@ -40,10 +43,11 @@ int SDL_setFramerate(FPSmanager * manager, int rate)
 	}
 }
 
-/* 
-Return the current target framerate in Hz 
-*/
+/*!
+\brief Return the current target framerate in Hz 
 
+Get the currently set framerate of the manager.
+*/
 int SDL_getFramerate(FPSmanager * manager)
 {
 	if (manager == NULL) {
@@ -53,10 +57,13 @@ int SDL_getFramerate(FPSmanager * manager)
 	}
 }
 
-/* 
-Delay execution to maintain a constant framerate. Calculate fps.
-*/
+/*!
+\brief Delay execution to maintain a constant framerate and calculate fps.
 
+Generate a delay to accomodate currently set framerate. Call once in the
+graphics/rendering loop. If the computer cannot keep up with the rate (i.e.
+drawing too slow), the delay is zero and the delay interpolation is reset.
+*/
 void SDL_framerateDelay(FPSmanager * manager)
 {
 	Uint32 current_ticks;

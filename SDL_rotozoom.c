@@ -1237,7 +1237,23 @@ SDL_Surface *zoomSurface(SDL_Surface * src, double zoomx, double zoomy, int smoo
 	return (rz_dst);
 }
 
-SDL_Surface *shrinkSurface(SDL_Surface * src, int factorx, int factory)
+/*! 
+\brief Shrink a surface
+
+Shrinks a 32bit or 8bit 'src' surface to a newly created 'dst' surface.
+'factorx' and 'factory' are the shrinking ratios (i.e. 2=1/2 the size,
+3=1/3 the size, etc.) The destination surface is antialiased by averaging
+the source box RGBA or Y information. If the surface is not 8bit
+or 32bit RGBA/ABGR it will be converted into a 32bit RGBA format on the fly.
+The input surface is not modified. The output surface is newly allocated.
+
+\param src The surface to shrink.
+\param factorx The horizontal shrinking ratio.
+\param factory The vertical shrinking ratio.
+\return The modified (shrunken) surface.
+
+*/
+SDL_Surface *shrinkSurface(SDL_Surface *src, int factorx, int factory)
 {
 	SDL_Surface *rz_src;
 	SDL_Surface *rz_dst;
