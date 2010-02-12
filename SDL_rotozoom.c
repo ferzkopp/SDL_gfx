@@ -1,6 +1,6 @@
 /*  
 
-SDL_rotozoom.c - rotozoomer for 32bit or 8bit surfaces
+SDL_rotozoom.c - rotozoomer, zoomer and shrinker for 32bit or 8bit surfaces
 
 LGPL (c) A. Schiffler
 
@@ -15,18 +15,51 @@ LGPL (c) A. Schiffler
 
 #include "SDL_rotozoom.h"
 
+/* ---- Internally used structures */
+
+/*!
+\brief A 32 bit RGBA pixel.
+*/
+typedef struct tColorRGBA {
+	Uint8 r;
+	Uint8 g;
+	Uint8 b;
+	Uint8 a;
+} tColorRGBA;
+
+/*!
+\brief A 8bit Y/palette pixel.
+*/
+typedef struct tColorY {
+	Uint8 y;
+} tColorY;
+
+/*! 
+\brief Returns maximum of two numbers a and b.
+*/
 #define MAX(a,b)    (((a) > (b)) ? (a) : (b))
 
-
-/* 
-
-32bit integer-factor averaging Shrinker
-
-Shrinks 32bit RGBA/ABGR 'src' surface to 'dst' surface.
-
+/*!
+\brief Lower limit of absolute zoom factor or rotation degrees.
 */
+#define VALUE_LIMIT	0.001
 
-int shrinkSurfaceRGBA(SDL_Surface * src, SDL_Surface * dst, int factorx, int factory)
+/*! 
+\brief Internal 32 bit integer-factor averaging Shrinker.
+
+Shrinks 32 bit RGBA/ABGR 'src' surface to 'dst' surface.
+Averages color and alpha values values of src pixels to calculate dst pixels.
+Assumes src and dst surfaces are of 32 bit depth.
+Assumes dst surface was allocated with the correct dimensions.
+
+\param src The surface to shrink (input).
+\param dst The shrunken surface (output).
+\param factorx The horizontal shrinking ratio.
+\param factory The vertical shrinking ratio.
+
+\return 0 for success or -1 for error.
+*/
+int _shrinkSurfaceRGBA(SDL_Surface * src, SDL_Surface * dst, int factorx, int factory)
 {
 	int x, y, dx, dy, sgap, dgap, ra, ga, ba, aa;
 	int n_average;
@@ -100,15 +133,22 @@ int shrinkSurfaceRGBA(SDL_Surface * src, SDL_Surface * dst, int factorx, int fac
 	return (0);
 }
 
-/* 
-
-8bit integer-factor averaging Shrinker
+/*! 
+\brief Internal 8 bit integer-factor averaging shrinker.
 
 Shrinks 8bit Y 'src' surface to 'dst' surface.
+Averages color (brightness) values values of src pixels to calculate dst pixels.
+Assumes src and dst surfaces are of 8 bit depth.
+Assumes dst surface was allocated with the correct dimensions.
 
+\param src The surface to shrink (input).
+\param dst The shrunken surface (output).
+\param factorx The horizontal shrinking ratio.
+\param factory The vertical shrinking ratio.
+
+\return 0 for success or -1 for error.
 */
-
-int shrinkSurfaceY(SDL_Surface * src, SDL_Surface * dst, int factorx, int factory)
+int _shrinkSurfaceY(SDL_Surface * src, SDL_Surface * dst, int factorx, int factory)
 {
 	int x, y, dx, dy, sgap, dgap, a;
 	int n_average;
@@ -177,15 +217,22 @@ int shrinkSurfaceY(SDL_Surface * src, SDL_Surface * dst, int factorx, int factor
 	return (0);
 }
 
-/* 
+/*! 
+\brief Internal 32 bit Zoomer with optional anti-aliasing by bilinear interpolation.
 
-32bit Zoomer with optional anti-aliasing by bilinear interpolation.
+Zooms 32 bit RGBA/ABGR 'src' surface to 'dst' surface.
+Assumes src and dst surfaces are of 32 bit depth.
+Assumes dst surface was allocated with the correct dimensions.
 
-Zoomes 32bit RGBA/ABGR 'src' surface to 'dst' surface.
+\param src The surface to zoom (input).
+\param dst The zoomed surface (output).
+\param flipx Flag indicating if the image should be horizontally flipped.
+\param flipy Flag indicating if the image should be vertically flipped.
+\param smooth Antialiasing flag; set to SMOOTHING_ON to enable.
 
+\return 0 for success or -1 for error.
 */
-
-int zoomSurfaceRGBA(SDL_Surface * src, SDL_Surface * dst, int flipx, int flipy, int smooth)
+int _zoomSurfaceRGBA(SDL_Surface * src, SDL_Surface * dst, int flipx, int flipy, int smooth)
 {
 	int x, y, sx, sy, *sax, *say, *csax, *csay, csx, csy, ex, ey, t1, t2, sstep, lx, ly;
 	tColorRGBA *c00, *c01, *c10, *c11, *cswap;
@@ -385,15 +432,22 @@ int zoomSurfaceRGBA(SDL_Surface * src, SDL_Surface * dst, int flipx, int flipy, 
 	return (0);
 }
 
-/* 
+/*! 
 
-8bit Zoomer without smoothing.
+\brief Internal 8 bit Zoomer without smoothing.
 
-Zoomes 8bit palette/Y 'src' surface to 'dst' surface.
+Zooms 8bit palette/Y 'src' surface to 'dst' surface.
+Assumes src and dst surfaces are of 8 bit depth.
+Assumes dst surface was allocated with the correct dimensions.
 
+\param src The surface to zoom (input).
+\param dst The zoomed surface (output).
+\param flipx Flag indicating if the image should be horizontally flipped.
+\param flipy Flag indicating if the image should be vertically flipped.
+
+\return 0 for success or -1 for error.
 */
-
-int zoomSurfaceY(SDL_Surface * src, SDL_Surface * dst, int flipx, int flipy)
+int _zoomSurfaceY(SDL_Surface * src, SDL_Surface * dst, int flipx, int flipy)
 {
 	int x, y;
 	Uint32 *sax, *say, *csax, *csay;
@@ -448,7 +502,6 @@ int zoomSurfaceY(SDL_Surface * src, SDL_Surface * dst, int flipx, int flipy)
 		csay++;
 	}
 
-
 	/*
 	* Draw 
 	*/
@@ -492,15 +545,26 @@ int zoomSurfaceY(SDL_Surface * src, SDL_Surface * dst, int flipx, int flipy)
 	return (0);
 }
 
-/* 
+/*! 
+\brief Internal 32 bit rotozoomer with optional anti-aliasing.
 
-32bit Rotozoomer with optional anti-aliasing by bilinear interpolation.
+Rotates and zooms 32 bit RGBA/ABGR 'src' surface to 'dst' surface based on the control 
+parameters by scanning the destination surface and applying optionally anti-aliasing
+by bilinear interpolation.
+Assumes src and dst surfaces are of 32 bit depth.
+Assumes dst surface was allocated with the correct dimensions.
 
-Rotates and zoomes 32bit RGBA/ABGR 'src' surface to 'dst' surface.
-
+\param src Source surface.
+\param dst Destination surface.
+\param cx Horizontal center coordinate.
+\param cy Vertical center coordinate.
+\param isin Integer version of sine of angle.
+\param icos Integer version of cosine of angle.
+\param flipx Flag indicating horizontal mirroring should be applied.
+\param flipy Flag indicating vertical mirroring should be applied.
+\param smooth Flag indicating anti-aliasing should be used.
 */
-
-void transformSurfaceRGBA(SDL_Surface * src, SDL_Surface * dst, int cx, int cy, int isin, int icos, int flipx, int flipy, int smooth)
+void _transformSurfaceRGBA(SDL_Surface * src, SDL_Surface * dst, int cx, int cy, int isin, int icos, int flipx, int flipy, int smooth)
 {
 	int x, y, t1, t2, dx, dy, xd, yd, sdx, sdy, ax, ay, ex, ey, sw, sh;
 	tColorRGBA c00, c01, c10, c11, cswap;
@@ -598,14 +662,24 @@ void transformSurfaceRGBA(SDL_Surface * src, SDL_Surface * dst, int cx, int cy, 
 	}
 }
 
-/* 
+/*!
 
-8bit Rotozoomer without smoothing
+\brief Rotates and zooms 8 bit palette/Y 'src' surface to 'dst' surface without smoothing.
 
-Rotates and zoomes 8bit palette/Y 'src' surface to 'dst' surface.
+Rotates and zooms 8 bit RGBA/ABGR 'src' surface to 'dst' surface based on the control 
+parameters by scanning the destination surface.
+Assumes src and dst surfaces are of 8 bit depth.
+Assumes dst surface was allocated with the correct dimensions.
 
+\param src Source surface.
+\param dst Destination surface.
+\param cx Horizontal center coordinate.
+\param cy Vertical center coordinate.
+\param isin Integer version of sine of angle.
+\param icos Integer version of cosine of angle.
+\param flipx Flag indicating horizontal mirroring should be applied.
+\param flipy Flag indicating vertical mirroring should be applied.
 */
-
 void transformSurfaceY(SDL_Surface * src, SDL_Surface * dst, int cx, int cy, int isin, int icos, int flipx, int flipy)
 {
 	int x, y, dx, dy, xd, yd, sdx, sdy, ax, ay, sw, sh;
@@ -652,42 +726,46 @@ void transformSurfaceY(SDL_Surface * src, SDL_Surface * dst, int cx, int cy, int
 	}
 }
 
-/* 
+/*!
+\brief Rotates a 32 bit surface in increments of 90 degrees.
 
-32bit specialized 90degree rotator
+Specialized 90 degree rotator which rotates a 'src' surface in 90 degree 
+increments clockwise returning a new surface. Faster than rotozoomer since
+not scanning or interpolation takes place. Input surface must be 32 bit.
+(Code contributed by Jeff Schiller.)
 
-Rotates and zooms 'src' surface to 'dst' surface in 90degree increments.
+\param src Source surface to rotate.
+\param numClockwiseTurns Number of clockwise 90 degree turns to apply to the source.
 
-(contributed by Jeff Schiller)
-
+\returns The new, rotated surface; or NULL for surfaces with incorrect input format.
 */
-SDL_Surface* rotateSurface90Degrees(SDL_Surface* pSurf, int numClockwiseTurns) 
+SDL_Surface* rotateSurface90Degrees(SDL_Surface* src, int numClockwiseTurns) 
 {
 	int row, col, newWidth, newHeight;
-	SDL_Surface* pSurfOut;
+	SDL_Surface* dst;
 
 	/* Has to be a valid surface pointer and only 32-bit surfaces (for now) */
-	if (!pSurf || pSurf->format->BitsPerPixel != 32) { return NULL; }
+	if (!src || src->format->BitsPerPixel != 32) { return NULL; }
 
 	/* normalize numClockwiseTurns */
 	while(numClockwiseTurns < 0) { numClockwiseTurns += 4; }
 	numClockwiseTurns = (numClockwiseTurns % 4);
 
 	/* if it's even, our new width will be the same as the source surface */
-	newWidth = (numClockwiseTurns % 2) ? (pSurf->h) : (pSurf->w);
-	newHeight = (numClockwiseTurns % 2) ? (pSurf->w) : (pSurf->h);
-	pSurfOut = SDL_CreateRGBSurface( pSurf->flags, newWidth, newHeight, pSurf->format->BitsPerPixel,
-		pSurf->format->Rmask,
-		pSurf->format->Gmask, 
-		pSurf->format->Bmask, 
-		pSurf->format->Amask);
-	if(!pSurfOut) {
+	newWidth = (numClockwiseTurns % 2) ? (src->h) : (src->w);
+	newHeight = (numClockwiseTurns % 2) ? (src->w) : (src->h);
+	dst = SDL_CreateRGBSurface( src->flags, newWidth, newHeight, src->format->BitsPerPixel,
+		src->format->Rmask,
+		src->format->Gmask, 
+		src->format->Bmask, 
+		src->format->Amask);
+	if(!dst) {
 		return NULL;
 	}
 
 	if(numClockwiseTurns != 0) {
-		SDL_LockSurface(pSurf);
-		SDL_LockSurface(pSurfOut);
+		SDL_LockSurface(src);
+		SDL_LockSurface(dst);
 		switch(numClockwiseTurns) {
 
 			/* rotate clockwise */
@@ -696,13 +774,13 @@ SDL_Surface* rotateSurface90Degrees(SDL_Surface* pSurf, int numClockwiseTurns)
 			 Uint32* srcBuf = NULL;
 			 Uint32* dstBuf = NULL;
 
-			 for (row = 0; row < pSurf->h; ++row) {
-				 srcBuf = (Uint32*)(pSurf->pixels) + (row*pSurf->pitch/4);
-				 dstBuf = (Uint32*)(pSurfOut->pixels) + (pSurfOut->w - row - 1);
-				 for (col = 0; col < pSurf->w; ++col) {
+			 for (row = 0; row < src->h; ++row) {
+				 srcBuf = (Uint32*)(src->pixels) + (row*src->pitch/4);
+				 dstBuf = (Uint32*)(dst->pixels) + (dst->w - row - 1);
+				 for (col = 0; col < src->w; ++col) {
 					 *dstBuf = *srcBuf;
 					 ++srcBuf;
-					 dstBuf += pSurfOut->pitch/4;
+					 dstBuf += dst->pitch/4;
 				 } 
 				 /* end for(col) */
 			 } 
@@ -715,10 +793,10 @@ SDL_Surface* rotateSurface90Degrees(SDL_Surface* pSurf, int numClockwiseTurns)
 			 Uint32* srcBuf = NULL;
 			 Uint32* dstBuf = NULL;
 
-			 for(row = 0; row < pSurf->h; ++row) {
-				 srcBuf = (Uint32*)(pSurf->pixels) + (row*pSurf->pitch/4);
-				 dstBuf = (Uint32*)(pSurfOut->pixels) + ((pSurfOut->h - row - 1)*pSurfOut->pitch/4) + (pSurfOut->w - 1);
-				 for(col = 0; col < pSurf->w; ++col) {
+			 for(row = 0; row < src->h; ++row) {
+				 srcBuf = (Uint32*)(src->pixels) + (row*src->pitch/4);
+				 dstBuf = (Uint32*)(dst->pixels) + ((dst->h - row - 1)*dst->pitch/4) + (dst->w - 1);
+				 for(col = 0; col < src->w; ++col) {
 					 *dstBuf = *srcBuf;
 					 ++srcBuf;
 					 --dstBuf;
@@ -732,13 +810,13 @@ SDL_Surface* rotateSurface90Degrees(SDL_Surface* pSurf, int numClockwiseTurns)
 			 Uint32* srcBuf = NULL;
 			 Uint32* dstBuf = NULL;
 
-			 for(row = 0; row < pSurf->h; ++row) {
-				 srcBuf = (Uint32*)(pSurf->pixels) + (row*pSurf->pitch/4);
-				 dstBuf = (Uint32*)(pSurfOut->pixels) + row + ((pSurfOut->h - 1)*pSurfOut->pitch/4);
-				 for(col = 0; col < pSurf->w; ++col) {
+			 for(row = 0; row < src->h; ++row) {
+				 srcBuf = (Uint32*)(src->pixels) + (row*src->pitch/4);
+				 dstBuf = (Uint32*)(dst->pixels) + row + ((dst->h - 1)*dst->pitch/4);
+				 for(col = 0; col < src->w; ++col) {
 					 *dstBuf = *srcBuf;
 					 ++srcBuf;
-					 dstBuf -= pSurfOut->pitch/4;
+					 dstBuf -= dst->pitch/4;
 				 } 
 			 } 
 		 }
@@ -746,36 +824,37 @@ SDL_Surface* rotateSurface90Degrees(SDL_Surface* pSurf, int numClockwiseTurns)
 		} 
 		/* end switch */
 
-		SDL_UnlockSurface(pSurf);
-		SDL_UnlockSurface(pSurfOut);
+		SDL_UnlockSurface(src);
+		SDL_UnlockSurface(dst);
 	} 
 	/* end if numClockwiseTurns > 0 */
 	else {
 		/* simply copy surface to output */
-		if(SDL_BlitSurface(pSurf, NULL, pSurfOut, NULL)) {
+		if(SDL_BlitSurface(src, NULL, dst, NULL)) {
 			return NULL;
 		}
 	}
-	return pSurfOut;
+	return dst;
 }
 
-/* 
 
-rotozoomSurface()
+/*!
+\brief Internal target surface sizing function for rotozooms with trig result return. 
 
-Rotates and zoomes a 32bit or 8bit 'src' surface to newly created 'dst' surface.
-'angle' is the rotation in degrees. 'zoom' a scaling factor. If 'smooth' is 1
-then the destination 32bit surface is anti-aliased. If the surface is not 8bit
-or 32bit RGBA/ABGR it will be converted into a 32bit RGBA format on the fly.
+\param width The source surface width.
+\param height The source surface height.
+\param angle The angle to rotate in degrees.
+\param zoomx The horizontal scaling factor.
+\param zoomy The vertical scaling factor.
+\param dstwidth The calculated width of the destination surface.
+\param dstheight The calculated height of the destination surface.
+\param canglezoom The sine of the angle adjusted by the zoom factor.
+\param sanglezoom The cosine of the angle adjusted by the zoom factor.
 
 */
-
-#define VALUE_LIMIT	0.001
-
-/* Local rotozoom-size function with trig result return */
-
-void rotozoomSurfaceSizeTrig(int width, int height, double angle, double zoomx, double zoomy, int *dstwidth, int *dstheight, 
-							 double *canglezoom, double *sanglezoom)
+void _rotozoomSurfaceSizeTrig(int width, int height, double angle, double zoomx, double zoomy, 
+							  int *dstwidth, int *dstheight, 
+							  double *canglezoom, double *sanglezoom)
 {
 	double x, y, cx, cy, sx, sy;
 	double radangle;
@@ -804,34 +883,77 @@ void rotozoomSurfaceSizeTrig(int width, int height, double angle, double zoomx, 
 	*dstheight = 2 * dstheighthalf;
 }
 
+/*! 
+\brief Returns the size of the resulting target surface for a rotozoomSurfaceXY() call. 
 
-/* Publically available rotozoom-size function */
-
+\param width The source surface width.
+\param height The source surface height.
+\param angle The angle to rotate in degrees.
+\param zoomx The horizontal scaling factor.
+\param zoomy The vertical scaling factor.
+\param dstwidth The calculated width of the rotozoomed destination surface.
+\param dstheight The calculated height of the rotozoomed destination surface.
+*/
 void rotozoomSurfaceSizeXY(int width, int height, double angle, double zoomx, double zoomy, int *dstwidth, int *dstheight)
 {
 	double dummy_sanglezoom, dummy_canglezoom;
 
-	rotozoomSurfaceSizeTrig(width, height, angle, zoomx, zoomy, dstwidth, dstheight, &dummy_sanglezoom, &dummy_canglezoom);
+	_rotozoomSurfaceSizeTrig(width, height, angle, zoomx, zoomy, dstwidth, dstheight, &dummy_sanglezoom, &dummy_canglezoom);
 }
 
-/* Publically available rotozoom-size function */
+/*! 
+\brief Returns the size of the resulting target surface for a rotozoomSurface() call. 
 
+\param width The source surface width.
+\param height The source surface height.
+\param angle The angle to rotate in degrees.
+\param zoom The scaling factor.
+\param dstwidth The calculated width of the rotozoomed destination surface.
+\param dstheight The calculated height of the rotozoomed destination surface.
+*/
 void rotozoomSurfaceSize(int width, int height, double angle, double zoom, int *dstwidth, int *dstheight)
 {
 	double dummy_sanglezoom, dummy_canglezoom;
 
-	rotozoomSurfaceSizeTrig(width, height, angle, zoom, zoom, dstwidth, dstheight, &dummy_sanglezoom, &dummy_canglezoom);
+	_rotozoomSurfaceSizeTrig(width, height, angle, zoom, zoom, dstwidth, dstheight, &dummy_sanglezoom, &dummy_canglezoom);
 }
 
-/* Publically available rotozoom function */
+/*!
+\brief Rotates and zooms a surface and optional anti-aliasing. 
 
+Rotates and zoomes a 32bit or 8bit 'src' surface to newly created 'dst' surface.
+'angle' is the rotation in degrees and 'zoom' a scaling factor. If 'smooth' is set
+then the destination 32bit surface is anti-aliased. If the surface is not 8bit
+or 32bit RGBA/ABGR it will be converted into a 32bit RGBA format on the fly.
+
+\param src The surface to rotozoom.
+\param angle The angle to rotate in degrees.
+\param zoom The scaling factor.
+\param smooth Antialiasing flag; set to SMOOTHING_ON to enable.
+
+\return The new rotozoomed surface.
+*/
 SDL_Surface *rotozoomSurface(SDL_Surface * src, double angle, double zoom, int smooth)
 {
 	return rotozoomSurfaceXY(src, angle, zoom, zoom, smooth);
 }
 
-/* Publically available rotozoom function */
+/*!
+\brief Rotates and zooms a surface with different horizontal and vertival scaling factors and optional anti-aliasing. 
 
+Rotates and zooms a 32bit or 8bit 'src' surface to newly created 'dst' surface.
+'angle' is the rotation in degrees, 'zoomx and 'zoomy' scaling factors. If 'smooth' is set
+then the destination 32bit surface is anti-aliased. If the surface is not 8bit
+or 32bit RGBA/ABGR it will be converted into a 32bit RGBA format on the fly.
+
+\param src The surface to rotozoom.
+\param angle The angle to rotate in degrees.
+\param zoomx The horizontal scaling factor.
+\param zoomy The vertical scaling factor.
+\param smooth Antialiasing flag; set to SMOOTHING_ON to enable.
+
+\return The new rotozoomed surface.
+*/
 SDL_Surface *rotozoomSurfaceXY(SDL_Surface * src, double angle, double zoomx, double zoomy, int smooth)
 {
 	SDL_Surface *rz_src;
@@ -915,7 +1037,7 @@ SDL_Surface *rotozoomSurfaceXY(SDL_Surface * src, double angle, double zoomx, do
 		*/
 
 		/* Determine target size */
-		rotozoomSurfaceSizeTrig(rz_src->w, rz_src->h, angle, zoomx, zoomy, &dstwidth, &dstheight, &canglezoom, &sanglezoom);
+		_rotozoomSurfaceSizeTrig(rz_src->w, rz_src->h, angle, zoomx, zoomy, &dstwidth, &dstheight, &canglezoom, &sanglezoom);
 
 		/*
 		* Calculate target factors from sin/cos and zoom 
@@ -965,7 +1087,7 @@ SDL_Surface *rotozoomSurfaceXY(SDL_Surface * src, double angle, double zoomx, do
 			/*
 			* Call the 32bit transformation routine to do the rotation (using alpha) 
 			*/
-			transformSurfaceRGBA(rz_src, rz_dst, dstwidthhalf, dstheighthalf,
+			_transformSurfaceRGBA(rz_src, rz_dst, dstwidthhalf, dstheighthalf,
 				(int) (sanglezoominv), (int) (canglezoominv), 
 				flipx, flipy,
 				smooth);
@@ -1044,7 +1166,7 @@ SDL_Surface *rotozoomSurfaceXY(SDL_Surface * src, double angle, double zoomx, do
 			/*
 			* Call the 32bit transformation routine to do the zooming (using alpha) 
 			*/
-			zoomSurfaceRGBA(rz_src, rz_dst, flipx, flipy, smooth);
+			_zoomSurfaceRGBA(rz_src, rz_dst, flipx, flipy, smooth);
 			/*
 			* Turn on source-alpha support 
 			*/
@@ -1060,7 +1182,7 @@ SDL_Surface *rotozoomSurfaceXY(SDL_Surface * src, double angle, double zoomx, do
 			/*
 			* Call the 8bit transformation routine to do the zooming 
 			*/
-			zoomSurfaceY(rz_src, rz_dst, flipx, flipy);
+			_zoomSurfaceY(rz_src, rz_dst, flipx, flipy);
 			SDL_SetColorKey(rz_dst, SDL_SRCCOLORKEY | SDL_RLEACCEL, rz_src->format->colorkey);
 		}
 		/*
@@ -1082,21 +1204,29 @@ SDL_Surface *rotozoomSurfaceXY(SDL_Surface * src, double angle, double zoomx, do
 	return (rz_dst);
 }
 
-/* 
+/*!
+\brief Calculates the size of the target surface for a zoomSurface() call.
 
-zoomSurface()
+The minimum size of the target surface is 1. The input factors can be positive or negative.
 
-Zoomes a 32bit or 8bit 'src' surface to newly created 'dst' surface.
-'zoomx' and 'zoomy' are scaling factors for width and height. If 'smooth' is 1
-then the destination 32bit surface is anti-aliased. If the surface is not 8bit
-or 32bit RGBA/ABGR it will be converted into a 32bit RGBA format on the fly.
-
+\param width The width of the source surface to zoom.
+\param height The height of the source surface to zoom.
+\param zoomx The horizontal zoom factor.
+\param zoomy The vertical zoom factor.
+\param dstwidth Pointer to an integer to store the calculated width of the zoomed target surface.
+\param dstheight Pointer to an integer to store the calculated height of the zoomed target surface.
 */
-
-#define VALUE_LIMIT	0.001
-
 void zoomSurfaceSize(int width, int height, double zoomx, double zoomy, int *dstwidth, int *dstheight)
 {
+	/*
+	* Make zoom factors positive 
+	*/
+	int flipx, flipy;
+	flipx = (zoomx<0.0);
+	if (flipx) zoomx = -zoomx;
+	flipy = (zoomy<0.0);
+	if (flipy) zoomy = -zoomy;
+
 	/*
 	* Sanity check zoom factors 
 	*/
@@ -1120,6 +1250,22 @@ void zoomSurfaceSize(int width, int height, double zoomx, double zoomy, int *dst
 	}
 }
 
+/*! 
+\brief Zoom a surface by independent horizontal and vertical factors with optional smoothing.
+
+Zooms a 32bit or 8bit 'src' surface to newly created 'dst' surface.
+'zoomx' and 'zoomy' are scaling factors for width and height. If 'smooth' is on
+then the destination 32bit surface is anti-aliased. If the surface is not 8bit
+or 32bit RGBA/ABGR it will be converted into a 32bit RGBA format on the fly.
+If zoom factors are negative, the image is flipped on the axes.
+
+\param src The surface to zoom.
+\param zoomx The horizontal zoom factor.
+\param zoomy The vertical zoom factor.
+\param smooth Antialiasing flag; set to SMOOTHING_ON to enable.
+
+\return The new, zoomed surface.
+*/
 SDL_Surface *zoomSurface(SDL_Surface * src, double zoomx, double zoomy, int smooth)
 {
 	SDL_Surface *rz_src;
@@ -1200,7 +1346,7 @@ SDL_Surface *zoomSurface(SDL_Surface * src, double zoomx, double zoomy, int smoo
 		/*
 		* Call the 32bit transformation routine to do the zooming (using alpha) 
 		*/
-		zoomSurfaceRGBA(rz_src, rz_dst, flipx, flipy, smooth);
+		_zoomSurfaceRGBA(rz_src, rz_dst, flipx, flipy, smooth);
 		/*
 		* Turn on source-alpha support 
 		*/
@@ -1216,7 +1362,7 @@ SDL_Surface *zoomSurface(SDL_Surface * src, double zoomx, double zoomy, int smoo
 		/*
 		* Call the 8bit transformation routine to do the zooming 
 		*/
-		zoomSurfaceY(rz_src, rz_dst, flipx, flipy);
+		_zoomSurfaceY(rz_src, rz_dst, flipx, flipy);
 		SDL_SetColorKey(rz_dst, SDL_SRCCOLORKEY | SDL_RLEACCEL, rz_src->format->colorkey);
 	}
 	/*
@@ -1238,7 +1384,7 @@ SDL_Surface *zoomSurface(SDL_Surface * src, double zoomx, double zoomy, int smoo
 }
 
 /*! 
-\brief Shrink a surface
+\brief Shrink a surface by an integer ratio using averaging.
 
 Shrinks a 32bit or 8bit 'src' surface to a newly created 'dst' surface.
 'factorx' and 'factory' are the shrinking ratios (i.e. 2=1/2 the size,
@@ -1250,8 +1396,8 @@ The input surface is not modified. The output surface is newly allocated.
 \param src The surface to shrink.
 \param factorx The horizontal shrinking ratio.
 \param factory The vertical shrinking ratio.
-\return The modified (shrunken) surface.
 
+\return The new, shrunken surface.
 */
 SDL_Surface *shrinkSurface(SDL_Surface *src, int factorx, int factory)
 {
@@ -1330,7 +1476,7 @@ SDL_Surface *shrinkSurface(SDL_Surface *src, int factorx, int factory)
 		/*
 		* Call the 32bit transformation routine to do the shrinking (using alpha) 
 		*/
-		shrinkSurfaceRGBA(rz_src, rz_dst, factorx, factory);
+		_shrinkSurfaceRGBA(rz_src, rz_dst, factorx, factory);
 		/*
 		* Turn on source-alpha support 
 		*/
@@ -1346,7 +1492,7 @@ SDL_Surface *shrinkSurface(SDL_Surface *src, int factorx, int factory)
 		/*
 		* Call the 8bit transformation routine to do the shrinking 
 		*/
-		shrinkSurfaceY(rz_src, rz_dst, factorx, factory);
+		_shrinkSurfaceY(rz_src, rz_dst, factorx, factory);
 		SDL_SetColorKey(rz_dst, SDL_SRCCOLORKEY | SDL_RLEACCEL, rz_src->format->colorkey);
 	}
 	/*
