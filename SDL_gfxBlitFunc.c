@@ -8,6 +8,13 @@ LGPL (c) A. Schiffler
 
 #include "SDL_gfxBlitFunc.h"
 
+/*!  
+\brief Alpha adjustment table for custom blitter.
+
+The table provides values for a modified, non-linear 
+transfer function which maintain brightness.
+
+*/
 static unsigned int GFX_ALPHA_ADJUST_ARRAY[256] = {
 	0,  /* 0 */
 	15,  /* 1 */
@@ -267,9 +274,15 @@ static unsigned int GFX_ALPHA_ADJUST_ARRAY[256] = {
 	255   /* 255 */
 };
 
-/* Special blitter for correct destination Alpha during RGBA->RGBA blits */
+/*!
+\brief Internal blitter using adjusted destination alpha during RGBA->RGBA blits.
 
-void SDL_gfxBlitBlitterRGBA(SDL_gfxBlitInfo * info)
+Performs the blit based on the 'info' structure and applies the transfer function
+to the destination 'a' values.
+
+\param info The blit info to use.
+*/
+void _SDL_gfxBlitBlitterRGBA(SDL_gfxBlitInfo * info)
 {
 	int       width = info->d_width;
 	int       height = info->d_height;
@@ -296,7 +309,7 @@ void SDL_gfxBlitBlitterRGBA(SDL_gfxBlitInfo * info)
 			unsigned sAA;
 			GFX_DISEMBLE_RGBA(src, srcbpp, srcfmt, pixel, sR, sG, sB, sA);
 			GFX_DISEMBLE_RGBA(dst, dstbpp, dstfmt, pixel, dR, dG, dB, dA);
-			sAA=GFX_ALPHA_ADJUST[sA & 255]; 
+			sAA=GFX_ALPHA_ADJUST_ARRAY[sA & 255]; 
 			GFX_ALPHA_BLEND(sR, sG, sB, sAA, dR, dG, dB); 
 			dA |= sAA;
 			GFX_ASSEMBLE_RGBA(dst, dstbpp, dstfmt, dR, dG, dB, dA); 
@@ -307,7 +320,19 @@ void SDL_gfxBlitBlitterRGBA(SDL_gfxBlitInfo * info)
 	}
 }
 
-int SDL_gfxBlitRGBACall(SDL_Surface * src, SDL_Rect * srcrect, SDL_Surface * dst, SDL_Rect * dstrect)
+/*!
+\brief Internal blitter setup wrapper for RGBA->RGBA blits.
+
+Sets up the blitter info based on the 'src' and 'dst' surfaces and rectangles.
+
+\param src The source surface.
+\param srcrect The source rectangle.
+\param dst The destination surface.
+\param dstrect The destination rectangle.
+
+\returns Returns 1 if blit was performed, 0 otherwise.
+*/
+int _SDL_gfxBlitRGBACall(SDL_Surface * src, SDL_Rect * srcrect, SDL_Surface * dst, SDL_Rect * dstrect)
 {
 	/*
 	* Set up source and destination buffer pointers, then blit 
@@ -334,13 +359,26 @@ int SDL_gfxBlitRGBACall(SDL_Surface * src, SDL_Rect * srcrect, SDL_Surface * dst
 		/*
 		* Run the actual software blitter 
 		*/
-		SDL_gfxBlitBlitterRGBA(&info);
+		_SDL_gfxBlitBlitterRGBA(&info);
+		return 1;
 	}
 
 	return (0);
 }
 
+/*!
+\brief Blitter for RGBA->RGBA blits with alpha adjustment.
 
+Verifies the input 'src' and 'dst' surfaces and rectangles and performs blit.
+The destination clip rectangle is honored.
+
+\param src The source surface.
+\param srcrect The source rectangle.
+\param dst The destination surface.
+\param dstrect The destination rectangle.
+
+\returns Returns 1 if blit was performed, 0 otherwise, or -1 if an error occured.
+*/
 int SDL_gfxBlitRGBA(SDL_Surface * src, SDL_Rect * srcrect, SDL_Surface * dst, SDL_Rect * dstrect)
 {
 	SDL_Rect  sr, dr;
@@ -436,13 +474,24 @@ int SDL_gfxBlitRGBA(SDL_Surface * src, SDL_Rect * srcrect, SDL_Surface * dst, SD
 		sr.y = srcy;
 		sr.w = dr.w = w;
 		sr.h = dr.h = h;
-		return (SDL_gfxBlitRGBACall(src, &sr, dst, &dr));
+		return (_SDL_gfxBlitRGBACall(src, &sr, dst, &dr));
 	}
+
 	return 0;
 }
 
-/* Helper function that sets the alpha channel in a 32bit surface */
+/*!
+\brief Sets the alpha channel in a 32 bit surface.
 
+Helper function that sets the alpha channel in a 32 bit surface
+to a constant value.
+Only 32 bit surfaces can be used with this function.
+
+\param src Pointer to the target surface to change.
+\param a The alpha value to set.
+
+\return Returns 1 if alpha was changed, 0 otherwise.
+*/
 int SDL_gfxSetAlpha(SDL_Surface *src, Uint8 a)
 {
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
@@ -474,8 +523,19 @@ int SDL_gfxSetAlpha(SDL_Surface *src, Uint8 a)
 	} 
 }
 
-/* Helper function that multiplies the alpha channel in a 32bit surface */
+/*!
+\brief Multiply the alpha channel in a 32bit surface.
 
+Helper function that multiplies the alpha channel in a 32 bit surface
+with a constant value. The final alpha is always scaled to the range 
+0-255 (i.e. the factor is a/256).
+Only 32 bit surfaces can be used with this function.
+
+\param src Pointer to the target surface to change.
+\param a The alpha value to multiply with.
+
+\return Returns 1 if alpha was changed, 0 otherwise.
+*/
 int SDL_gfxMultiplyAlpha(SDL_Surface *src, Uint8 a)
 {
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
@@ -484,6 +544,7 @@ int SDL_gfxMultiplyAlpha(SDL_Surface *src, Uint8 a)
 	Uint16 alpha_offset = 3;
 #endif
 	Uint16 i, j;
+
 	/* Check if we have a 32bit surface */
 	if ( (src) && (src->format) && (src->format->BytesPerPixel==4) && (a!=255) ) {
 		/* Lock and process */
@@ -501,14 +562,7 @@ int SDL_gfxMultiplyAlpha(SDL_Surface *src, Uint8 a)
 			SDL_UnlockSurface(src);
 		}
 		return 1;
-	} else {
-		return 0;
-	} 
-}
+	}
 
-/* -------- Alpha adjustment table, modified transfer function --------  */
-
-int * gfx_alpha_adjust(void)
-{
-	return GFX_ALPHA_ADJUST_ARRAY;
+	return 0;
 }

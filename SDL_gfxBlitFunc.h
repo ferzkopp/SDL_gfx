@@ -44,11 +44,12 @@ extern    "C" {
 
 	/* -------- Macros */
 
-	/* Define SDL macros locally as a substitute for a #include "SDL_blit.h", */
-
+	/* Define SDL macros locally as a substitute for an #include "SDL_blit.h", */
 	/* which doesn't work since the include file doesn't get installed.       */
 
-	/* The structure passed to the low level blit functions */
+/*!
+\brief The structure passed to the low level blit functions.
+*/
 	typedef struct {
 		Uint8    *s_pixels;
 		int       s_width;
@@ -64,6 +65,9 @@ extern    "C" {
 		SDL_PixelFormat *dst;
 	} SDL_gfxBlitInfo;
 
+/*!
+\brief Unwrap RGBA values from a pixel using mask, shift and loss for surface.
+*/
 #define GFX_RGBA_FROM_PIXEL(pixel, fmt, r, g, b, a)				\
 	{									\
 	r = ((pixel&fmt->Rmask)>>fmt->Rshift)<<fmt->Rloss; 		\
@@ -72,6 +76,9 @@ extern    "C" {
 	a = ((pixel&fmt->Amask)>>fmt->Ashift)<<fmt->Aloss;	 	\
 	}
 
+/*!
+\brief Disassemble buffer pointer into a pixel and separate RGBA values.
+*/
 #define GFX_DISEMBLE_RGBA(buf, bpp, fmt, pixel, r, g, b, a)			   \
 	do {									   \
 	pixel = *((Uint32 *)(buf));			   		   \
@@ -79,6 +86,9 @@ extern    "C" {
 	pixel &= ~fmt->Amask;						   \
 	} while(0)
 
+/*!
+\brief Wrap a pixel from RGBA values using mask, shift and loss for surface.
+*/
 #define GFX_PIXEL_FROM_RGBA(pixel, fmt, r, g, b, a)				\
 	{									\
 	pixel = ((r>>fmt->Rloss)<<fmt->Rshift)|				\
@@ -87,6 +97,9 @@ extern    "C" {
 	((a<<fmt->Aloss)<<fmt->Ashift);				\
 	}
 
+/*!
+\brief Assemble pixel into buffer pointer from separate RGBA values.
+*/
 #define GFX_ASSEMBLE_RGBA(buf, bpp, fmt, r, g, b, a)			\
 	{									\
 	Uint32 pixel;					\
@@ -95,7 +108,9 @@ extern    "C" {
 	*((Uint32 *)(buf)) = pixel;			\
 	}
 
-	/* Blend the RGB values of two pixels based on a source alpha value */
+/*!
+\brief Blend the RGB values of two pixels based on a source alpha value.
+*/
 #define GFX_ALPHA_BLEND(sR, sG, sB, A, dR, dG, dB)	\
 	do {						\
 	dR = (((sR-dR)*(A))/255)+dR;		\
@@ -103,9 +118,11 @@ extern    "C" {
 	dB = (((sB-dB)*(A))/255)+dB;		\
 	} while(0)
 
-	/* This is a very useful loop for optimizing blitters */
+/*!
+\brief 4-times unrolled DUFFs loop.
 
-	/* 4-times unrolled loop */
+This is a very useful loop for optimizing blitters.
+*/
 #define GFX_DUFFS_LOOP4(pixel_copy_increment, width)			\
 	{ int n = (width+3)/4;							\
 	switch (width & 3) {						\
@@ -117,12 +134,7 @@ extern    "C" {
 	}								\
 	}
 
-	/* -------- Alpha adjustment table, modified transfer function --------  */
 
-	SDL_GFXBLITFUNC_SCOPE int * gfx_alpha_adjust(void);
-#define GFX_ALPHA_ADJUST gfx_alpha_adjust()
-
-	/* --- */
 
 	/* Ends C function definitions when using C++ */
 #ifdef __cplusplus
