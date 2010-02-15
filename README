@@ -48,6 +48,7 @@ Currently, The following Anti-Aliased drawing primitives are available:
 - AA-circle
 - AA-ellipse
 
+Note: All ___Color routines expect the color to be in the format 0xRRGGBBAA.
 
 \subsection notes_roto Notes on Rotozoomer
 
