@@ -2448,21 +2448,33 @@ int aalineRGBA(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Ui
 
 /* ----- Circle */
 
-/* Note: Based on algorithm from sge library, modified by A. Schiffler */
-/* with multiple pixel-draw removal and other minor speedup changes.   */
+/*!
+\brief Draw circle with blending.
 
-int circleColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 r, Uint32 color)
+Note: Circle drawing routine is based on an algorithms from the sge library, 
+but modified by A. Schiffler for multiple pixel-draw removal and other 
+minor speedup changes.
+
+\param dst The surface to draw on.
+\param x X coordinate of the center of the circle.
+\param y Y coordinate of the center of the circle.
+\param rad Radius in pixels of the circle.
+\param color The color value of the circle to draw (0xRRGGBBAA). 
+
+\returns Returns 0 on success, -1 on failure.
+*/
+int circleColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Uint32 color)
 {
 	Sint16 left, right, top, bottom;
 	int result;
 	Sint16 x1, y1, x2, y2;
 	Sint16 cx = 0;
-	Sint16 cy = r;
+	Sint16 cy = rad;
 	Sint16 ocx = (Sint16) 0xffff;
 	Sint16 ocy = (Sint16) 0xffff;
-	Sint16 df = 1 - r;
+	Sint16 df = 1 - rad;
 	Sint16 d_e = 3;
-	Sint16 d_se = -2 * r + 5;
+	Sint16 d_se = -2 * rad + 5;
 	Sint16 xpcx, xmcx, xpcy, xmcy;
 	Sint16 ypcy, ymcy, ypcx, ymcx;
 	Uint8 *colorptr;
@@ -2477,14 +2489,14 @@ int circleColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 r, Uint32 color)
 	/*
 	* Sanity check radius 
 	*/
-	if (r < 0) {
+	if (rad < 0) {
 		return (-1);
 	}
 
 	/*
-	* Special case for r=0 - draw a point 
+	* Special case for rad=0 - draw a point 
 	*/
-	if (r == 0) {
+	if (rad == 0) {
 		return (pixelColor(dst, x, y, color));
 	}
 
@@ -2492,22 +2504,22 @@ int circleColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 r, Uint32 color)
 	* Get circle and clipping boundary and 
 	* test if bounding box of circle is visible 
 	*/
-	x2 = x + r;
+	x2 = x + rad;
 	left = dst->clip_rect.x;
 	if (x2<left) {
 		return(0);
 	} 
-	x1 = x - r;
+	x1 = x - rad;
 	right = dst->clip_rect.x + dst->clip_rect.w - 1;
 	if (x1>right) {
 		return(0);
 	} 
-	y2 = y + r;
+	y2 = y + rad;
 	top = dst->clip_rect.y;
 	if (y2<top) {
 		return(0);
 	} 
-	y1 = y - r;
+	y1 = y - rad;
 	bottom = dst->clip_rect.y + dst->clip_rect.h - 1;
 	if (y1>bottom) {
 		return(0);
@@ -2657,6 +2669,20 @@ int circleColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 r, Uint32 color)
 	return (result);
 }
 
+/*!
+\brief Draw circle with blending.
+
+\param dst The surface to draw on.
+\param x X coordinate of the center of the circle.
+\param y Y coordinate of the center of the circle.
+\param rad Radius in pixels of the circle.
+\param r The red value of the circle to draw. 
+\param g The green value of the circle to draw. 
+\param b The blue value of the circle to draw. 
+\param a The alpha value of the circle to draw.
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int circleRGBA(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
 	/*
@@ -2667,21 +2693,35 @@ int circleRGBA(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Uint8 r, Uint8
 
 /* ----- Arc */
 
-/* Note: Based on above circle algorithm by A. Schiffler below.  Written by D. Raber */
-/* Calculates which octants arc goes through and renders accordingly */
+/*!
+\brief Arc with blending.
 
-int arcColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 r, Sint16 start, Sint16 end, Uint32 color)
+Note Arc drawing is based on circle algorithm by A. Schiffler and 
+written by D. Raber. Calculates which octants arc goes through and 
+renders pixels accordingly.
+
+\param dst The surface to draw on.
+\param x X coordinate of the center of the arc.
+\param y Y coordinate of the center of the arc.
+\param rad Radius in pixels of the arc.
+\param start Starting radius in degrees of the arc.
+\param end Ending radius in degrees of the arc.
+\param color The color value of the arc to draw (0xRRGGBBAA). 
+
+\returns Returns 0 on success, -1 on failure.
+*/
+int arcColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Sint16 start, Sint16 end, Uint32 color)
 {
 	Sint16 left, right, top, bottom;
 	int result;
 	Sint16 x1, y1, x2, y2;
 	Sint16 cx = 0;
-	Sint16 cy = r;
+	Sint16 cy = rad;
 	Sint16 ocx = (Sint16) 0xffff;
 	Sint16 ocy = (Sint16) 0xffff;
-	Sint16 df = 1 - r;
+	Sint16 df = 1 - rad;
 	Sint16 d_e = 3;
-	Sint16 d_se = -2 * r + 5;
+	Sint16 d_se = -2 * rad + 5;
 	Sint16 xpcx, xmcx, xpcy, xmcy;
 	Sint16 ypcy, ymcy, ypcx, ymcx;
 	Uint8 *colorptr;
@@ -2699,59 +2739,41 @@ int arcColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 r, Sint16 start, Sint
 	/*
 	* Sanity check radius 
 	*/
-	if (r < 0) {
+	if (rad < 0) {
 		return (-1);
 	}
 
 	/*
-	* Special case for r=0 - draw a point 
+	* Special case for rad=0 - draw a point 
 	*/
-	if (r == 0) {
+	if (rad == 0) {
 		return (pixelColor(dst, x, y, color));
 	}
-
-	/*
-	* Fixup angles
-	*/
-	start = start % 360;
-	end = end % 360;
 
 	/*
 	* Get arc's circle and clipping boundary and 
 	* test if bounding box of circle is visible 
 	*/
-	x2 = x + r;
+	x2 = x + rad;
 	left = dst->clip_rect.x;
 	if (x2<left) {
 		return(0);
 	} 
-	x1 = x - r;
+	x1 = x - rad;
 	right = dst->clip_rect.x + dst->clip_rect.w - 1;
 	if (x1>right) {
 		return(0);
 	} 
-	y2 = y + r;
+	y2 = y + rad;
 	top = dst->clip_rect.y;
 	if (y2<top) {
 		return(0);
 	} 
-	y1 = y - r;
+	y1 = y - rad;
 	bottom = dst->clip_rect.y + dst->clip_rect.h - 1;
 	if (y1>bottom) {
 		return(0);
 	}  
-
-	/*
-	* Draw arc 
-	*/
-	result = 0;
-
-	/* Lock surface */
-	if (SDL_MUSTLOCK(dst)) {
-		if (SDL_LockSurface(dst) < 0) {
-			return (-1);
-		}
-	}
 
 	// Octant labelling
 	//      
@@ -2766,10 +2788,16 @@ int arcColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 r, Sint16 start, Sint
 	//  / 2 | 1 \
 	//      +y
 
-	drawoct = 0; // 0x00000000
-	// whether or not to keep drawing a given octant.
+	// Initially reset bitmask to 0x00000000
+	// the set whether or not to keep drawing a given octant.
 	// For example: 0x00111100 means we're drawing in octants 2-5
+	drawoct = 0; 
 
+	/*
+	 * Fixup angles
+	 */
+	start %= 360;
+	end %= 360;
 	// 0 <= start & end < 360; note that sometimes start > end - if so, arc goes back through 0.
 	while (start < 0) start += 360;
 	while (end < 0) end += 360;
@@ -2781,8 +2809,8 @@ int arcColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 r, Sint16 start, Sint
 	endoct = end / 45;
 	oct = startoct - 1; // we increment as first step in loop
 
-	//stopval_start, stopval_end; // what values of cx to stop at.
-
+	// stopval_start, stopval_end; 
+	// what values of cx to stop at.
 	do {
 		oct = (oct + 1) % 8;
 
@@ -2807,7 +2835,7 @@ int arcColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 r, Sint16 start, Sint
 				temp = -sin(start * M_PI / 180);
 				break;
 			}
-			temp *= r;
+			temp *= rad;
 			stopval_start = (int)temp; // always round down.
 			// This isn't arbitrary, but requires graph paper to explain well.
 			// The basic idea is that we're always changing drawoct after we draw, so we
@@ -2838,7 +2866,7 @@ int arcColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 r, Sint16 start, Sint
 				temp = -sin(end * M_PI / 180);
 				break;
 			}
-			temp *= r;
+			temp *= rad;
 			stopval_end = (int)temp;
 
 			// and whether to draw in this octant initially
@@ -2862,6 +2890,17 @@ int arcColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 r, Sint16 start, Sint
 
 	// so now we have what octants to draw and when to draw them.  all that's left is the actual raster code.
 
+	/* Lock surface */
+	if (SDL_MUSTLOCK(dst)) {
+		if (SDL_LockSurface(dst) < 0) {
+			return (-1);
+		}
+	}
+
+	/*
+	* Draw arc 
+	*/
+	result = 0;
 
 	/*
 	* Alpha Check 
@@ -2914,7 +2953,6 @@ int arcColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 r, Sint16 start, Sint
 				if (drawoct & 24)  result |= fastPixelColorNolock(dst, xmcy, y, color); // 8 + 16
 				if (drawoct & 129) result |= fastPixelColorNolock(dst, xpcy, y, color); // 1 + 128
 			}
-
 
 			/*
 			* Update whether we're drawing an octant
@@ -2987,7 +3025,6 @@ int arcColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 r, Sint16 start, Sint
 				if (drawoct & 129) result |= pixelColorNolock(dst, xpcy, y, color);
 			}
 
-
 			/*
 			* Update whether we're drawing an octant
 			*/
@@ -3028,6 +3065,22 @@ int arcColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 r, Sint16 start, Sint
 	return (result);
 }
 
+/*!
+\brief Arc with blending.
+
+\param dst The surface to draw on.
+\param x X coordinate of the center of the arc.
+\param y Y coordinate of the center of the arc.
+\param rad Radius in pixels of the arc.
+\param start Starting radius in degrees of the arc.
+\param end Ending radius in degrees of the arc.
+\param r The red value of the arc to draw. 
+\param g The green value of the arc to draw. 
+\param b The blue value of the arc to draw. 
+\param a The alpha value of the arc to draw.
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int arcRGBA(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Sint16 start, Sint16 end, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
 	/*
@@ -3038,13 +3091,39 @@ int arcRGBA(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Sint16 start, Sin
 
 /* ----- AA Circle */
 
-/* AA circle is based on AAellipse  */
 
-int aacircleColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 r, Uint32 color)
+/*!
+\brief Draw anti-aliased circle with blending.
+
+Note: The AA-circle routine is based on AA-ellipse with identical radii.
+
+\param dst The surface to draw on.
+\param x X coordinate of the center of the aa-circle.
+\param y Y coordinate of the center of the aa-circle.
+\param rad Radius in pixels of the aa-circle.
+\param color The color value of the aa-circle to draw (0xRRGGBBAA). 
+
+\returns Returns 0 on success, -1 on failure.
+*/
+int aacircleColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Uint32 color)
 {
-	return (aaellipseColor(dst, x, y, r, r, color));
+	return (aaellipseColor(dst, x, y, rad, rad, color));
 }
 
+/*!
+\brief Draw anti-aliased circle with blending.
+
+\param dst The surface to draw on.
+\param x X coordinate of the center of the aa-circle.
+\param y Y coordinate of the center of the aa-circle.
+\param rad Radius in pixels of the aa-circle.
+\param r The red value of the aa-circle to draw. 
+\param g The green value of the aa-circle to draw. 
+\param b The blue value of the aa-circle to draw. 
+\param a The alpha value of the aa-circle to draw.
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int aacircleRGBA(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
 	/*
@@ -3056,22 +3135,32 @@ int aacircleRGBA(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Uint8 r, Uin
 
 /* ----- Filled Circle */
 
-/* Note: Based on algorithm from sge library with multiple-hline draw removal */
+/*!
+\brief Draw filled circle with blending.
 
-/* and other speedup changes. */
+Note: Based on algorithms from sge library with modifications by A. Schiffler for
+multiple-hline draw removal and other minor speedup changes.
 
-int filledCircleColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 r, Uint32 color)
+\param dst The surface to draw on.
+\param x X coordinate of the center of the filled circle.
+\param y Y coordinate of the center of the filled circle.
+\param rad Radius in pixels of the filled circle.
+\param color The color value of the filled circle to draw (0xRRGGBBAA). 
+
+\returns Returns 0 on success, -1 on failure.
+*/
+int filledCircleColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Uint32 color)
 {
 	Sint16 left, right, top, bottom;
 	int result;
 	Sint16 x1, y1, x2, y2;
 	Sint16 cx = 0;
-	Sint16 cy = r;
+	Sint16 cy = rad;
 	Sint16 ocx = (Sint16) 0xffff;
 	Sint16 ocy = (Sint16) 0xffff;
-	Sint16 df = 1 - r;
+	Sint16 df = 1 - rad;
 	Sint16 d_e = 3;
-	Sint16 d_se = -2 * r + 5;
+	Sint16 d_se = -2 * rad + 5;
 	Sint16 xpcx, xmcx, xpcy, xmcy;
 	Sint16 ypcy, ymcy, ypcx, ymcx;
 
@@ -3085,14 +3174,14 @@ int filledCircleColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 r, Uint32 co
 	/*
 	* Sanity check radius 
 	*/
-	if (r < 0) {
+	if (rad < 0) {
 		return (-1);
 	}
 
 	/*
-	* Special case for r=0 - draw a point 
+	* Special case for rad=0 - draw a point 
 	*/
-	if (r == 0) {
+	if (rad == 0) {
 		return (pixelColor(dst, x, y, color));
 	}
 
@@ -3100,22 +3189,22 @@ int filledCircleColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 r, Uint32 co
 	* Get circle and clipping boundary and 
 	* test if bounding box of circle is visible 
 	*/
-	x2 = x + r;
+	x2 = x + rad;
 	left = dst->clip_rect.x;
 	if (x2<left) {
 		return(0);
 	} 
-	x1 = x - r;
+	x1 = x - rad;
 	right = dst->clip_rect.x + dst->clip_rect.w - 1;
 	if (x1>right) {
 		return(0);
 	} 
-	y2 = y + r;
+	y2 = y + rad;
 	top = dst->clip_rect.y;
 	if (y2<top) {
 		return(0);
 	} 
-	y1 = y - r;
+	y1 = y - rad;
 	bottom = dst->clip_rect.y + dst->clip_rect.h - 1;
 	if (y1>bottom) {
 		return(0);
@@ -3173,6 +3262,20 @@ int filledCircleColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 r, Uint32 co
 	return (result);
 }
 
+/*!
+\brief Draw filled circle with blending.
+
+\param dst The surface to draw on.
+\param x X coordinate of the center of the filled circle.
+\param y Y coordinate of the center of the filled circle.
+\param rad Radius in pixels of the filled circle.
+\param r The red value of the filled circle to draw. 
+\param g The green value of the filled circle to draw. 
+\param b The blue value of the filled circle to draw. 
+\param a The alpha value of the filled circle to draw.
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int filledCircleRGBA(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
 	/*
@@ -3182,12 +3285,23 @@ int filledCircleRGBA(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Uint8 r,
 		(dst, x, y, rad, ((Uint32) r << 24) | ((Uint32) g << 16) | ((Uint32) b << 8) | (Uint32) a));
 }
 
-
 /* ----- Ellipse */
 
-/* Note: Based on algorithm from sge library with multiple-hline draw removal */
-/* and other speedup changes. */
+/*!
+\brief Draw ellipse with blending.
 
+Note: Based on algorithms from sge library with modifications by A. Schiffler for
+multiple-pixel draw removal and other minor speedup changes.
+
+\param dst The surface to draw on.
+\param x X coordinate of the center of the ellipse.
+\param y Y coordinate of the center of the ellipse.
+\param rx Horizontal radius in pixels of the ellipse.
+\param ry Vertical radius in pixels of the ellipse.
+\param color The color value of the ellipse to draw (0xRRGGBBAA). 
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int ellipseColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rx, Sint16 ry, Uint32 color)
 {
 	Sint16 left, right, top, bottom;
@@ -3487,6 +3601,21 @@ int ellipseColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rx, Sint16 ry, Ui
 	return (result);
 }
 
+/*!
+\brief Draw ellipse with blending.
+
+\param dst The surface to draw on.
+\param x X coordinate of the center of the ellipse.
+\param y Y coordinate of the center of the ellipse.
+\param rx Horizontal radius in pixels of the ellipse.
+\param ry Vertical radius in pixels of the ellipse.
+\param r The red value of the ellipse to draw. 
+\param g The green value of the ellipse to draw. 
+\param b The blue value of the ellipse to draw. 
+\param a The alpha value of the ellipse to draw.
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int ellipseRGBA(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rx, Sint16 ry, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
 	/*
@@ -3523,15 +3652,28 @@ lrint (double flt)
 #endif
 #endif
 
-/* Based on code from Anders Lindstroem, based on code from SGE, based on code from TwinLib */
+/*!
+\brief Draw anti-aliased ellipse with blending.
 
-int aaellipseColor(SDL_Surface * dst, Sint16 xc, Sint16 yc, Sint16 rx, Sint16 ry, Uint32 color)
+Note: Based on code from Anders Lindstroem, which is based on code from sge library, 
+which is based on code from TwinLib.
+
+\param dst The surface to draw on.
+\param x X coordinate of the center of the aa-ellipse.
+\param y Y coordinate of the center of the aa-ellipse.
+\param rx Horizontal radius in pixels of the aa-ellipse.
+\param ry Vertical radius in pixels of the aa-ellipse.
+\param color The color value of the aa-ellipse to draw (0xRRGGBBAA). 
+
+\returns Returns 0 on success, -1 on failure.
+*/
+int aaellipseColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rx, Sint16 ry, Uint32 color)
 {
 	Sint16 left, right, top, bottom;
 	Sint16 x1,y1,x2,y2;
 	int i;
 	int a2, b2, ds, dt, dxt, t, s, d;
-	Sint16 x, y, xs, ys, dyt, od, xx, yy, xc2, yc2;
+	Sint16 xp, yp, xs, ys, dyt, od, xx, yy, xc2, yc2;
 	float cp;
 	double sab;
 	Uint8 weight, iweight;
@@ -3555,35 +3697,35 @@ int aaellipseColor(SDL_Surface * dst, Sint16 xc, Sint16 yc, Sint16 rx, Sint16 ry
 	* Special case for rx=0 - draw a vline 
 	*/
 	if (rx == 0) {
-		return (vlineColor(dst, xc, yc - ry, yc + ry, color));
+		return (vlineColor(dst, x, y - ry, y + ry, color));
 	}
 	/*
-	* Special case for ry=0 - draw a hline 
+	* Special case for ry=0 - draw an hline 
 	*/
 	if (ry == 0) {
-		return (hlineColor(dst, xc - rx, xc + rx, yc, color));
+		return (hlineColor(dst, x - rx, x + rx, y, color));
 	}
 
 	/*
 	* Get circle and clipping boundary and 
 	* test if bounding box of circle is visible 
 	*/
-	x2 = xc + rx;
+	x2 = x + rx;
 	left = dst->clip_rect.x;
 	if (x2<left) {
 		return(0);
 	} 
-	x1 = xc - rx;
+	x1 = x - rx;
 	right = dst->clip_rect.x + dst->clip_rect.w - 1;
 	if (x1>right) {
 		return(0);
 	} 
-	y2 = yc + ry;
+	y2 = y + ry;
 	top = dst->clip_rect.y;
 	if (y2<top) {
 		return(0);
 	} 
-	y1 = yc - ry;
+	y1 = y - ry;
 	bottom = dst->clip_rect.y + dst->clip_rect.h - 1;
 	if (y1>bottom) {
 		return(0);
@@ -3596,8 +3738,8 @@ int aaellipseColor(SDL_Surface * dst, Sint16 xc, Sint16 yc, Sint16 rx, Sint16 ry
 	ds = 2 * a2;
 	dt = 2 * b2;
 
-	xc2 = 2 * xc;
-	yc2 = 2 * yc;
+	xc2 = 2 * x;
+	yc2 = 2 * y;
 
 	sab = sqrt(a2 + b2);
 	od = (Sint16)lrint(sab*0.01) + 1; /* introduce some overdraw */
@@ -3607,11 +3749,8 @@ int aaellipseColor(SDL_Surface * dst, Sint16 xc, Sint16 yc, Sint16 rx, Sint16 ry
 	s = -2 * a2 * ry;
 	d = 0;
 
-	x = xc;
-	y = yc - ry;
-
-	/* Draw */
-	result = 0;
+	xp = x;
+	yp = y - ry;
 
 	/* Lock surface */
 	if (SDL_MUSTLOCK(dst)) {
@@ -3620,30 +3759,33 @@ int aaellipseColor(SDL_Surface * dst, Sint16 xc, Sint16 yc, Sint16 rx, Sint16 ry
 		}
 	}
 
+	/* Draw */
+	result = 0;
+
 	/* "End points" */
-	result |= pixelColorNolock(dst, x, y, color);
-	result |= pixelColorNolock(dst, xc2 - x, y, color);
-	result |= pixelColorNolock(dst, x, yc2 - y, color);
-	result |= pixelColorNolock(dst, xc2 - x, yc2 - y, color);
+	result |= pixelColorNolock(dst, xp, yp, color);
+	result |= pixelColorNolock(dst, xc2 - xp, yp, color);
+	result |= pixelColorNolock(dst, xp, yc2 - yp, color);
+	result |= pixelColorNolock(dst, xc2 - xp, yc2 - yp, color);
 
 	for (i = 1; i <= dxt; i++) {
-		x--;
+		xp--;
 		d += t - b2;
 
 		if (d >= 0)
-			ys = y - 1;
+			ys = yp - 1;
 		else if ((d - s - a2) > 0) {
 			if ((2 * d - s - a2) >= 0)
-				ys = y + 1;
+				ys = yp + 1;
 			else {
-				ys = y;
-				y++;
+				ys = yp;
+				yp++;
 				d -= s + a2;
 				s += ds;
 			}
 		} else {
-			y++;
-			ys = y + 1;
+			yp++;
+			ys = yp + 1;
 			d -= s + a2;
 			s += ds;
 		}
@@ -3665,44 +3807,44 @@ int aaellipseColor(SDL_Surface * dst, Sint16 xc, Sint16 yc, Sint16 rx, Sint16 ry
 		iweight = 255 - weight;
 
 		/* Upper half */
-		xx = xc2 - x;
-		result |= pixelColorWeightNolock(dst, x, y, color, iweight);
-		result |= pixelColorWeightNolock(dst, xx, y, color, iweight);
+		xx = xc2 - xp;
+		result |= pixelColorWeightNolock(dst, xp, yp, color, iweight);
+		result |= pixelColorWeightNolock(dst, xx, yp, color, iweight);
 
-		result |= pixelColorWeightNolock(dst, x, ys, color, weight);
+		result |= pixelColorWeightNolock(dst, xp, ys, color, weight);
 		result |= pixelColorWeightNolock(dst, xx, ys, color, weight);
 
 		/* Lower half */
-		yy = yc2 - y;
-		result |= pixelColorWeightNolock(dst, x, yy, color, iweight);
+		yy = yc2 - yp;
+		result |= pixelColorWeightNolock(dst, xp, yy, color, iweight);
 		result |= pixelColorWeightNolock(dst, xx, yy, color, iweight);
 
 		yy = yc2 - ys;
-		result |= pixelColorWeightNolock(dst, x, yy, color, weight);
+		result |= pixelColorWeightNolock(dst, xp, yy, color, weight);
 		result |= pixelColorWeightNolock(dst, xx, yy, color, weight);
 	}
 
-	/* Replaces original approximation code dyt = abs(y - yc); */
+	/* Replaces original approximation code dyt = abs(yp - yc); */
 	dyt = (Sint16)lrint((double)b2 / sab ) + od;    
 
 	for (i = 1; i <= dyt; i++) {
-		y++;
+		yp++;
 		d -= s + a2;
 
 		if (d <= 0)
-			xs = x + 1;
+			xs = xp + 1;
 		else if ((d + t - b2) < 0) {
 			if ((2 * d + t - b2) <= 0)
-				xs = x - 1;
+				xs = xp - 1;
 			else {
-				xs = x;
-				x--;
+				xs = xp;
+				xp--;
 				d += t - b2;
 				t -= dt;
 			}
 		} else {
-			x--;
-			xs = x - 1;
+			xp--;
+			xs = xp - 1;
 			d += t - b2;
 			t -= dt;
 		}
@@ -3724,18 +3866,18 @@ int aaellipseColor(SDL_Surface * dst, Sint16 xc, Sint16 yc, Sint16 rx, Sint16 ry
 		iweight = 255 - weight;
 
 		/* Left half */
-		xx = xc2 - x;
-		yy = yc2 - y;
-		result |= pixelColorWeightNolock(dst, x, y, color, iweight);
-		result |= pixelColorWeightNolock(dst, xx, y, color, iweight);
+		xx = xc2 - xp;
+		yy = yc2 - yp;
+		result |= pixelColorWeightNolock(dst, xp, yp, color, iweight);
+		result |= pixelColorWeightNolock(dst, xx, yp, color, iweight);
 
-		result |= pixelColorWeightNolock(dst, x, yy, color, iweight);
+		result |= pixelColorWeightNolock(dst, xp, yy, color, iweight);
 		result |= pixelColorWeightNolock(dst, xx, yy, color, iweight);
 
 		/* Right half */
-		xx = 2 * xc - xs;
-		result |= pixelColorWeightNolock(dst, xs, y, color, weight);
-		result |= pixelColorWeightNolock(dst, xx, y, color, weight);
+		xx = xc2 - xs;
+		result |= pixelColorWeightNolock(dst, xs, yp, color, weight);
+		result |= pixelColorWeightNolock(dst, xx, yp, color, weight);
 
 		result |= pixelColorWeightNolock(dst, xs, yy, color, weight);
 		result |= pixelColorWeightNolock(dst, xx, yy, color, weight);
@@ -3750,6 +3892,21 @@ int aaellipseColor(SDL_Surface * dst, Sint16 xc, Sint16 yc, Sint16 rx, Sint16 ry
 	return (result);
 }
 
+/*!
+\brief Draw anti-aliased ellipse with blending.
+
+\param dst The surface to draw on.
+\param x X coordinate of the center of the aa-ellipse.
+\param y Y coordinate of the center of the aa-ellipse.
+\param rx Horizontal radius in pixels of the aa-ellipse.
+\param ry Vertical radius in pixels of the aa-ellipse.
+\param r The red value of the aa-ellipse to draw. 
+\param g The green value of the aa-ellipse to draw. 
+\param b The blue value of the aa-ellipse to draw. 
+\param a The alpha value of the aa-ellipse to draw.
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int aaellipseRGBA(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rx, Sint16 ry, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
 	/*
