@@ -791,7 +791,7 @@ int filledRectAlpha(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y
 }
 
 /*!
-/brief Draw horizontal line of RGBA color with alpha blending.
+/brief Internal function to draw horizontal line of RGBA color with alpha blending.
 
 \param dst The surface to draw on.
 \param x1 X coordinate of the first point (i.e. left) of the line.
@@ -801,14 +801,14 @@ int filledRectAlpha(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y
 
 \returns Returns 0 on success, -1 on failure.
 */
-int HLineAlpha(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y, Uint32 color)
+int _HLineAlpha(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y, Uint32 color)
 {
 	return (filledRectAlpha(dst, x1, y, x2, y, color));
 }
 
 
 /*!
-/brief Draw vertical line of RGBA color with alpha blending.
+/brief Internal function to draw vertical line of RGBA color with alpha blending.
 
 \param dst The surface to draw on.
 \param x X coordinate of the points of the line.
@@ -818,7 +818,7 @@ int HLineAlpha(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y, Uint32 color)
 
 \returns Returns 0 on success, -1 on failure.
 */
-int VLineAlpha(SDL_Surface * dst, Sint16 x, Sint16 y1, Sint16 y2, Uint32 color)
+int _VLineAlpha(SDL_Surface * dst, Sint16 x, Sint16 y1, Sint16 y2, Uint32 color)
 {
 	return (filledRectAlpha(dst, x, y1, x, y2, color));
 }
@@ -1246,7 +1246,7 @@ int hlineColor(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y, Uint32 color)
 		/*
 		* Alpha blending blit 
 		*/
-		result = HLineAlpha(dst, x1, x1 + w, y, color);
+		result = _HLineAlpha(dst, x1, x1 + w, y, color);
 	}
 
 	return (result);
@@ -1432,7 +1432,7 @@ int vlineColor(SDL_Surface * dst, Sint16 x, Sint16 y1, Sint16 y2, Uint32 color)
 		* Alpha blending blit 
 		*/
 
-		result = VLineAlpha(dst, x, y1, y1 + h, color);
+		result = _VLineAlpha(dst, x, y1, y1 + h, color);
 
 	}
 
@@ -3922,6 +3922,21 @@ int aaellipseRGBA(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rx, Sint16 ry, U
 /* Based on algorithm from sge library with multiple-hline draw removal */
 /* and other speedup changes. */
 
+/*!
+\brief Draw filled ellipse with blending.
+
+Note: Based on algorithm from sge library with multiple-hline draw removal
+and other speedup changes.
+
+\param dst The surface to draw on.
+\param x X coordinate of the center of the filled ellipse.
+\param y Y coordinate of the center of the filled ellipse.
+\param rx Horizontal radius in pixels of the filled ellipse.
+\param ry Vertical radius in pixels of the filled ellipse.
+\param color The color value of the filled ellipse to draw (0xRRGGBBAA). 
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int filledEllipseColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rx, Sint16 ry, Uint32 color)
 {
 	Sint16 left, right, top, bottom;
@@ -4075,7 +4090,21 @@ int filledEllipseColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rx, Sint16 
 	return (result);
 }
 
+/*!
+\brief Draw filled ellipse with blending.
 
+\param dst The surface to draw on.
+\param x X coordinate of the center of the filled ellipse.
+\param y Y coordinate of the center of the filled ellipse.
+\param rx Horizontal radius in pixels of the filled ellipse.
+\param ry Vertical radius in pixels of the filled ellipse.
+\param r The red value of the filled ellipse to draw. 
+\param g The green value of the filled ellipse to draw. 
+\param b The blue value of the filled ellipse to draw. 
+\param a The alpha value of the filled ellipse to draw.
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int filledEllipseRGBA(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rx, Sint16 ry, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
 	/*
@@ -4085,11 +4114,25 @@ int filledEllipseRGBA(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rx, Sint16 r
 		(dst, x, y, rx, ry, ((Uint32) r << 24) | ((Uint32) g << 16) | ((Uint32) b << 8) | (Uint32) a));
 }
 
-/* ----- filled pie */
+/* ----- pie */
 
-/* Low-speed float pie-calc implementation by drawing polygons/lines. */
+/*!
+\brief Internal float (low-speed) pie-calc implementation by drawing polygons.
 
-int doPieColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Sint16 start, Sint16 end, Uint32 color, Uint8 filled)
+Note: Determines vertex array and uses polygon or filledPolygon drawing routines to render.
+
+\param dst The surface to draw on.
+\param x X coordinate of the center of the pie.
+\param y Y coordinate of the center of the pie.
+\param rad Radius in pixels of the pie.
+\param start Starting radius in degrees of the pie.
+\param end Ending radius in degrees of the pie.
+\param color The color value of the pie to draw (0xRRGGBBAA). 
+\param filled Flag indicating if the pie should be filled (=1) or not (=0).
+
+\returns Returns 0 on success, -1 on failure.
+*/
+int _pieColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Sint16 start, Sint16 end, Uint32 color, Uint8 filled)
 {
 	Sint16 left, right, top, bottom;
 	Sint16 x1, y1, x2, y2;
@@ -4165,7 +4208,7 @@ int doPieColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Sint16 start, 
 		end_angle += (2.0 * M_PI);
 	}
 
-	/* Count points (rather than calculate it) */
+	/* Count points (rather than calculating it) */
 	numpoints = 1;
 	angle = start_angle;
 	while (angle <= end_angle) {
@@ -4182,7 +4225,7 @@ int doPieColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Sint16 start, 
 		return (lineColor(dst, x, y, posX, posY, color));
 	}
 
-	/* Allocate vertex array */
+	/* Allocate combined vertex array */
 	vx = vy = (Sint16 *) malloc(2 * sizeof(Uint16) * numpoints);
 	if (vx == NULL) {
 		return (-1);
@@ -4210,41 +4253,115 @@ int doPieColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Sint16 start, 
 		result = polygonColor(dst, vx, vy, numpoints, color);
 	}
 
-	/* Free vertex array */
+	/* Free combined vertex array */
 	free(vx);
 
 	return (result);
 }
 
+/*!
+\brief Draw pie (outline) with alpha blending.
+
+\param dst The surface to draw on.
+\param x X coordinate of the center of the pie.
+\param y Y coordinate of the center of the pie.
+\param rad Radius in pixels of the pie.
+\param start Starting radius in degrees of the pie.
+\param end Ending radius in degrees of the pie.
+\param color The color value of the pie to draw (0xRRGGBBAA). 
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int pieColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, 
 			 Sint16 start, Sint16 end, Uint32 color) 
 {
-	return (doPieColor(dst, x, y, rad, start, end, color, 0));
+	return (_pieColor(dst, x, y, rad, start, end, color, 0));
 
 }
 
+/*!
+\brief Draw pie (outline) with alpha blending.
+
+\param dst The surface to draw on.
+\param x X coordinate of the center of the pie.
+\param y Y coordinate of the center of the pie.
+\param rad Radius in pixels of the pie.
+\param start Starting radius in degrees of the pie.
+\param end Ending radius in degrees of the pie.
+\param r The red value of the pie to draw. 
+\param g The green value of the pie to draw. 
+\param b The blue value of the pie to draw. 
+\param a The alpha value of the pie to draw.
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int pieRGBA(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad,
 			Sint16 start, Sint16 end, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
-	return (doPieColor(dst, x, y, rad, start, end,
+	return (_pieColor(dst, x, y, rad, start, end,
 		((Uint32) r << 24) | ((Uint32) g << 16) | ((Uint32) b << 8) | (Uint32) a, 0));
 
 }
 
+/*!
+\brief Draw filled pie with alpha blending.
+
+\param dst The surface to draw on.
+\param x X coordinate of the center of the filled pie.
+\param y Y coordinate of the center of the filled pie.
+\param rad Radius in pixels of the filled pie.
+\param start Starting radius in degrees of the filled pie.
+\param end Ending radius in degrees of the filled pie.
+\param color The color value of the filled pie to draw (0xRRGGBBAA). 
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int filledPieColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Sint16 start, Sint16 end, Uint32 color)
 {
-	return (doPieColor(dst, x, y, rad, start, end, color, 1));
+	return (_pieColor(dst, x, y, rad, start, end, color, 1));
 }
 
+/*!
+\brief Draw filled pie with alpha blending.
+
+\param dst The surface to draw on.
+\param x X coordinate of the center of the filled pie.
+\param y Y coordinate of the center of the filled pie.
+\param rad Radius in pixels of the filled pie.
+\param start Starting radius in degrees of the filled pie.
+\param end Ending radius in degrees of the filled pie.
+\param r The red value of the filled pie to draw. 
+\param g The green value of the filled pie to draw. 
+\param b The blue value of the filled pie to draw. 
+\param a The alpha value of the filled pie to draw.
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int filledPieRGBA(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad,
 				  Sint16 start, Sint16 end, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
-	return (doPieColor(dst, x, y, rad, start, end,
+	return (_pieColor(dst, x, y, rad, start, end,
 		((Uint32) r << 24) | ((Uint32) g << 16) | ((Uint32) b << 8) | (Uint32) a, 1));
 }
 
-/* Trigon */
+/* ------ Trigon */
 
+/*!
+\brief Draw trigon (triangle outline) with alpha blending.
+
+Note: Creates vertex array and uses polygon routine to render.
+
+\param dst The surface to draw on.
+\param x1 X coordinate of the first point of the trigon.
+\param y1 Y coordinate of the first point of the trigon.
+\param x2 X coordinate of the second point of the trigon.
+\param y2 Y coordinate of the second point of the trigon.
+\param x3 X coordinate of the third point of the trigon.
+\param y3 Y coordinate of the third point of the trigon.
+\param color The color value of the trigon to draw (0xRRGGBBAA). 
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int trigonColor(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Sint16 x3, Sint16 y3, Uint32 color)
 {
 	Sint16 vx[3]; 
@@ -4260,6 +4377,23 @@ int trigonColor(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, S
 	return(polygonColor(dst,vx,vy,3,color));
 }
 
+/*!
+\brief Draw trigon (triangle outline) with alpha blending.
+
+\param dst The surface to draw on.
+\param x1 X coordinate of the first point of the trigon.
+\param y1 Y coordinate of the first point of the trigon.
+\param x2 X coordinate of the second point of the trigon.
+\param y2 Y coordinate of the second point of the trigon.
+\param x3 X coordinate of the third point of the trigon.
+\param y3 Y coordinate of the third point of the trigon.
+\param r The red value of the trigon to draw. 
+\param g The green value of the trigon to draw. 
+\param b The blue value of the trigon to draw. 
+\param a The alpha value of the trigon to draw.
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int trigonRGBA(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Sint16 x3, Sint16 y3,
 			   Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
@@ -4276,8 +4410,24 @@ int trigonRGBA(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Si
 	return(polygonRGBA(dst,vx,vy,3,r,g,b,a));
 }				 
 
-/* AA-Trigon */
+/* ------ AA-Trigon */
 
+/*!
+\brief Draw anti-aliased trigon (triangle outline) with alpha blending.
+
+Note: Creates vertex array and uses aapolygon routine to render.
+
+\param dst The surface to draw on.
+\param x1 X coordinate of the first point of the aa-trigon.
+\param y1 Y coordinate of the first point of the aa-trigon.
+\param x2 X coordinate of the second point of the aa-trigon.
+\param y2 Y coordinate of the second point of the aa-trigon.
+\param x3 X coordinate of the third point of the aa-trigon.
+\param y3 Y coordinate of the third point of the aa-trigon.
+\param color The color value of the aa-trigon to draw (0xRRGGBBAA). 
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int aatrigonColor(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Sint16 x3, Sint16 y3, Uint32 color)
 {
 	Sint16 vx[3]; 
@@ -4293,6 +4443,23 @@ int aatrigonColor(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2,
 	return(aapolygonColor(dst,vx,vy,3,color));
 }
 
+/*!
+\brief Draw anti-aliased trigon (triangle outline) with alpha blending.
+
+\param dst The surface to draw on.
+\param x1 X coordinate of the first point of the aa-trigon.
+\param y1 Y coordinate of the first point of the aa-trigon.
+\param x2 X coordinate of the second point of the aa-trigon.
+\param y2 Y coordinate of the second point of the aa-trigon.
+\param x3 X coordinate of the third point of the aa-trigon.
+\param y3 Y coordinate of the third point of the aa-trigon.
+\param r The red value of the aa-trigon to draw. 
+\param g The green value of the aa-trigon to draw. 
+\param b The blue value of the aa-trigon to draw. 
+\param a The alpha value of the aa-trigon to draw.
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int aatrigonRGBA(SDL_Surface * dst,  Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Sint16 x3, Sint16 y3,
 				 Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
@@ -4309,8 +4476,24 @@ int aatrigonRGBA(SDL_Surface * dst,  Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2,
 	return(aapolygonRGBA(dst,vx,vy,3,r,g,b,a));
 }				   
 
-/* Filled Trigon */
+/* ------ Filled Trigon */
 
+/*!
+\brief Draw filled trigon (triangle) with alpha blending.
+
+Note: Creates vertex array and uses aapolygon routine to render.
+
+\param dst The surface to draw on.
+\param x1 X coordinate of the first point of the filled trigon.
+\param y1 Y coordinate of the first point of the filled trigon.
+\param x2 X coordinate of the second point of the filled trigon.
+\param y2 Y coordinate of the second point of the filled trigon.
+\param x3 X coordinate of the third point of the filled trigon.
+\param y3 Y coordinate of the third point of the filled trigon.
+\param color The color value of the filled trigon to draw (0xRRGGBBAA). 
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int filledTrigonColor(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Sint16 x3, Sint16 y3, Uint32 color)
 {
 	Sint16 vx[3]; 
@@ -4326,6 +4509,25 @@ int filledTrigonColor(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16
 	return(filledPolygonColor(dst,vx,vy,3,color));
 }
 
+/*!
+\brief Draw filled trigon (triangle) with alpha blending.
+
+Note: Creates vertex array and uses aapolygon routine to render.
+
+\param dst The surface to draw on.
+\param x1 X coordinate of the first point of the filled trigon.
+\param y1 Y coordinate of the first point of the filled trigon.
+\param x2 X coordinate of the second point of the filled trigon.
+\param y2 Y coordinate of the second point of the filled trigon.
+\param x3 X coordinate of the third point of the filled trigon.
+\param y3 Y coordinate of the third point of the filled trigon.
+\param r The red value of the filled trigon to draw. 
+\param g The green value of the filled trigon to draw. 
+\param b The blue value of the filled trigon to draw. 
+\param a The alpha value of the filled trigon to draw.
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int filledTrigonRGBA(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Sint16 x3, Sint16 y3,
 					 Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
@@ -4344,6 +4546,17 @@ int filledTrigonRGBA(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 
 
 /* ---- Polygon */
 
+/*!
+\brief Draw polygon with alpha blending.
+
+\param dst The surface to draw on.
+\param vx Vertex array containing X coordinates of the points of the polygon.
+\param vy Vertex array containing Y coordinates of the points of the polygon.
+\param n Number of points in the vertex array. Minimum number is 3.
+\param color The color value of the polygon to draw (0xRRGGBBAA). 
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int polygonColor(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, int n, Uint32 color)
 {
 	int result;
@@ -4355,6 +4568,16 @@ int polygonColor(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, int n,
 	*/
 	if ((dst->clip_rect.w==0) || (dst->clip_rect.h==0)) {
 		return(0);
+	}
+
+	/*
+	* Vertex array NULL check 
+	*/
+	if (vx == NULL) {
+		return (-1);
+	}
+	if (vy == NULL) {
+		return (-1);
 	}
 
 	/*
@@ -4388,6 +4611,20 @@ int polygonColor(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, int n,
 	return (result);
 }
 
+/*!
+\brief Draw polygon with alpha blending.
+
+\param dst The surface to draw on.
+\param vx Vertex array containing X coordinates of the points of the polygon.
+\param vy Vertex array containing Y coordinates of the points of the polygon.
+\param n Number of points in the vertex array. Minimum number is 3.
+\param r The red value of the polygon to draw. 
+\param g The green value of the polygon to draw. 
+\param b The blue value of the polygon to draw. 
+\param a The alpha value of the polygon to draw.
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int polygonRGBA(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, int n, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
 	/*
@@ -4398,6 +4635,17 @@ int polygonRGBA(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, int n, 
 
 /* ---- AA-Polygon */
 
+/*!
+\brief Draw anti-aliased polygon with alpha blending.
+
+\param dst The surface to draw on.
+\param vx Vertex array containing X coordinates of the points of the aa-polygon.
+\param vy Vertex array containing Y coordinates of the points of the aa-polygon.
+\param n Number of points in the vertex array. Minimum number is 3.
+\param color The color value of the aa-polygon to draw (0xRRGGBBAA). 
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int aapolygonColor(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, int n, Uint32 color)
 {
 	int result;
@@ -4409,6 +4657,16 @@ int aapolygonColor(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, int 
 	*/
 	if ((dst->clip_rect.w==0) || (dst->clip_rect.h==0)) {
 		return(0);
+	}
+
+	/*
+	* Vertex array NULL check 
+	*/
+	if (vx == NULL) {
+		return (-1);
+	}
+	if (vy == NULL) {
+		return (-1);
 	}
 
 	/*
@@ -4442,6 +4700,20 @@ int aapolygonColor(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, int 
 	return (result);
 }
 
+/*!
+\brief Draw anti-aliased polygon with alpha blending.
+
+\param dst The surface to draw on.
+\param vx Vertex array containing X coordinates of the points of the aa-polygon.
+\param vy Vertex array containing Y coordinates of the points of the aa-polygon.
+\param n Number of points in the vertex array. Minimum number is 3.
+\param r The red value of the aa-polygon to draw. 
+\param g The green value of the aa-polygon to draw. 
+\param b The blue value of the aa-polygon to draw. 
+\param a The alpha value of the aa-polygon to draw.
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int aapolygonRGBA(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, int n, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
 	/*
@@ -4452,14 +4724,48 @@ int aapolygonRGBA(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, int n
 
 /* ---- Filled Polygon */
 
-int gfxPrimitivesCompareInt(const void *a, const void *b);
+/*!
+\brief Internal helper qsort callback functions used in filled polygon drawing.
 
-/* Global vertex array to use if optional parameters are not given in polygon calls. */
+\param a The surface to draw on.
+\param b Vertex array containing X coordinates of the points of the polygon.
+
+\returns Returns 0 if a==b, a negative number if a<b or a positive number if a>b.
+*/
+int _gfxPrimitivesCompareInt(const void *a, const void *b)
+{
+	return (*(const int *) a) - (*(const int *) b);
+}
+
+/*!
+\brief Global vertex array to use if optional parameters are not given in filledPolygonMT calls.
+
+Note: Used for non-multithreaded (default) operation of filledPolygonMT.
+*/
 static int *gfxPrimitivesPolyIntsGlobal = NULL;
+
+/*!
+\brief Flag indicating if global vertex array was already allocated.
+
+Note: Used for non-multithreaded (default) operation of filledPolygonMT.
+*/
 static int gfxPrimitivesPolyAllocatedGlobal = 0;
 
-/* (Note: The last two parameters are optional; but required for multithreaded operation.) */  
+/*!
+\brief Draw filled polygon with alpha blending (multi-threaded capable).
 
+Note: The last two parameters are optional; but are required for multithreaded operation.  
+
+\param dst The surface to draw on.
+\param vx Vertex array containing X coordinates of the points of the filled polygon.
+\param vy Vertex array containing Y coordinates of the points of the filled polygon.
+\param n Number of points in the vertex array. Minimum number is 3.
+\param color The color value of the filled polygon to draw (0xRRGGBBAA). 
+\param polyInts Preallocated, temporary vertex array used for sorting vertices. Required for multithreaded operation; set to NULL otherwise.
+\param polyAllocated Flag indicating if temporary vertex array was allocated. Required for multithreaded operation; set to NULL otherwise.
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int filledPolygonColorMT(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, int n, Uint32 color, int **polyInts, int *polyAllocated)
 {
 	int result;
@@ -4478,6 +4784,16 @@ int filledPolygonColorMT(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy
 	*/
 	if ((dst->clip_rect.w==0) || (dst->clip_rect.h==0)) {
 		return(0);
+	}
+
+	/*
+	* Vertex array NULL check 
+	*/
+	if (vx == NULL) {
+		return (-1);
+	}
+	if (vy == NULL) {
+		return (-1);
 	}
 
 	/*
@@ -4583,7 +4899,7 @@ int filledPolygonColorMT(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy
 			} 	    
 		}
 
-		qsort(gfxPrimitivesPolyInts, ints, sizeof(int), gfxPrimitivesCompareInt);
+		qsort(gfxPrimitivesPolyInts, ints, sizeof(int), _gfxPrimitivesCompareInt);
 
 		for (i = 0; (i < ints); i += 2) {
 			xa = gfxPrimitivesPolyInts[i] + 1;
@@ -4597,6 +4913,24 @@ int filledPolygonColorMT(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy
 	return (result);
 }
 
+/*!
+\brief Draw filled polygon with alpha blending (multi-threaded capable).
+
+Note: The last two parameters are optional; but are required for multithreaded operation.  
+
+\param dst The surface to draw on.
+\param vx Vertex array containing X coordinates of the points of the filled polygon.
+\param vy Vertex array containing Y coordinates of the points of the filled polygon.
+\param n Number of points in the vertex array. Minimum number is 3.
+\param r The red value of the filled polygon to draw. 
+\param g The green value of the filled polygon to draw. 
+\param b The blue value of the filed polygon to draw. 
+\param a The alpha value of the filled polygon to draw.
+\param polyInts Preallocated, temporary vertex array used for sorting vertices. Required for multithreaded operation; set to NULL otherwise.
+\param polyAllocated Flag indicating if temporary vertex array was allocated. Required for multithreaded operation; set to NULL otherwise.
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int filledPolygonRGBAMT(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, int n, Uint8 r, Uint8 g, Uint8 b, Uint8 a, int **polyInts, int *polyAllocated)
 {
 	/*
@@ -4605,8 +4939,20 @@ int filledPolygonRGBAMT(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy,
 	return (filledPolygonColorMT(dst, vx, vy, n, ((Uint32) r << 24) | ((Uint32) g << 16) | ((Uint32) b << 8) | (Uint32) a, polyInts, polyAllocated));
 }
 
-/* Standard versions are calling multithreaded versions with NULL cache parameters */
+/*!
+\brief Draw filled polygon with alpha blending.
 
+Note: Standard filledPolygon function is calling multithreaded version with NULL parameters
+to use the global vertex cache.
+
+\param dst The surface to draw on.
+\param vx Vertex array containing X coordinates of the points of the filled polygon.
+\param vy Vertex array containing Y coordinates of the points of the filled polygon.
+\param n Number of points in the vertex array. Minimum number is 3.
+\param color The color value of the filled polygon to draw (0xRRGGBBAA). 
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int filledPolygonColor(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, int n, Uint32 color)
 {
 	/*
@@ -4615,6 +4961,20 @@ int filledPolygonColor(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, 
 	return (filledPolygonColorMT(dst, vx, vy, n, color, NULL, NULL));
 }
 
+/*!
+\brief Draw filled polygon with alpha blending.
+
+\param dst The surface to draw on.
+\param vx Vertex array containing X coordinates of the points of the filled polygon.
+\param vy Vertex array containing Y coordinates of the points of the filled polygon.
+\param n Number of points in the vertex array. Minimum number is 3.
+\param r The red value of the filled polygon to draw. 
+\param g The green value of the filled polygon to draw. 
+\param b The blue value of the filed polygon to draw. 
+\param a The alpha value of the filled polygon to draw.
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int filledPolygonRGBA(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, int n, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
 	/*
@@ -4623,7 +4983,20 @@ int filledPolygonRGBA(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, i
 	return (filledPolygonColorMT(dst, vx, vy, n, ((Uint32) r << 24) | ((Uint32) g << 16) | ((Uint32) b << 8) | (Uint32) a, NULL, NULL));
 }
 
-int _texturedHLine(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y,SDL_Surface *texture,int texture_dx,int texture_dy)
+/*!
+\brief Internal function to draw a textured horizontal line.
+
+\param dst The surface to draw on.
+\param x1 X coordinate of the first point (i.e. left) of the line.
+\param x2 X coordinate of the second point (i.e. right) of the line.
+\param y Y coordinate of the points of the line.
+\param texture The texture surface to retrieve color information from.
+\param texture_dx The X offset for the texture lookup.
+\param texture_dy The Y offset for the textured lookup.
+
+\returns Returns 0 on success, -1 on failure.
+*/
+int _HLineTextured(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y, SDL_Surface *texture, int texture_dx, int texture_dy)
 {
 	Sint16 left, right, top, bottom;
 	Sint16 w;
@@ -4668,7 +5041,6 @@ int _texturedHLine(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y,SDL_Surface
 		return (0);
 	}
 
-
 	/*
 	* Clip x 
 	*/
@@ -4680,16 +5052,16 @@ int _texturedHLine(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y,SDL_Surface
 	}
 
 	/*
-	* Calculate width 
-	*/
+	 * Calculate width to draw
+	 */
 	w = x2 - x1;
 
 	/*
-	* Determint where in the texture we start drawing
-	**/
+	 * Determine where in the texture we start drawing
+	 */
 	texture_x_walker =   (x1 - texture_dx)  % texture->w;
 	if (texture_x_walker < 0){
-		texture_x_walker = texture->w +texture_x_walker ;
+		texture_x_walker = texture->w + texture_x_walker ;
 	}
 
 	texture_y_start = (y + texture_dy) % texture->h;
@@ -4697,42 +5069,44 @@ int _texturedHLine(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y,SDL_Surface
 		texture_y_start = texture->h + texture_y_start;
 	}
 
-	//setup the source rectangle  we are only drawing one horizontal line
+	// setup the source rectangle; we are only drawing one horizontal line
 	source_rect.y = texture_y_start;
-	source_rect.x =texture_x_walker;
-	source_rect.h =1;
-	//we will draw to the current y
+	source_rect.x = texture_x_walker;
+	source_rect.h = 1;
+
+	// we will draw to the current y
 	dst_rect.y = y;
 
-	//if there are enough pixels left in the current row of the texture
-	//draw it all at once
+	// if there are enough pixels left in the current row of the texture
+	// draw it all at once
 	if (w <= texture->w -texture_x_walker){
 		source_rect.w = w;
 		source_rect.x = texture_x_walker;
 		dst_rect.x= x1;
-		result = (SDL_BlitSurface  (texture,&source_rect , dst, &dst_rect) == 0);
-	} else {//we need to draw multiple times
-		//draw the first segment
-		pixels_written = texture->w  -texture_x_walker;
+		result = (SDL_BlitSurface  (texture, &source_rect , dst, &dst_rect) == 0);
+	} else { // we need to draw multiple times
+		// draw the first segment
+		pixels_written = texture->w  - texture_x_walker;
 		source_rect.w = pixels_written;
 		source_rect.x = texture_x_walker;
 		dst_rect.x= x1;
-		result = (SDL_BlitSurface (texture,&source_rect , dst, &dst_rect) == 0);
+		result |= (SDL_BlitSurface (texture, &source_rect , dst, &dst_rect) == 0);
 		write_width = texture->w;
 
-		//now draw the rest
-		//set the source x to 0
+		// now draw the rest
+		// set the source x to 0
 		source_rect.x = 0;
-		while(pixels_written < w){
-			if (write_width >= w - pixels_written){
-				write_width=  w- pixels_written;
+		while (pixels_written < w){
+			if (write_width >= w - pixels_written) {
+				write_width =  w - pixels_written;
 			}
 			source_rect.w = write_width;
 			dst_rect.x = x1 + pixels_written;
-			result  = (SDL_BlitSurface  (texture,&source_rect , dst, &dst_rect) == 0);
+			result  |= (SDL_BlitSurface  (texture,&source_rect , dst, &dst_rect) == 0);
 			pixels_written += write_width;
 		}
 	}
+
 	return result;
 }
 
@@ -4887,17 +5261,16 @@ int texturedPolygonMT(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, i
 			if ( ((y >= y1) && (y < y2)) || ((y == maxy) && (y > y1) && (y <= y2)) ) {
 				gfxPrimitivesPolyInts[ints++] = ((65536 * (y - y1)) / (y2 - y1)) * (x2 - x1) + (65536 * x1);
 			} 
-
 		}
 
-		qsort(gfxPrimitivesPolyInts, ints, sizeof(int), gfxPrimitivesCompareInt);
+		qsort(gfxPrimitivesPolyInts, ints, sizeof(int), _gfxPrimitivesCompareInt);
 
 		for (i = 0; (i < ints); i += 2) {
 			xa = gfxPrimitivesPolyInts[i] + 1;
 			xa = (xa >> 16) + ((xa & 32768) >> 15);
 			xb = gfxPrimitivesPolyInts[i+1] - 1;
 			xb = (xb >> 16) + ((xb & 32768) >> 15);
-			result |= _texturedHLine(dst, xa, xb, y, texture,texture_dx,texture_dy);
+			result |= _HLineTextured(dst, xa, xb, y, texture, texture_dx, texture_dy);
 		}
 	}
 
@@ -4914,12 +5287,7 @@ int texturedPolygon(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, int
 	return (texturedPolygonMT(dst, vx, vy, n, texture, texture_dx, texture_dy, NULL, NULL));
 }
 
-/* Helper qsort callback for polygon drawing */
 
-int gfxPrimitivesCompareInt(const void *a, const void *b)
-{
-	return (*(const int *) a) - (*(const int *) b);
-}
 
 
 
