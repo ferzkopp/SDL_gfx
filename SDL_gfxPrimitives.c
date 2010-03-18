@@ -5110,24 +5110,31 @@ int _HLineTextured(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y, SDL_Surfac
 	return result;
 }
 
-/**
-* Draws a polygon filled with the given texture. this operation use SDL_BlitSurface. It supports
-* alpha drawing.
-* to get the best performance of this operation you need to make sure the texture and the dst surface have the same format
-* see  http://docs.mandragor.org/files/Common_libs_documentation/SDL/SDL_Documentation_project_en/sdlblitsurface.html
-*
-* dest the destination surface, 
-* vx array of x vector components
-* vy array of x vector components
-* n the amount of vectors in the vx and vy array
-* texture the sdl surface to use to fill the polygon
-* texture_dx the offset of the texture relative to the screeen. if you move the polygon 10 pixels 
-* to the left and want the texture to apear the same you need to increase the texture_dx value
-* texture_dy see texture_dx
-*
-* (Note: The last two parameters are optional, but required for multithreaded operation.)
-**/
-int texturedPolygonMT(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, int n, SDL_Surface * texture,int texture_dx,int texture_dy, int **polyInts, int *polyAllocated)
+/*!
+\brief Draws a polygon filled with the given texture (Multi-Threading Capable). 
+
+This operation use internally SDL_BlitSurface for lines of the source texture. It supports
+alpha drawing.
+
+To get the best performance of this operation you need to make sure the texture and the dst surface have the same format
+(see  http://docs.mandragor.org/files/Common_libs_documentation/SDL/SDL_Documentation_project_en/sdlblitsurface.html).
+The last two parameters are optional, but required for multithreaded operation. When set to NULL, uses global static temp array.
+
+\param dst the destination surface, 
+\param vx array of x vector components
+\param vy array of x vector components
+\param n the amount of vectors in the vx and vy array
+\param texture the sdl surface to use to fill the polygon
+\param texture_dx the offset of the texture relative to the screeen. if you move the polygon 10 pixels 
+       to the left and want the texture to apear the same you need to increase the texture_dx value
+\param texture_dy see texture_dx
+\param polyInts preallocated temp array storage for vertex sorting (used for multi-threaded operation)
+\param polyAllocated flag indicating oif the temp array was allocated (used for multi-threaded operation)
+
+\returns Returns 0 on success, -1 on failure.
+*/
+int texturedPolygonMT(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, int n, 
+					  SDL_Surface * texture, int texture_dx, int texture_dy, int **polyInts, int *polyAllocated)
 {
 	int result;
 	int i;
@@ -5277,8 +5284,22 @@ int texturedPolygonMT(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, i
 	return (result);
 }
 
-/* Standard version is calling multithreaded versions with NULL cache parameters. */
+/*!
+\brief Draws a polygon filled with the given texture. 
 
+This standard version is calling multithreaded versions with NULL cache parameters.
+
+\param dst the destination surface, 
+\param vx array of x vector components
+\param vy array of x vector components
+\param n the amount of vectors in the vx and vy array
+\param texture the sdl surface to use to fill the polygon
+\param texture_dx the offset of the texture relative to the screeen. if you move the polygon 10 pixels 
+       to the left and want the texture to apear the same you need to increase the texture_dx value
+\param texture_dy see texture_dx
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int texturedPolygon(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, int n, SDL_Surface *texture, int texture_dx, int texture_dy)
 {
 	/*
@@ -5288,21 +5309,56 @@ int texturedPolygon(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, int
 }
 
 
-
-
-
 /* ---- Character */
 
+/*!
+\brief Global cache for NxM pixel font surfaces created at runtime.
+*/
 static SDL_Surface *gfxPrimitivesFont[256];
+
+/*!
+\brief Global cache of the color used for the font surfaces created at runtime.
+*/
 static Uint32 gfxPrimitivesFontColor[256];
 
-/* Default is to use 8x8 internal font */
+/*!
+\brief Pointer to the current font data. Default is a 8x8 pixel internal font. 
+*/
 static const unsigned char *currentFontdata = gfxPrimitivesFontdata;
 
-static int charWidth = 8, charHeight = 8;
-static int charPitch = 1;
-static int charSize = 8;	/* character data size in bytes */
+/*!
+\brief Width of the current font. Default is 8. 
+*/
+static int charWidth = 8;
 
+/*!
+\brief Height of the current font. Default is 8. 
+*/
+static int charHeight = 8;
+
+/*!
+\brief Pitch of the current font in bytes. Default is 1. 
+*/
+static int charPitch = 1;
+
+/*!
+\brief Character data size in bytes of the current font. Default is 8. 
+*/
+static int charSize = 8;
+
+/*!
+\brief Sets or resets the current global font data.
+
+The font data array is organized in follows: 
+[fontdata] = [character 0][character 1]...[character 255] where
+[character n] = [byte 1 row 1][byte 2 row 1]...[byte {pitch} row 1][byte 1 row 2] ...[byte {pitch} row height] where
+[byte n] = [bit 0]...[bit 7] where 
+[bit n] = [0 for transparent pixel|1 for colored pixel]
+
+\param fontdata Pointer to array of font data. Set to NULL, to reset global font to the default 8x8 font.
+\param cw Width of character in bytes. Ignored if fontdata==NULL.
+\param ch Height of character in bytes. Ignored if fontdata==NULL.
+*/
 void gfxPrimitivesSetFont(const void *fontdata, int cw, int ch)
 {
 	int i;
@@ -5328,6 +5384,21 @@ void gfxPrimitivesSetFont(const void *fontdata, int cw, int ch)
 	}
 }
 
+/*!
+\brief Draw a character of the currently set font.
+
+On first call for a particular character and color combination, the function needs to
+generate the character surface (slower. Subsequent calls blit a cached surface (fast). 
+Uses alpha blending if A<255 in color.
+
+\param dst The surface to draw on.
+\param x X (horizontal) coordinate of the upper left corner of the character.
+\param y Y (vertical) coordinate of the upper left corner of the character.
+]param c The character to draw.
+\param color The color value of the character to draw (0xRRGGBBAA). 
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int characterColor(SDL_Surface * dst, Sint16 x, Sint16 y, char c, Uint32 color)
 {
 	Sint16 left, right, top, bottom;
@@ -5469,6 +5540,20 @@ int characterColor(SDL_Surface * dst, Sint16 x, Sint16 y, char c, Uint32 color)
 	return (result);
 }
 
+/*!
+\brief Draw a character of the currently set font.
+
+\param dst The surface to draw on.
+\param x X (horizontal) coordinate of the upper left corner of the character.
+\param y Y (vertical) coordinate of the upper left corner of the character.
+]param c The character to draw.
+\param r The red value of the character to draw. 
+\param g The green value of the character to draw. 
+\param b The blue value of the character to draw. 
+\param a The alpha value of the character to draw.
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int characterRGBA(SDL_Surface * dst, Sint16 x, Sint16 y, char c, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
 	/*
@@ -5477,13 +5562,27 @@ int characterRGBA(SDL_Surface * dst, Sint16 x, Sint16 y, char c, Uint8 r, Uint8 
 	return (characterColor(dst, x, y, c, ((Uint32) r << 24) | ((Uint32) g << 16) | ((Uint32) b << 8) | (Uint32) a));
 }
 
-int stringColor(SDL_Surface * dst, Sint16 x, Sint16 y, const char *c, Uint32 color)
+/*!
+\brief Draw a string in the currently set font.
+
+The spacing between consequtive characters in the string is the fixed number of pixels 
+of the character width of the current global font.
+
+\param dst The surface to draw on.
+\param x X (horizontal) coordinate of the upper left corner of the string.
+\param y Y (vertical) coordinate of the upper left corner of the string.
+]param s The string to draw.
+\param color The color value of the string to draw (0xRRGGBBAA). 
+
+\returns Returns 0 on success, -1 on failure.
+*/
+int stringColor(SDL_Surface * dst, Sint16 x, Sint16 y, const char *s, Uint32 color)
 {
 	int result = 0;
 	int curx = x;
-	const char *curchar = c;
+	const char *curchar = s;
 
-	while (*curchar) {
+	while (*curchar && !result) {
 		result |= characterColor(dst, curx, y, *curchar, color);
 		curx += charWidth;
 		curchar++;
@@ -5492,21 +5591,40 @@ int stringColor(SDL_Surface * dst, Sint16 x, Sint16 y, const char *c, Uint32 col
 	return (result);
 }
 
-int stringRGBA(SDL_Surface * dst, Sint16 x, Sint16 y, const char *c, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+/*!
+\brief Draw a string in the currently set font.
+
+\param dst The surface to draw on.
+\param x X (horizontal) coordinate of the upper left corner of the string.
+\param y Y (vertical) coordinate of the upper left corner of the string.
+]param s The string to draw.
+\param r The red value of the string to draw. 
+\param g The green value of the string to draw. 
+\param b The blue value of the string to draw. 
+\param a The alpha value of the string to draw.
+
+\returns Returns 0 on success, -1 on failure.
+*/
+int stringRGBA(SDL_Surface * dst, Sint16 x, Sint16 y, const char *s, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
 	/*
 	* Draw 
 	*/
-	return (stringColor(dst, x, y, c, ((Uint32) r << 24) | ((Uint32) g << 16) | ((Uint32) b << 8) | (Uint32) a));
+	return (stringColor(dst, x, y, s, ((Uint32) r << 24) | ((Uint32) g << 16) | ((Uint32) b << 8) | (Uint32) a));
 }
 
 /* ---- Bezier curve */
 
-/*
-Calculate bezier interpolator of data array with ndata values at position 't'
-*/
+/*!
+\brief Internal function to calculate bezier interpolator of data array with ndata values at position 't'.
 
-double evaluateBezier (double *data, int ndata, double t) 
+\param data Array of values.
+\param ndata Size of array.
+\param t Position for which to calculate interpolated value. t should be between [0, ndata].
+
+\returns Interpolated value at position t, value[0] when t<0, value[n-1] when t>n.
+*/
+double _evaluateBezier (double *data, int ndata, double t) 
 {
 	double mu, result;
 	int n,k,kn,nn,nkn;
@@ -5553,6 +5671,18 @@ double evaluateBezier (double *data, int ndata, double t)
 	return(result);
 }
 
+/*!
+\brief Draw a bezier curve with alpha blending.
+
+\param dst The surface to draw on.
+\param vx Vertex array containing X coordinates of the points of the bezier curve.
+\param vy Vertex array containing Y coordinates of the points of the bezier curve.
+\param n Number of points in the vertex array. Minimum number is 3.
+\param s Number of steps for the interpolation. Minimum number is 2.
+\param color The color value of the bezier curve to draw (0xRRGGBBAA). 
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int bezierColor(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, int n, int s, Uint32 color)
 {
 	int result;
@@ -5595,12 +5725,12 @@ int bezierColor(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, int n, 
 	*/
 	result = 0;
 	t=0.0;
-	x1=(Sint16)lrint(evaluateBezier(x,n+1,t));
-	y1=(Sint16)lrint(evaluateBezier(y,n+1,t));
+	x1=(Sint16)lrint(_evaluateBezier(x,n+1,t));
+	y1=(Sint16)lrint(_evaluateBezier(y,n+1,t));
 	for (i = 0; i <= (n*s); i++) {
 		t += stepsize;
-		x2=(Sint16)evaluateBezier(x,n,t);
-		y2=(Sint16)evaluateBezier(y,n,t);
+		x2=(Sint16)_evaluateBezier(x,n,t);
+		y2=(Sint16)_evaluateBezier(y,n,t);
 		result |= lineColor(dst, x1, y1, x2, y2, color);
 		x1 = x2;
 		y1 = y2;
@@ -5613,6 +5743,21 @@ int bezierColor(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, int n, 
 	return (result);
 }
 
+/*!
+\brief Draw a bezier curve with alpha blending.
+
+\param dst The surface to draw on.
+\param vx Vertex array containing X coordinates of the points of the bezier curve.
+\param vy Vertex array containing Y coordinates of the points of the bezier curve.
+\param n Number of points in the vertex array. Minimum number is 3.
+\param s Number of steps for the interpolation. Minimum number is 2.
+\param r The red value of the bezier curve to draw. 
+\param g The green value of the bezier curve to draw. 
+\param b The blue value of the bezier curve to draw. 
+\param a The alpha value of the bezier curve to draw.
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int bezierRGBA(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, int n, int s, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
 	/*

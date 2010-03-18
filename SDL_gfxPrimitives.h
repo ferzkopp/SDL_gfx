@@ -11,7 +11,7 @@ LGPL (c) A. Schiffler
 
 #include <math.h>
 #ifndef M_PI
-#define M_PI	3.141592654
+#define M_PI	3.1415926535897932384626433832795
 #endif
 
 #include "SDL.h"
@@ -126,8 +126,6 @@ extern "C" {
 	SDL_GFXPRIMITIVES_SCOPE int filledEllipseRGBA(SDL_Surface * dst, Sint16 x, Sint16 y,
 		Sint16 rx, Sint16 ry, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 
-#define CLOCKWISE
-
 	/* Pie */
 
 	SDL_GFXPRIMITIVES_SCOPE int pieColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad,
@@ -188,21 +186,18 @@ extern "C" {
 	SDL_GFXPRIMITIVES_SCOPE int texturedPolygonMT(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, int n, SDL_Surface * texture,int texture_dx,int texture_dy, int **polyInts, int *polyAllocated);
 
 	/* Bezier */
-	/* (s = number of steps) */
 
 	SDL_GFXPRIMITIVES_SCOPE int bezierColor(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, int n, int s, Uint32 color);
 	SDL_GFXPRIMITIVES_SCOPE int bezierRGBA(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy,
 		int n, int s, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 
-
 	/* Characters/Strings */
 
+	SDL_GFXPRIMITIVES_SCOPE void gfxPrimitivesSetFont(const void *fontdata, int cw, int ch);
 	SDL_GFXPRIMITIVES_SCOPE int characterColor(SDL_Surface * dst, Sint16 x, Sint16 y, char c, Uint32 color);
 	SDL_GFXPRIMITIVES_SCOPE int characterRGBA(SDL_Surface * dst, Sint16 x, Sint16 y, char c, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
-	SDL_GFXPRIMITIVES_SCOPE int stringColor(SDL_Surface * dst, Sint16 x, Sint16 y, const char *c, Uint32 color);
-	SDL_GFXPRIMITIVES_SCOPE int stringRGBA(SDL_Surface * dst, Sint16 x, Sint16 y, const char *c, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
-
-	SDL_GFXPRIMITIVES_SCOPE void gfxPrimitivesSetFont(const void *fontdata, int cw, int ch);
+	SDL_GFXPRIMITIVES_SCOPE int stringColor(SDL_Surface * dst, Sint16 x, Sint16 y, const char *s, Uint32 color);
+	SDL_GFXPRIMITIVES_SCOPE int stringRGBA(SDL_Surface * dst, Sint16 x, Sint16 y, const char *s, Uint8 r, Uint8 g, Uint8 b, Uint8 a);
 
 	/* Ends C function definitions when using C++ */
 #ifdef __cplusplus
