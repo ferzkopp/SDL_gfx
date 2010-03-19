@@ -5394,7 +5394,7 @@ Uses alpha blending if A<255 in color.
 \param dst The surface to draw on.
 \param x X (horizontal) coordinate of the upper left corner of the character.
 \param y Y (vertical) coordinate of the upper left corner of the character.
-]param c The character to draw.
+\param c The character to draw.
 \param color The color value of the character to draw (0xRRGGBBAA). 
 
 \returns Returns 0 on success, -1 on failure.
@@ -5546,7 +5546,7 @@ int characterColor(SDL_Surface * dst, Sint16 x, Sint16 y, char c, Uint32 color)
 \param dst The surface to draw on.
 \param x X (horizontal) coordinate of the upper left corner of the character.
 \param y Y (vertical) coordinate of the upper left corner of the character.
-]param c The character to draw.
+\param c The character to draw.
 \param r The red value of the character to draw. 
 \param g The green value of the character to draw. 
 \param b The blue value of the character to draw. 
@@ -5571,7 +5571,7 @@ of the character width of the current global font.
 \param dst The surface to draw on.
 \param x X (horizontal) coordinate of the upper left corner of the string.
 \param y Y (vertical) coordinate of the upper left corner of the string.
-]param s The string to draw.
+\param s The string to draw.
 \param color The color value of the string to draw (0xRRGGBBAA). 
 
 \returns Returns 0 on success, -1 on failure.
@@ -5597,7 +5597,7 @@ int stringColor(SDL_Surface * dst, Sint16 x, Sint16 y, const char *s, Uint32 col
 \param dst The surface to draw on.
 \param x X (horizontal) coordinate of the upper left corner of the string.
 \param y Y (vertical) coordinate of the upper left corner of the string.
-]param s The string to draw.
+\param s The string to draw.
 \param r The red value of the string to draw. 
 \param g The green value of the string to draw. 
 \param b The blue value of the string to draw. 
