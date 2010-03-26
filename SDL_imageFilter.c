@@ -29,9 +29,12 @@ static int SDL_imageFilterUseMMX = 1;
 #define GCC__
 #endif
 
-/* MMX detection routine (with override flag) */
+/*!
+\brief Internal function returning the CPU flags. 
 
-unsigned int cpuFlags()
+\returns Flags of system CPU.
+*/
+unsigned int _cpuFlags()
 {
 	int flags = 0;
 
@@ -58,6 +61,11 @@ unsigned int cpuFlags()
 	return (flags);
 }
 
+/*!
+\brief MMX detection routine (with override flag). 
+
+\returns 1 of MMX was detected, 0 otherwise.
+*/
 int SDL_imageFilterMMXdetect(void)
 {
 	unsigned int mmx_bit;
@@ -67,18 +75,24 @@ int SDL_imageFilterMMXdetect(void)
 		return (0);
 	}
 
-	mmx_bit = cpuFlags();
+	mmx_bit = _cpuFlags();
 	mmx_bit &= 0x00800000;
 	mmx_bit = (mmx_bit && 0x00800000);
 
 	return (mmx_bit);
 }
 
+/*!
+\brief Disable MMX check and and force to use non-MMX code.
+*/
 void SDL_imageFilterMMXoff()
 {
 	SDL_imageFilterUseMMX = 0;
 }
 
+/*!
+\brief Enable MMX check and use MMX code if available.
+*/
 void SDL_imageFilterMMXon()
 {
 	SDL_imageFilterUseMMX = 1;
@@ -3292,25 +3306,29 @@ L1031:
 	return (0);
 }
 
-/*  SDL_imageFilterNormalizeLinear: D = saturation255((Nmax - Nmin)/(Cmax - Cmin)*(S - Cmin) + Nmin) */
-int SDL_imageFilterNormalizeLinear(unsigned char *Src1, unsigned char *Dest, unsigned int length, int Cmin, int Cmax, int Nmin,
+/*!
+\brief Filter using NormalizeLinear: D = saturation255((Nmax - Nmin)/(Cmax - Cmin)*(S - Cmin) + Nmin) 
+
+\return Returns 1 if filter was applied, 0 otherwise.
+*/
+int SDL_imageFilterNormalizeLinear(unsigned char *Src, unsigned char *Dest, unsigned int length, int Cmin, int Cmax, int Nmin,
 								   int Nmax)
 {
 	unsigned int i, istart;
-	unsigned char *cursrc1;
+	unsigned char *cursrc;
 	unsigned char *curdest;
 	int dN, dC, factor;
 	int result;
 
 	if ((SDL_imageFilterMMXdetect()) && (length > 7)) {
 
-		SDL_imageFilterNormalizeLinearMMX(Src1, Dest, length, Cmin, Cmax, Nmin, Nmax);
+		SDL_imageFilterNormalizeLinearMMX(Src, Dest, length, Cmin, Cmax, Nmin, Nmax);
 
 		/* Check for unaligned bytes */
 		if ((length & 7) > 0) {
 			/* Setup to process unaligned bytes */
 			istart = length & 0xfffffff8;
-			cursrc1 = &Src1[istart];
+			cursrc = &Src[istart];
 			curdest = &Dest[istart];
 		} else {
 			/* No unaligned bytes - we are done */
@@ -3319,7 +3337,7 @@ int SDL_imageFilterNormalizeLinear(unsigned char *Src1, unsigned char *Dest, uns
 	} else {
 		/* Setup to process whole image */
 		istart = 0;
-		cursrc1 = Src1;
+		cursrc = Src;
 		curdest = Dest;
 	}
 
@@ -3330,12 +3348,12 @@ int SDL_imageFilterNormalizeLinear(unsigned char *Src1, unsigned char *Dest, uns
 	dN = Nmax - Nmin;
 	factor = dN / dC;
 	for (i = istart; i < length; i++) {
-		result = factor * ((int) (*cursrc1) - Cmin) + Nmin;
+		result = factor * ((int) (*cursrc) - Cmin) + Nmin;
 		if (result > 255)
 			result = 255;
 		*curdest = (unsigned char) result;
 		/* Advance pointers */
-		cursrc1++;
+		cursrc++;
 		curdest++;
 	}
 
@@ -3344,7 +3362,20 @@ int SDL_imageFilterNormalizeLinear(unsigned char *Src1, unsigned char *Dest, uns
 
 /* ------------------------------------------------------------------------------------ */
 
-/*  SDL_imageFilterConvolveKernel3x3Divide: Dij = saturation0and255( ... ) */
+/*!
+\brief Filter using ConvolveKernel3x3Divide: Dij = saturation0and255( ... ) 
+
+\param Src The source 2D byte array to convolve. Should be different from destination.
+\param Dest The destination 2D byte array to store the result in. Should be different from source.
+\param rows Number of rows in source/destination array. Must be >2.
+\param columns Number of columns in source/destination array. Must be >2.
+\param Kernel The 2D convolution kernel of size 3x3.
+\param Divisor The divisor of the convolution sum. Must be >0.
+
+Note: Non-MMX implementation not available for this function.
+
+\return Returns 1 if filter was applied, 0 otherwise.
+*/
 int SDL_imageFilterConvolveKernel3x3Divide(unsigned char *Src, unsigned char *Dest, int rows, int columns,
 										   signed short *Kernel, unsigned char Divisor)
 {
@@ -3516,7 +3547,20 @@ L10322:
 	}
 }
 
-/*  SDL_imageFilterConvolveKernel5x5Divide: Dij = saturation0and255( ... ) */
+/*!
+\brief Filter using ConvolveKernel5x5Divide: Dij = saturation0and255( ... ) 
+
+\param Src The source 2D byte array to convolve. Should be different from destination.
+\param Dest The destination 2D byte array to store the result in. Should be different from source.
+\param rows Number of rows in source/destination array. Must be >4.
+\param columns Number of columns in source/destination array. Must be >4.
+\param Kernel The 2D convolution kernel of size 5x5.
+\param Divisor The divisor of the convolution sum. Must be >0.
+
+Note: Non-MMX implementation not available for this function.
+
+\return Returns 1 if filter was applied, 0 otherwise.
+*/
 int SDL_imageFilterConvolveKernel5x5Divide(unsigned char *Src, unsigned char *Dest, int rows, int columns,
 										   signed short *Kernel, unsigned char Divisor)
 {
@@ -3801,7 +3845,20 @@ L10332:
 	}
 }
 
-/*  SDL_imageFilterConvolveKernel7x7Divide: Dij = saturation0and255( ... ) */
+/*!
+\brief Filter using ConvolveKernel7x7Divide: Dij = saturation0and255( ... ) 
+
+\param Src The source 2D byte array to convolve. Should be different from destination.
+\param Dest The destination 2D byte array to store the result in. Should be different from source.
+\param rows Number of rows in source/destination array. Must be >6.
+\param columns Number of columns in source/destination array. Must be >6.
+\param Kernel The 2D convolution kernel of size 7x7.
+\param Divisor The divisor of the convolution sum. Must be >0.
+
+Note: Non-MMX implementation not available for this function.
+
+\return Returns 1 if filter was applied, 0 otherwise.
+*/
 int SDL_imageFilterConvolveKernel7x7Divide(unsigned char *Src, unsigned char *Dest, int rows, int columns,
 										   signed short *Kernel, unsigned char Divisor)
 {
@@ -4140,7 +4197,20 @@ L10342:
 	}
 }
 
-/*  SDL_imageFilterConvolveKernel9x9Divide: Dij = saturation0and255( ... ) */
+/*!
+\brief Filter using ConvolveKernel9x9Divide: Dij = saturation0and255( ... ) 
+
+\param Src The source 2D byte array to convolve. Should be different from destination.
+\param Dest The destination 2D byte array to store the result in. Should be different from source.
+\param rows Number of rows in source/destination array. Must be >8.
+\param columns Number of columns in source/destination array. Must be >8.
+\param Kernel The 2D convolution kernel of size 9x9.
+\param Divisor The divisor of the convolution sum. Must be >0.
+
+Note: Non-MMX implementation not available for this function.
+
+\return Returns 1 if filter was applied, 0 otherwise.
+*/
 int SDL_imageFilterConvolveKernel9x9Divide(unsigned char *Src, unsigned char *Dest, int rows, int columns,
 										   signed short *Kernel, unsigned char Divisor)
 {
@@ -4670,7 +4740,20 @@ L10352:
 	}
 }
 
-/*  SDL_imageFilterConvolveKernel3x3ShiftRight: Dij = saturation0and255( ... ) */
+/*!
+\brief Filter using ConvolveKernel3x3ShiftRight: Dij = saturation0and255( ... ) 
+
+\param Src The source 2D byte array to convolve. Should be different from destination.
+\param Dest The destination 2D byte array to store the result in. Should be different from source.
+\param rows Number of rows in source/destination array. Must be >2.
+\param columns Number of columns in source/destination array. Must be >2.
+\param Kernel The 2D convolution kernel of size 3x3.
+\param NRightShift The number of right bit shifts to apply to the convolution sum. Must be <7.
+
+Note: Non-MMX implementation not available for this function.
+
+\return Returns 1 if filter was applied, 0 otherwise.
+*/
 int SDL_imageFilterConvolveKernel3x3ShiftRight(unsigned char *Src, unsigned char *Dest, int rows, int columns,
 											   signed short *Kernel, unsigned char NRightShift)
 {
@@ -4829,7 +4912,20 @@ L10362:
 	}
 }
 
-/*  SDL_imageFilterConvolveKernel5x5ShiftRight: Dij = saturation0and255( ... ) */
+/*!
+\brief Filter using ConvolveKernel5x5ShiftRight: Dij = saturation0and255( ... ) 
+
+\param Src The source 2D byte array to convolve. Should be different from destination.
+\param Dest The destination 2D byte array to store the result in. Should be different from source.
+\param rows Number of rows in source/destination array. Must be >4.
+\param columns Number of columns in source/destination array. Must be >4.
+\param Kernel The 2D convolution kernel of size 5x5.
+\param NRightShift The number of right bit shifts to apply to the convolution sum. Must be <7.
+
+Note: Non-MMX implementation not available for this function.
+
+\return Returns 1 if filter was applied, 0 otherwise.
+*/
 int SDL_imageFilterConvolveKernel5x5ShiftRight(unsigned char *Src, unsigned char *Dest, int rows, int columns,
 											   signed short *Kernel, unsigned char NRightShift)
 {
@@ -5112,7 +5208,20 @@ L10372:
 	}
 }
 
-/*  SDL_imageFilterConvolveKernel7x7ShiftRight: Dij = saturation0and255( ... ) */
+/*!
+\brief Filter using ConvolveKernel7x7ShiftRight: Dij = saturation0and255( ... ) 
+
+\param Src The source 2D byte array to convolve. Should be different from destination.
+\param Dest The destination 2D byte array to store the result in. Should be different from source.
+\param rows Number of rows in source/destination array. Must be >6.
+\param columns Number of columns in source/destination array. Must be >6.
+\param Kernel The 2D convolution kernel of size 7x7.
+\param NRightShift The number of right bit shifts to apply to the convolution sum. Must be <7.
+
+Note: Non-MMX implementation not available for this function.
+
+\return Returns 1 if filter was applied, 0 otherwise.
+*/
 int SDL_imageFilterConvolveKernel7x7ShiftRight(unsigned char *Src, unsigned char *Dest, int rows, int columns,
 											   signed short *Kernel, unsigned char NRightShift)
 {
@@ -5457,7 +5566,20 @@ L10382:
 	}
 }
 
-/*  SDL_imageFilterConvolveKernel9x9ShiftRight: Dij = saturation0and255( ... ) */
+/*!
+\brief Filter using ConvolveKernel9x9ShiftRight: Dij = saturation255( ... ) 
+
+\param Src The source 2D byte array to convolve. Should be different from destination.
+\param Dest The destination 2D byte array to store the result in. Should be different from source.
+\param rows Number of rows in source/destination array. Must be >8.
+\param columns Number of columns in source/destination array. Must be >8.
+\param Kernel The 2D convolution kernel of size 9x9.
+\param NRightShift The number of right bit shifts to apply to the convolution sum. Must be <7.
+
+Note: Non-MMX implementation not available for this function.
+
+\return Returns 1 if filter was applied, 0 otherwise.
+*/
 int SDL_imageFilterConvolveKernel9x9ShiftRight(unsigned char *Src, unsigned char *Dest, int rows, int columns,
 											   signed short *Kernel, unsigned char NRightShift)
 {
@@ -6021,7 +6143,18 @@ L10392:
 
 /* ------------------------------------------------------------------------------------ */
 
-/*  SDL_imageFilterSobelX: Dij = saturation255( ... ) */
+/*!
+\brief Filter using SobelX: Dij = saturation255( ... ) 
+
+\param Src The source 2D byte array to sobel-filter. Should be different from destination.
+\param Dest The destination 2D byte array to store the result in. Should be different from source.
+\param rows Number of rows in source/destination array. Must be >7.
+\param columns Number of columns in source/destination array. Must be >2.
+
+Note: Non-MMX implementation not available for this function.
+
+\return Returns 1 if filter was applied, 0 otherwise.
+*/
 int SDL_imageFilterSobelX(unsigned char *Src, unsigned char *Dest, int rows, int columns)
 {
 	if ((columns < 8) || (rows < 3))
@@ -6257,7 +6390,19 @@ L10402:
 	}
 }
 
-/*  SDL_imageFilterSobelXShiftRight: Dij = saturation255( ... ) */
+/*!
+\brief Filter using SobelXShiftRight: Dij = saturation255( ... ) 
+
+\param Src The source 2D byte array to sobel-filter. Should be different from destination.
+\param Dest The destination 2D byte array to store the result in. Should be different from source.
+\param rows Number of rows in source/destination array. Must be >7.
+\param columns Number of columns in source/destination array. Must be >2.
+\param NRightShift The number of right bit shifts to apply to the filter sum. Must be <7.
+
+Note: Non-MMX implementation not available for this function.
+
+\return Returns 1 if filter was applied, 0 otherwise.
+*/
 int SDL_imageFilterSobelXShiftRight(unsigned char *Src, unsigned char *Dest, int rows, int columns,
 									unsigned char NRightShift)
 {
@@ -6525,7 +6670,9 @@ L10412:
 	}
 }
 
-/* Align stack to 32 byte boundary */
+/*!
+\brief Align stack to 32 byte boundary,
+*/
 void SDL_imageFilterAlignStack(void)
 {
 #ifdef USE_MMX
@@ -6551,7 +6698,9 @@ void SDL_imageFilterAlignStack(void)
 #endif
 }
 
-/* Restore previously aligned stack */
+/*!
+\brief Restore previously aligned stack.
+*/
 void SDL_imageFilterRestoreStack(void)
 {
 #ifdef USE_MMX

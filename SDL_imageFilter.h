@@ -135,7 +135,7 @@ extern "C" {
 		unsigned char Tmin, unsigned char Tmax);
 
 	//  SDL_imageFilterNormalizeLinear: D = saturation255((Nmax - Nmin)/(Cmax - Cmin)*(S - Cmin) + Nmin)
-	SDL_IMAGEFILTER_SCOPE int SDL_imageFilterNormalizeLinear(unsigned char *Src1, unsigned char *Dest, unsigned int length, int Cmin,
+	SDL_IMAGEFILTER_SCOPE int SDL_imageFilterNormalizeLinear(unsigned char *Src, unsigned char *Dest, unsigned int length, int Cmin,
 		int Cmax, int Nmin, int Nmax);
 
 	/* !!! NO C-ROUTINE FOR THESE FUNCTIONS YET !!! */

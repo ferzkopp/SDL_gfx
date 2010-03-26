@@ -42,11 +42,12 @@ typedef struct tColorY {
 /*! 
 \brief Number of guard rows added to destination surfaces.
 
-These allocate extra memory and are then hidden from the surface.
+This is a simple but effective workaround for observed issues.
+These rows allocate extra memory and are then hidden from the surface.
 Rows are added to the end of destination surfaces when they are allocated. 
 This catches any potential overflows which seem to happen with 
 just the right src image dimensions and scale/rotation and can lead
-the program will segfault.
+to a situation where the program can segfault.
 */
 #define GUARD_ROWS (2)
 

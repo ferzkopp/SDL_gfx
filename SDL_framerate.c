@@ -1,4 +1,3 @@
-
 /*
 
 SDL_framerate: framerate manager
