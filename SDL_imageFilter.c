@@ -1,27 +1,32 @@
 /*
 
-SDL_imageFilter - bytes-image "filter" routines 
-(uses inline x86 MMX optimizations if available)
+SDL_imageFilter - bytes-image "filter" routines.
+(Uses inline x86 MMX or ASM optimizations if available and enabled.)
 
 LGPL (c) A. Schiffler
 
-Note: Most MMX code is based on published routines 
-by Vladimir Kravtchenko at vk@cs.ubc.ca - credits to 
+Note: Most of the MMX code is based on published routines 
+by Vladimir Kravtchenko at vk@cs.ubc.ca - credits go to 
 him for his work.
 
 */
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "SDL_imageFilter.h"
 
-#define swap_32(x) (((x) >> 24) | (((x) & 0x00ff0000) >> 8)  | (((x) & 0x0000ff00) << 8)  | ((x) << 24))
+/*!
+\brief Swaps the byte order in a 32bit integer (LSB becomes MSB, etc.). 
+*/
+#define SWAP_32(x) (((x) >> 24) | (((x) & 0x00ff0000) >> 8)  | (((x) & 0x0000ff00) << 8)  | ((x) << 24))
 
 /* ------ Static variables ----- */
 
-/* Toggle the use of the MMX routines - ON by default */
-
+/*! 
+\brief Static state which enables the use of the MMX routines. Enabled by default 
+*/
 static int SDL_imageFilterUseMMX = 1;
 
 /* Detect GCC */
@@ -83,7 +88,7 @@ int SDL_imageFilterMMXdetect(void)
 }
 
 /*!
-\brief Disable MMX check and and force to use non-MMX code.
+\brief Disable MMX check for filter functions and and force to use non-MMX C based code.
 */
 void SDL_imageFilterMMXoff()
 {
@@ -91,7 +96,7 @@ void SDL_imageFilterMMXoff()
 }
 
 /*!
-\brief Enable MMX check and use MMX code if available.
+\brief Enable MMX check for filter functions and use MMX code if available.
 */
 void SDL_imageFilterMMXon()
 {
@@ -100,7 +105,16 @@ void SDL_imageFilterMMXon()
 
 /* ------------------------------------------------------------------------------------ */
 
-/*  SDL_imageFilterAdd: D = saturation255(S1 + S2) */
+/*!
+\brief Internal MMX Filter using Add: D = saturation255(S1 + S2) 
+
+\param Src1 Pointer to the start of the first source byte array (S1).
+\param Src2 Pointer to the start of the second source byte array (S2).
+\param Dest Pointer to the start of the destination byte array (D).
+\param SrcLength The number of bytes in the source arrays.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterAddMMX(unsigned char *Src1, unsigned char *Src2, unsigned char *Dest, unsigned int SrcLength)
 {
 #ifdef USE_MMX
@@ -113,7 +127,7 @@ int SDL_imageFilterAddMMX(unsigned char *Src1, unsigned char *Src2, unsigned cha
 			mov edi, Dest	/* load Dest address into edi */
 			mov ecx, SrcLength	/* load loop counter (SIZE) into ecx */
 			shr ecx, 3	/* counter/8 (MMX loads 8 bytes at a time) */
-			align 16	/* 16 byte allignment of the loop entry */
+			align 16	/* 16 byte alignment of the loop entry */
 L1010:
 		movq mm1, [eax]	/* load 8 bytes from Src1 into mm1 */
 		paddusb mm1, [ebx]	/* mm1=Src1+Src2 (add 8 bytes with saturation) */
@@ -133,7 +147,7 @@ L1010:
 		"mov          %0, %%edi \n\t"	/* load Dest address into edi */
 		"mov          %3, %%ecx \n\t"	/* load loop counter (SIZE) into ecx */
 		"shr          $3, %%ecx \n\t"	/* counter/8 (MMX loads 8 bytes at a time) */
-		".align 16              \n\t"	/* 16 byte allignment of the loop entry */
+		".align 16              \n\t"	/* 16 byte alignment of the loop entry */
 		"1: movq (%%eax), %%mm1 \n\t"    	/* load 8 bytes from Src1 into mm1 */
 		"paddusb (%%ebx), %%mm1 \n\t"	/* mm1=Src1+Src2 (add 8 bytes with saturation) */
 		"movq    %%mm1, (%%edi) \n\t"	/* store result in Dest */
@@ -148,16 +162,33 @@ L1010:
 		"m"(SrcLength)		/* %3 */
 		);
 #endif
-#endif
 	return (0);
+#else
+	return (-1);
+#endif
 }
 
-/*  SDL_imageFilterAdd: D = saturation255(S1 + S2) */
+/*!
+\brief Filter using Add: D = saturation255(S1 + S2) 
+
+\param Src1 Pointer to the start of the first source byte array (S1).
+\param Src2 Pointer to the start of the second source byte array (S2).
+\param Dest Pointer to the start of the destination byte array (D).
+\param length The number of bytes in the source arrays.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterAdd(unsigned char *Src1, unsigned char *Src2, unsigned char *Dest, unsigned int length)
 {
 	unsigned int i, istart;
 	unsigned char *cursrc1, *cursrc2, *curdst;
 	int result;
+
+	/* Validate input parameters */
+	if ((Src1 == NULL) || (Src2 == NULL) || (Dest == NULL))
+		return(-1);
+	if (length == 0)
+		return(0);
 
 	if ((SDL_imageFilterMMXdetect()) && (length > 7)) {
 
@@ -198,7 +229,17 @@ int SDL_imageFilterAdd(unsigned char *Src1, unsigned char *Src2, unsigned char *
 	return (0);
 }
 
-/*  SDL_imageFilterMean: D = S1/2 + S2/2 */
+/*!
+\brief Internal MMX Filter using Mean: D = S1/2 + S2/2
+
+\param Src1 Pointer to the start of the first source byte array (S1).
+\param Src2 Pointer to the start of the second source byte array (S2).
+\param Dest Pointer to the start of the destination byte array (D).
+\param SrcLength The number of bytes in the source arrays.
+\param Mask Mask array containing 8 bytes with 0x7F value.
+]
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterMeanMMX(unsigned char *Src1, unsigned char *Src2, unsigned char *Dest, unsigned int SrcLength,
 						   unsigned char *Mask)
 {
@@ -214,7 +255,7 @@ int SDL_imageFilterMeanMMX(unsigned char *Src1, unsigned char *Src2, unsigned ch
 			mov edi, Dest /* load Dest address into edi */
 			mov ecx, SrcLength /* load loop counter (SIZE) into ecx */
 			shr ecx, 3 	/* counter/8 (MMX loads 8 bytes at a time) */
-			align 16	/* 16 byte allignment of the loop entry */
+			align 16	/* 16 byte alignment of the loop entry */
 L21011:
 		movq mm1,  [eax] 	/* load 8 bytes from Src1 into mm1 */
 		movq mm2,  [ebx] 	/* load 8 bytes from Src2 into mm2 */
@@ -244,7 +285,7 @@ L21011:
 		"mov          %0, %%edi \n\t"	/* load Dest address into edi */
 		"mov          %3, %%ecx \n\t"	/* load loop counter (SIZE) into ecx */
 		"shr          $3, %%ecx \n\t"	/* counter/8 (MMX loads 8 bytes at a time) */
-		".align 16              \n\t"	/* 16 byte allignment of the loop entry */
+		".align 16              \n\t"	/* 16 byte alignment of the loop entry */
 		"1:                      \n\t"
 		"movq    (%%eax), %%mm1 \n\t"	/* load 8 bytes from Src1 into mm1 */
 		"movq    (%%ebx), %%mm2 \n\t"	/* load 8 bytes from Src2 into mm2 */
@@ -270,17 +311,34 @@ L21011:
 		"m"(Mask)			/* %4 */
 		);
 #endif
-#endif
 	return (0);
+#else
+	return (-1);
+#endif
 }
 
-/*  SDL_imageFilterMean: D = S1/2 + S2/2 */
+/*!
+\brief Filter using Mean: D = S1/2 + S2/2
+
+\param Src1 Pointer to the start of the first source byte array (S1).
+\param Src2 Pointer to the start of the second source byte array (S2).
+\param Dest Pointer to the start of the destination byte array (D).
+\param length The number of bytes in the source arrays.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterMean(unsigned char *Src1, unsigned char *Src2, unsigned char *Dest, unsigned int length)
 {
 	static unsigned char Mask[8] = { 0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F };
 	unsigned int i, istart;
 	unsigned char *cursrc1, *cursrc2, *curdst;
 	int result;
+
+	/* Validate input parameters */
+	if ((Src1 == NULL) || (Src2 == NULL) || (Dest == NULL))
+		return(-1);
+	if (length == 0)
+		return(0);
 
 	if ((SDL_imageFilterMMXdetect()) && (length > 7)) {
 		/* MMX routine */
@@ -318,7 +376,16 @@ int SDL_imageFilterMean(unsigned char *Src1, unsigned char *Src2, unsigned char 
 	return (0);
 }
 
-/*  SDL_imageFilterSub: D = saturation0(S1 - S2) */
+/*!
+\brief Internal MMX Filter using Sub: D = saturation0(S1 - S2)
+
+\param Src1 Pointer to the start of the first source byte array (S1).
+\param Src2 Pointer to the start of the second source byte array (S2).
+\param Dest Pointer to the start of the destination byte array (D).
+\param SrcLength The number of bytes in the source arrays.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterSubMMX(unsigned char *Src1, unsigned char *Src2, unsigned char *Dest, unsigned int SrcLength)
 {
 #ifdef USE_MMX
@@ -331,7 +398,7 @@ int SDL_imageFilterSubMMX(unsigned char *Src1, unsigned char *Src2, unsigned cha
 			mov edi,  Dest 	/* load Dest address into edi */
 			mov ecx,  SrcLength 	/* load loop counter (SIZE) into ecx */
 			shr ecx,  3 	/* counter/8 (MMX loads 8 bytes at a time) */
-			align 16 /* 16 byte allignment of the loop entry */
+			align 16 /* 16 byte alignment of the loop entry */
 L1012:
 		movq mm1,  [eax] 	/* load 8 bytes from Src1 into mm1 */
 		psubusb mm1,  [ebx] 	/* mm1=Src1-Src2 (sub 8 bytes with saturation) */
@@ -351,7 +418,7 @@ L1012:
 		"mov %0, %%edi \n\t"	/* load Dest address into edi */
 		"mov %3, %%ecx \n\t"	/* load loop counter (SIZE) into ecx */
 		"shr $3, %%ecx \n\t"	/* counter/8 (MMX loads 8 bytes at a time) */
-		".align 16       \n\t"	/* 16 byte allignment of the loop entry */
+		".align 16       \n\t"	/* 16 byte alignment of the loop entry */
 		"1: movq (%%eax), %%mm1 \n\t"     /* load 8 bytes from Src1 into mm1 */
 		"psubusb (%%ebx), %%mm1 \n\t"	/* mm1=Src1-Src2 (sub 8 bytes with saturation) */
 		"movq    %%mm1, (%%edi) \n\t"	/* store result in Dest */
@@ -366,15 +433,33 @@ L1012:
 		"m"(SrcLength)		/* %3 */
 		);
 #endif
-#endif
 	return (0);
+#else
+	return (-1);
+#endif
 }
 
+/*!
+\brief Filter using Sub: D = saturation0(S1 - S2)
+
+\param Src1 Pointer to the start of the first source byte array (S1).
+\param Src2 Pointer to the start of the second source byte array (S2).
+\param Dest Pointer to the start of the destination byte array (D).
+\param length The number of bytes in the source arrays.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterSub(unsigned char *Src1, unsigned char *Src2, unsigned char *Dest, unsigned int length)
 {
 	unsigned int i, istart;
 	unsigned char *cursrc1, *cursrc2, *curdst;
 	int result;
+
+	/* Validate input parameters */
+	if ((Src1 == NULL) || (Src2 == NULL) || (Dest == NULL))
+		return(-1);
+	if (length == 0)
+		return(0);
 
 	if ((SDL_imageFilterMMXdetect()) && (length > 7)) {
 		/* MMX routine */
@@ -414,7 +499,16 @@ int SDL_imageFilterSub(unsigned char *Src1, unsigned char *Src2, unsigned char *
 	return (0);
 }
 
-/*  SDL_imageFilterAbsDiff: D = | S1 - S2 | */
+/*!
+\brief Internal MMX Filter using AbsDiff: D = | S1 - S2 |
+
+\param Src1 Pointer to the start of the first source byte array (S1).
+\param Src2 Pointer to the start of the second source byte array (S2).
+\param Dest Pointer to the start of the destination byte array (D).
+\param SrcLength The number of bytes in the source arrays.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterAbsDiffMMX(unsigned char *Src1, unsigned char *Src2, unsigned char *Dest, unsigned int SrcLength)
 {
 #ifdef USE_MMX
@@ -427,7 +521,7 @@ int SDL_imageFilterAbsDiffMMX(unsigned char *Src1, unsigned char *Src2, unsigned
 			mov edi, Dest 	/* load Dest address into edi */
 			mov ecx, SrcLength 	/* load loop counter (SIZE) into ecx */
 			shr ecx,  3 	/* counter/8 (MMX loads 8 bytes at a time) */
-			align 16	/* 16 byte allignment of the loop entry */
+			align 16	/* 16 byte alignment of the loop entry */
 L1013:
 		movq mm1,  [eax] 	/* load 8 bytes from Src1 into mm1 */
 		movq mm2,  [ebx] 	/* load 8 bytes from Src2 into mm2 */
@@ -450,7 +544,7 @@ L1013:
 		"mov %0, %%edi \n\t"	/* load Dest address into edi */
 		"mov %3, %%ecx \n\t"	/* load loop counter (SIZE) into ecx */
 		"shr $3, %%ecx \n\t"	/* counter/8 (MMX loads 8 bytes at a time) */
-		".align 16       \n\t"	/* 16 byte allignment of the loop entry */
+		".align 16       \n\t"	/* 16 byte alignment of the loop entry */
 		"1: movq (%%eax), %%mm1 \n\t"     /* load 8 bytes from Src1 into mm1 */
 		"movq    (%%ebx), %%mm2 \n\t"	/* load 8 bytes from Src2 into mm2 */
 		"psubusb (%%ebx), %%mm1 \n\t"	/* mm1=Src1-Src2 (sub 8 bytes with saturation) */
@@ -468,16 +562,33 @@ L1013:
 		"m"(SrcLength)		/* %3 */
 		);
 #endif
-#endif
 	return (0);
+#else
+	return (-1);
+#endif
 }
 
-/*  SDL_imageFilterAbsDiff: D = | S1 - S2 | */
+/*!
+\brief Filter using AbsDiff: D = | S1 - S2 |
+
+\param Src1 Pointer to the start of the first source byte array (S1).
+\param Src2 Pointer to the start of the second source byte array (S2).
+\param Dest Pointer to the start of the destination byte array (D).
+\param length The number of bytes in the source arrays.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterAbsDiff(unsigned char *Src1, unsigned char *Src2, unsigned char *Dest, unsigned int length)
 {
 	unsigned int i, istart;
 	unsigned char *cursrc1, *cursrc2, *curdst;
 	int result;
+
+	/* Validate input parameters */
+	if ((Src1 == NULL) || (Src2 == NULL) || (Dest == NULL))
+		return(-1);
+	if (length == 0)
+		return(0);
 
 	if ((SDL_imageFilterMMXdetect()) && (length > 7)) {
 		/* MMX routine */
@@ -515,7 +626,16 @@ int SDL_imageFilterAbsDiff(unsigned char *Src1, unsigned char *Src2, unsigned ch
 	return (0);
 }
 
-/*  SDL_imageFilterMult: D = saturation255(S1 * S2) */
+/*!
+\brief Internal MMX Filter using Mult: D = saturation255(S1 * S2)
+
+\param Src1 Pointer to the start of the first source byte array (S1).
+\param Src2 Pointer to the start of the second source byte array (S2).
+\param Dest Pointer to the start of the destination byte array (D).
+\param SrcLength The number of bytes in the source arrays.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterMultMMX(unsigned char *Src1, unsigned char *Src2, unsigned char *Dest, unsigned int SrcLength)
 {
 #ifdef USE_MMX
@@ -529,7 +649,7 @@ int SDL_imageFilterMultMMX(unsigned char *Src1, unsigned char *Src2, unsigned ch
 			mov ecx, SrcLength   /* load loop counter (SIZE) into ecx */
 			shr ecx, 3   /* counter/8 (MMX loads 8 bytes at a time) */
 			pxor mm0, mm0   /* zero mm0 register */
-			align 16      	/* 16 byte allignment of the loop entry */
+			align 16      	/* 16 byte alignment of the loop entry */
 L1014:
 		movq mm1, [eax]   /* load 8 bytes from Src1 into mm1 */
 		movq mm3, [ebx]   /* load 8 bytes from Src2 into mm3 */
@@ -568,7 +688,7 @@ L1014:
 		"mov %3, %%ecx \n\t"	/* load loop counter (SIZE) into ecx */
 		"shr $3, %%ecx \n\t"	/* counter/8 (MMX loads 8 bytes at a time) */
 		"pxor      %%mm0, %%mm0 \n\t"	/* zero mm0 register */
-		".align 16       \n\t"	/* 16 byte allignment of the loop entry */
+		".align 16       \n\t"	/* 16 byte alignment of the loop entry */
 		"1: movq (%%eax), %%mm1 \n\t"     /* load 8 bytes from Src1 into mm1 */
 		"movq    (%%ebx), %%mm3 \n\t"	/* load 8 bytes from Src2 into mm3 */
 		"movq      %%mm1, %%mm2 \n\t"	/* copy mm1 into mm2 */
@@ -601,16 +721,33 @@ L1014:
 		"m"(SrcLength)		/* %3 */
 		);
 #endif
-#endif
 	return (0);
+#else
+	return (-1);
+#endif
 }
 
-/*  SDL_imageFilterMult: D = saturation255(S1 * S2) */
+/*!
+\brief Filter using Mult: D = saturation255(S1 * S2)
+
+\param Src1 Pointer to the start of the first source byte array (S1).
+\param Src2 Pointer to the start of the second source byte array (S2).
+\param Dest Pointer to the start of the destination byte array (D).
+\param length The number of bytes in the source arrays.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterMult(unsigned char *Src1, unsigned char *Src2, unsigned char *Dest, unsigned int length)
 {
 	unsigned int i, istart;
 	unsigned char *cursrc1, *cursrc2, *curdst;
 	int result;
+
+	/* Validate input parameters */
+	if ((Src1 == NULL) || (Src2 == NULL) || (Dest == NULL))
+		return(-1);
+	if (length == 0)
+		return(0);
 
 	if ((SDL_imageFilterMMXdetect()) && (length > 7)) {
 		/* MMX routine */
@@ -653,7 +790,16 @@ int SDL_imageFilterMult(unsigned char *Src1, unsigned char *Src2, unsigned char 
 	return (0);
 }
 
-/*  SDL_imageFilterMultNor: D = S1 * S2  (non-MMX) */
+/*!
+\brief Internal ASM Filter using MultNor: D = S1 * S2
+
+\param Src1 Pointer to the start of the first source byte array (S1).
+\param Src2 Pointer to the start of the second source byte array (S2).
+\param Dest Pointer to the start of the destination byte array (D).
+\param SrcLength The number of bytes in the source arrays.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterMultNorASM(unsigned char *Src1, unsigned char *Src2, unsigned char *Dest, unsigned int SrcLength)
 {
 #ifdef USE_MMX
@@ -665,7 +811,7 @@ int SDL_imageFilterMultNorASM(unsigned char *Src1, unsigned char *Src2, unsigned
 			mov esi, Src2   /* load Src2 address into esi */
 			mov edi, Dest   /* load Dest address into edi */
 			mov ecx, SrcLength   /* load loop counter (SIZE) into ecx */
-			align 16 	/* 16 byte allignment of the loop entry */
+			align 16 	/* 16 byte alignment of the loop entry */
 L10141:
 		mov al, [edx]   /* load a byte from Src1 */
 		mul [esi] 	/* mul with a byte from Src2 */
@@ -684,7 +830,7 @@ L10142:
 		"mov %1, %%esi \n\t"	/* load Src2 address into esi */
 		"mov %0, %%edi \n\t"	/* load Dest address into edi */
 		"mov %3, %%ecx \n\t"	/* load loop counter (SIZE) into ecx */
-		".align 16       \n\t"	/* 16 byte allignment of the loop entry */
+		".align 16       \n\t"	/* 16 byte alignment of the loop entry */
 		"1:mov  (%%edx), %%al \n\t"      /* load a byte from Src1 */
 		"mulb (%%esi)       \n\t"	/* mul with a byte from Src2 */
 		"mov %%al, (%%edi)  \n\t"       /* move a byte result to Dest */
@@ -698,16 +844,33 @@ L10142:
 		"m"(SrcLength)		/* %3 */
 		);
 #endif
-#endif
 	return (0);
+#else
+	return (-1);
+#endif
 }
 
-/*  SDL_imageFilterMultNor: D = S1 * S2 */
+/*!
+\brief Filter using MultNor: D = S1 * S2
+
+\param Src1 Pointer to the start of the first source byte array (S1).
+\param Src2 Pointer to the start of the second source byte array (S2).
+\param Dest Pointer to the start of the destination byte array (D).
+\param length The number of bytes in the source arrays.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterMultNor(unsigned char *Src1, unsigned char *Src2, unsigned char *Dest, unsigned int length)
 {
 	unsigned int i, istart;
 	unsigned char *cursrc1, *cursrc2, *curdst;
 	int result;
+
+	/* Validate input parameters */
+	if ((Src1 == NULL) || (Src2 == NULL) || (Dest == NULL))
+		return(-1);
+	if (length == 0)
+		return(0);
 
 	if (SDL_imageFilterMMXdetect()) {
 		if (length > 0) {
@@ -750,7 +913,16 @@ int SDL_imageFilterMultNor(unsigned char *Src1, unsigned char *Src2, unsigned ch
 	return (0);
 }
 
-/*  SDL_imageFilterMultDivby2: D = saturation255(S1/2 * S2) */
+/*!
+\brief Internal MMX Filter using MultDivby2: D = saturation255(S1/2 * S2)
+
+\param Src1 Pointer to the start of the first source byte array (S1).
+\param Src2 Pointer to the start of the second source byte array (S2).
+\param Dest Pointer to the start of the destination byte array (D).
+\param SrcLength The number of bytes in the source arrays.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterMultDivby2MMX(unsigned char *Src1, unsigned char *Src2, unsigned char *Dest, unsigned int SrcLength)
 {
 #ifdef USE_MMX
@@ -764,7 +936,7 @@ int SDL_imageFilterMultDivby2MMX(unsigned char *Src1, unsigned char *Src2, unsig
 			mov ecx,  SrcLength 	/* load loop counter (SIZE) into ecx */
 			shr ecx,  3 	/* counter/8 (MMX loads 8 bytes at a time) */
 			pxor mm0,  mm0 	/* zero mm0 register */
-			align 16          	/* 16 byte allignment of the loop entry */
+			align 16          	/* 16 byte alignment of the loop entry */
 L1015:
 		movq mm1,  [eax] 	/* load 8 bytes from Src1 into mm1 */
 		movq mm3,  [ebx] 	/* load 8 bytes from Src2 into mm3 */
@@ -796,7 +968,7 @@ L1015:
 		"mov %3, %%ecx \n\t"	/* load loop counter (SIZE) into ecx */
 		"shr $3, %%ecx \n\t"	/* counter/8 (MMX loads 8 bytes at a time) */
 		"pxor      %%mm0, %%mm0 \n\t"	/* zero mm0 register */
-		".align 16       \n\t"	/* 16 byte allignment of the loop entry */
+		".align 16       \n\t"	/* 16 byte alignment of the loop entry */
 		"1: movq (%%eax), %%mm1 \n\t"	/* load 8 bytes from Src1 into mm1 */
 		"movq    (%%ebx), %%mm3 \n\t"	/* load 8 bytes from Src2 into mm3 */
 		"movq      %%mm1, %%mm2 \n\t"	/* copy mm1 into mm2 */
@@ -822,16 +994,33 @@ L1015:
 		"m"(SrcLength)		/* %3 */
 		);
 #endif
-#endif
 	return (0);
+#else
+	return (-1);
+#endif
 }
 
-/*  SDL_imageFilterMultDivby2: D = saturation255(S1/2 * S2) */
+/*!
+\brief Filter using MultDivby2: D = saturation255(S1/2 * S2)
+
+\param Src1 Pointer to the start of the first source byte array (S1).
+\param Src2 Pointer to the start of the second source byte array (S2).
+\param Dest Pointer to the start of the destination byte array (D).
+\param length The number of bytes in the source arrays.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterMultDivby2(unsigned char *Src1, unsigned char *Src2, unsigned char *Dest, unsigned int length)
 {
 	unsigned int i, istart;
 	unsigned char *cursrc1, *cursrc2, *curdst;
 	int result;
+
+	/* Validate input parameters */
+	if ((Src1 == NULL) || (Src2 == NULL) || (Dest == NULL))
+		return(-1);
+	if (length == 0)
+		return(0);
 
 	if ((SDL_imageFilterMMXdetect()) && (length > 7)) {
 		/* MMX routine */
@@ -871,7 +1060,16 @@ int SDL_imageFilterMultDivby2(unsigned char *Src1, unsigned char *Src2, unsigned
 	return (0);
 }
 
-/*  SDL_imageFilterMultDivby4: D = saturation255(S1/2 * S2/2) */
+/*!
+\brief Internal MMX Filter using MultDivby4: D = saturation255(S1/2 * S2/2)
+
+\param Src1 Pointer to the start of the first source byte array (S1).
+\param Src2 Pointer to the start of the second source byte array (S2).
+\param Dest Pointer to the start of the destination byte array (D).
+\param SrcLength The number of bytes in the source arrays.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterMultDivby4MMX(unsigned char *Src1, unsigned char *Src2, unsigned char *Dest, unsigned int SrcLength)
 {
 #ifdef USE_MMX
@@ -885,7 +1083,7 @@ int SDL_imageFilterMultDivby4MMX(unsigned char *Src1, unsigned char *Src2, unsig
 			mov ecx, SrcLength 	/* load loop counter (SIZE) into ecx */
 			shr ecx,  3 	/* counter/8 (MMX loads 8 bytes at a time) */
 			pxor mm0, mm0   	/* zero mm0 register */
-			align 16          	/* 16 byte allignment of the loop entry */
+			align 16          	/* 16 byte alignment of the loop entry */
 L1016:
 		movq mm1, [eax]   	/* load 8 bytes from Src1 into mm1 */
 		movq mm3, [ebx]   	/* load 8 bytes from Src2 into mm3 */
@@ -919,7 +1117,7 @@ L1016:
 		"mov %3, %%ecx \n\t"	/* load loop counter (SIZE) into ecx */
 		"shr $3, %%ecx \n\t"	/* counter/8 (MMX loads 8 bytes at a time) */
 		"pxor      %%mm0, %%mm0 \n\t"	/* zero mm0 register */
-		".align 16       \n\t"	/* 16 byte allignment of the loop entry */
+		".align 16       \n\t"	/* 16 byte alignment of the loop entry */
 		"1: movq (%%eax), %%mm1 \n\t"	/* load 8 bytes from Src1 into mm1 */
 		"movq    (%%ebx), %%mm3 \n\t"	/* load 8 bytes from Src2 into mm3 */
 		"movq      %%mm1, %%mm2 \n\t"	/* copy mm1 into mm2 */
@@ -947,16 +1145,33 @@ L1016:
 		"m"(SrcLength)		/* %3 */
 		);
 #endif
-#endif
 	return (0);
+#else
+	return (-1);
+#endif
 }
 
-/*  SDL_imageFilterMultDivby4: D = saturation255(S1/2 * S2/2) */
+/*!
+\brief Filter using MultDivby4: D = saturation255(S1/2 * S2/2)
+
+\param Src1 Pointer to the start of the first source byte array (S1).
+\param Src2 Pointer to the start of the second source byte array (S2).
+\param Dest Pointer to the start of the destination byte array (D).
+\param length The number of bytes in the source arrays.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterMultDivby4(unsigned char *Src1, unsigned char *Src2, unsigned char *Dest, unsigned int length)
 {
 	unsigned int i, istart;
 	unsigned char *cursrc1, *cursrc2, *curdst;
 	int result;
+
+	/* Validate input parameters */
+	if ((Src1 == NULL) || (Src2 == NULL) || (Dest == NULL))
+		return(-1);
+	if (length == 0)
+		return(0);
 
 	if ((SDL_imageFilterMMXdetect()) && (length > 7)) {
 		/* MMX routine */
@@ -996,7 +1211,16 @@ int SDL_imageFilterMultDivby4(unsigned char *Src1, unsigned char *Src2, unsigned
 	return (0);
 }
 
-/*  SDL_imageFilterBitAnd: D = S1 & S2 */
+/*!
+\brief Internal MMX Filter using BitAnd: D = S1 & S2
+
+\param Src1 Pointer to the start of the first source byte array (S1).
+\param Src2 Pointer to the start of the second source byte array (S2).
+\param Dest Pointer to the start of the destination byte array (D).
+\param SrcLength The number of bytes in the source arrays.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterBitAndMMX(unsigned char *Src1, unsigned char *Src2, unsigned char *Dest, unsigned int SrcLength)
 {
 #ifdef USE_MMX
@@ -1009,7 +1233,7 @@ int SDL_imageFilterBitAndMMX(unsigned char *Src1, unsigned char *Src2, unsigned 
 			mov edi, Dest   	/* load Dest address into edi */
 			mov ecx, SrcLength 	/* load loop counter (SIZE) into ecx */
 			shr ecx, 3 	/* counter/8 (MMX loads 8 bytes at a time) */
-			align 16          	/* 16 byte allignment of the loop entry */
+			align 16          	/* 16 byte alignment of the loop entry */
 L1017:
 		movq mm1, [eax]   	/* load 8 bytes from Src1 into mm1 */
 		pand mm1, [ebx]   	/* mm1=Src1&Src2 */
@@ -1029,7 +1253,7 @@ L1017:
 		"mov %0, %%edi \n\t"	/* load Dest address into edi */
 		"mov %3, %%ecx \n\t"	/* load loop counter (SIZE) into ecx */
 		"shr $3, %%ecx \n\t"	/* counter/8 (MMX loads 8 bytes at a time) */
-		".align 16       \n\t"	/* 16 byte allignment of the loop entry */
+		".align 16       \n\t"	/* 16 byte alignment of the loop entry */
 		"1: movq (%%eax), %%mm1 \n\t"	/* load 8 bytes from Src1 into mm1 */
 		"pand    (%%ebx), %%mm1 \n\t"	/* mm1=Src1&Src2 */
 		"movq    %%mm1, (%%edi) \n\t"	/* store result in Dest */
@@ -1044,15 +1268,32 @@ L1017:
 		"m"(SrcLength)		/* %3 */
 		);
 #endif
-#endif
 	return (0);
+#else
+	return (-1);
+#endif
 }
 
-/*  SDL_imageFilterBitAnd: D = S1 & S2 */
+/*!
+\brief Filter using BitAnd: D = S1 & S2
+
+\param Src1 Pointer to the start of the first source byte array (S1).
+\param Src2 Pointer to the start of the second source byte array (S2).
+\param Dest Pointer to the start of the destination byte array (D).
+\param length The number of bytes in the source arrays.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterBitAnd(unsigned char *Src1, unsigned char *Src2, unsigned char *Dest, unsigned int length)
 {
 	unsigned int i, istart;
 	unsigned char *cursrc1, *cursrc2, *curdst;
+
+	/* Validate input parameters */
+	if ((Src1 == NULL) || (Src2 == NULL) || (Dest == NULL))
+		return(-1);
+	if (length == 0)
+		return(0);
 
 	if ((SDL_imageFilterMMXdetect()>0) && (length>7)) {
 		/*  if (length > 7) { */
@@ -1092,7 +1333,16 @@ int SDL_imageFilterBitAnd(unsigned char *Src1, unsigned char *Src2, unsigned cha
 	return (0);
 }
 
-/*  SDL_imageFilterBitOr: D = S1 | S2 */
+/*!
+\brief Internal MMX Filter using BitOr: D = S1 | S2
+
+\param Src1 Pointer to the start of the first source byte array (S1).
+\param Src2 Pointer to the start of the second source byte array (S2).
+\param Dest Pointer to the start of the destination byte array (D).
+\param SrcLength The number of bytes in the source arrays.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterBitOrMMX(unsigned char *Src1, unsigned char *Src2, unsigned char *Dest, unsigned int SrcLength)
 {
 #ifdef USE_MMX
@@ -1105,7 +1355,7 @@ int SDL_imageFilterBitOrMMX(unsigned char *Src1, unsigned char *Src2, unsigned c
 			mov edi, Dest   	/* load Dest address into edi */
 			mov ecx, SrcLength 	/* load loop counter (SIZE) into ecx */
 			shr ecx,  3 	/* counter/8 (MMX loads 8 bytes at a time) */
-			align 16          	/* 16 byte allignment of the loop entry */
+			align 16          	/* 16 byte alignment of the loop entry */
 L91017:
 		movq mm1, [eax]   	/* load 8 bytes from Src1 into mm1 */
 		por mm1, [ebx]   	/* mm1=Src1|Src2 */
@@ -1125,7 +1375,7 @@ L91017:
 		"mov %0, %%edi \n\t"	/* load Dest address into edi */
 		"mov %3, %%ecx \n\t"	/* load loop counter (SIZE) into ecx */
 		"shr $3, %%ecx \n\t"	/* counter/8 (MMX loads 8 bytes at a time) */
-		".align 16       \n\t"	/* 16 byte allignment of the loop entry */
+		".align 16       \n\t"	/* 16 byte alignment of the loop entry */
 		"1: movq (%%eax), %%mm1 \n\t"	/* load 8 bytes from Src1 into mm1 */
 		"por     (%%ebx), %%mm1 \n\t"	/* mm1=Src1|Src2 */
 		"movq    %%mm1, (%%edi) \n\t"	/* store result in Dest */
@@ -1140,15 +1390,32 @@ L91017:
 		"m"(SrcLength)		/* %3 */
 		);
 #endif
-#endif
 	return (0);
+#else
+	return (-1);
+#endif
 }
 
-/*  SDL_imageFilterBitOr: D = S1 | S2 */
+/*!
+\brief Filter using BitOr: D = S1 | S2
+
+\param Src1 Pointer to the start of the first source byte array (S1).
+\param Src2 Pointer to the start of the second source byte array (S2).
+\param Dest Pointer to the start of the destination byte array (D).
+\param length The number of bytes in the source arrays.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterBitOr(unsigned char *Src1, unsigned char *Src2, unsigned char *Dest, unsigned int length)
 {
 	unsigned int i, istart;
 	unsigned char *cursrc1, *cursrc2, *curdst;
+
+	/* Validate input parameters */
+	if ((Src1 == NULL) || (Src2 == NULL) || (Dest == NULL))
+		return(-1);
+	if (length == 0)
+		return(0);
 
 	if ((SDL_imageFilterMMXdetect()) && (length > 7)) {
 
@@ -1185,7 +1452,16 @@ int SDL_imageFilterBitOr(unsigned char *Src1, unsigned char *Src2, unsigned char
 	return (0);
 }
 
-/*  SDL_imageFilterDiv: D = S1 / S2  (non-MMX) */
+/*!
+\brief Internal ASM Filter using Div: D = S1 / S2
+
+\param Src1 Pointer to the start of the first source byte array (S1).
+\param Src2 Pointer to the start of the second source byte array (S2).
+\param Dest Pointer to the start of the destination byte array (D).
+\param SrcLength The number of bytes in the source arrays.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterDivASM(unsigned char *Src1, unsigned char *Src2, unsigned char *Dest, unsigned int SrcLength)
 {
 #ifdef USE_MMX
@@ -1197,7 +1473,7 @@ int SDL_imageFilterDivASM(unsigned char *Src1, unsigned char *Src2, unsigned cha
 			mov esi, Src2   	/* load Src2 address into esi */
 			mov edi, Dest   	/* load Dest address into edi */
 			mov ecx, SrcLength 	/* load loop counter (SIZE) into ecx */
-			align 16        	/* 16 byte allignment of the loop entry */
+			align 16        	/* 16 byte alignment of the loop entry */
 L10191:
 		mov bl, [esi]   	/* load a byte from Src2 */
 		cmp bl, 0   	/* check if it zero */
@@ -1223,7 +1499,7 @@ L10193:
 		"mov %1, %%esi \n\t"	/* load Src2 address into esi */
 		"mov %0, %%edi \n\t"	/* load Dest address into edi */
 		"mov %3, %%ecx \n\t"	/* load loop counter (SIZE) into ecx */
-		".align 16     \n\t"	/* 16 byte allignment of the loop entry */
+		".align 16     \n\t"	/* 16 byte alignment of the loop entry */
 		"1: mov (%%esi), %%bl  \n\t"	/* load a byte from Src2 */
 		"cmp       $0, %%bl  \n\t"	/* check if it zero */
 		"jnz 2f              \n\t" "movb  $255, (%%edi) \n\t"	/* division by zero = 255 !!! */
@@ -1241,16 +1517,33 @@ L10193:
 		"m"(SrcLength)		/* %3 */
 		);
 #endif
-#endif
 	return (0);
+#else
+	return (-1);
+#endif
 }
 
-/*  SDL_imageFilterDiv: D = S1 / S2  (non-MMX!) */
+/*!
+\brief Filter using Div: D = S1 / S2
+
+\param Src1 Pointer to the start of the first source byte array (S1).
+\param Src2 Pointer to the start of the second source byte array (S2).
+\param Dest Pointer to the start of the destination byte array (D).
+\param length The number of bytes in the source arrays.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterDiv(unsigned char *Src1, unsigned char *Src2, unsigned char *Dest, unsigned int length)
 {
 	unsigned int i, istart;
 	unsigned char *cursrc1, *cursrc2, *curdst;
 	int result;
+
+	/* Validate input parameters */
+	if ((Src1 == NULL) || (Src2 == NULL) || (Dest == NULL))
+		return(-1);
+	if (length == 0)
+		return(0);
 
 	if (SDL_imageFilterMMXdetect()) {
 		if (length > 0) {
@@ -1285,7 +1578,15 @@ int SDL_imageFilterDiv(unsigned char *Src1, unsigned char *Src2, unsigned char *
 
 /* ------------------------------------------------------------------------------------ */
 
-/*  SDL_imageFilterBitNegation: D = !S */
+/*!
+\brief Internal MMX Filter using BitNegation: D = !S
+
+\param Src1 Pointer to the start of the source byte array (S1).
+\param Dest Pointer to the start of the destination byte array (D).
+\param SrcLength The number of bytes in the source array.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterBitNegationMMX(unsigned char *Src1, unsigned char *Dest, unsigned int SrcLength)
 {
 #ifdef USE_MMX
@@ -1298,7 +1599,7 @@ int SDL_imageFilterBitNegationMMX(unsigned char *Src1, unsigned char *Dest, unsi
 			mov edi, Dest   	/* load Dest address into edi */
 			mov ecx, SrcLength 	/* load loop counter (SIZE) into ecx */
 			shr ecx,  3 	/* counter/8 (MMX loads 8 bytes at a time) */
-			align 16          	/* 16 byte allignment of the loop entry */
+			align 16          	/* 16 byte alignment of the loop entry */
 L91117:
 		movq mm0, [eax]   	/* load 8 bytes from Src1 into mm1 */
 		pxor mm0, mm1   	/* negate mm0 by xoring with mm1 */
@@ -1317,7 +1618,7 @@ L91117:
 		"mov %0, %%edi \n\t"	/* load Dest address into edi */
 		"mov %2, %%ecx \n\t"	/* load loop counter (SIZE) into ecx */
 		"shr $3, %%ecx \n\t"	/* counter/8 (MMX loads 8 bytes at a time) */
-		".align 16       \n\t"	/* 16 byte allignment of the loop entry */
+		".align 16       \n\t"	/* 16 byte alignment of the loop entry */
 		"1: movq (%%eax), %%mm0 \n\t"	/* load 8 bytes from Src1 into mm1 */
 		"pxor      %%mm1, %%mm0 \n\t"	/* negate mm0 by xoring with mm1 */
 		"movq    %%mm0, (%%edi) \n\t"	/* store result in Dest */
@@ -1330,15 +1631,31 @@ L91117:
 		"m"(SrcLength)		/* %2 */
 		);
 #endif
-#endif
 	return (0);
+#else
+	return (-1);
+#endif
 }
 
-/*  SDL_imageFilterBitNegation: D = !S */
+/*!
+\brief Filter using BitNegation: D = !S
+
+\param Src1 Pointer to the start of the source byte array (S).
+\param Dest Pointer to the start of the destination byte array (D).
+\param length The number of bytes in the source array.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterBitNegation(unsigned char *Src1, unsigned char *Dest, unsigned int length)
 {
 	unsigned int i, istart;
 	unsigned char *cursrc1, *curdst;
+
+	/* Validate input parameters */
+	if ((Src1 == NULL) || (Dest == NULL))
+		return(-1);
+	if (length == 0)
+		return(0);
 
 	if ((SDL_imageFilterMMXdetect()) && (length > 7)) {
 		/* MMX routine */
@@ -1372,7 +1689,16 @@ int SDL_imageFilterBitNegation(unsigned char *Src1, unsigned char *Dest, unsigne
 	return (0);
 }
 
-/*  SDL_imageFilterAddByteMMX: D = saturation255(S + C) */
+/*!
+\brief Internal MMX Filter using AddByte: D = saturation255(S + C) 
+
+\param Src1 Pointer to the start of the source byte array (S).
+\param Dest Pointer to the start of the destination byte array (D).
+\param SrcLength The number of bytes in the source array.
+\param C Constant value to add (C).
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterAddByteMMX(unsigned char *Src1, unsigned char *Dest, unsigned int SrcLength, unsigned char C)
 {
 #ifdef USE_MMX
@@ -1393,7 +1719,7 @@ int SDL_imageFilterAddByteMMX(unsigned char *Src1, unsigned char *Dest, unsigned
 			mov edi, Dest   	/* load Dest address into edi */
 			mov ecx, SrcLength 	/* load loop counter (SIZE) into ecx */
 			shr ecx,  3 	/* counter/8 (MMX loads 8 bytes at a time) */
-			align 16                 	/* 16 byte allignment of the loop entry */
+			align 16                 	/* 16 byte alignment of the loop entry */
 L1021:
 		movq mm0, [eax]   	/* load 8 bytes from Src1 into MM0 */
 		paddusb mm0,  mm1 	/* MM0=SrcDest+C (add 8 bytes with saturation) */
@@ -1421,7 +1747,7 @@ L1021:
 		"mov          %0, %%edi \n\t"	/* load Dest address into edi */
 		"mov          %2, %%ecx \n\t"	/* load loop counter (SIZE) into ecx */
 		"shr          $3, %%ecx \n\t"	/* counter/8 (MMX loads 8 bytes at a time) */
-		".align 16              \n\t"	/* 16 byte allignment of the loop entry */
+		".align 16              \n\t"	/* 16 byte alignment of the loop entry */
 		"1:                     \n\t" 
 		"movq    (%%eax), %%mm0 \n\t"	/* load 8 bytes from Src1 into MM0 */
 		"paddusb   %%mm1, %%mm0 \n\t"	/* MM0=SrcDest+C (add 8 bytes with saturation) */
@@ -1437,17 +1763,41 @@ L1021:
 		"m"(C)			/* %3 */
 		);
 #endif
-#endif
 	return (0);
+#else
+	return (-1);
+#endif
 }
 
-/*  SDL_imageFilterAddByte: D = saturation255(S + C) */
+/*!
+\brief Filter using AddByte: D = saturation255(S + C) 
+
+\param Src1 Pointer to the start of the source byte array (S).
+\param Dest Pointer to the start of the destination byte array (D).
+\param length The number of bytes in the source array.
+\param C Constant value to add (C).
+
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterAddByte(unsigned char *Src1, unsigned char *Dest, unsigned int length, unsigned char C)
 {
 	unsigned int i, istart;
 	int iC;
 	unsigned char *cursrc1, *curdest;
 	int result;
+
+	/* Validate input parameters */
+	if ((Src1 == NULL) || (Dest == NULL))
+		return(-1);
+	if (length == 0)
+		return(0);
+
+	/* Special case: C==0 */
+	if (C == 0) {
+		memcpy(Src1, Dest, length);
+		return (0); 
+	}
 
 	if ((SDL_imageFilterMMXdetect()) && (length > 7)) {
 
@@ -1485,8 +1835,18 @@ int SDL_imageFilterAddByte(unsigned char *Src1, unsigned char *Dest, unsigned in
 	return (0);
 }
 
-/*  SDL_imageFilterAddUintMMX: D = saturation255((S + (uint)C), Cs=swap_32(C) */
-int SDL_imageFilterAddUintMMX(unsigned char *Src1, unsigned char *Dest, unsigned int SrcLength, unsigned int C, unsigned int TCs)
+/*!
+\brief Internal MMX Filter using AddUint: D = saturation255((S[i] + Cs[i % 4]), Cs=Swap32((uint)C)
+
+\param Src1 Pointer to the start of the source byte array (S).
+\param Dest Pointer to the start of the destination byte array (D).
+\param SrcLength The number of bytes in the source array.
+\param C Constant to add (C).
+\param Cs Byteorder-swapped constant to add (Cs).
+
+\return Returns 0 for success or -1 for error.
+*/
+int SDL_imageFilterAddUintMMX(unsigned char *Src1, unsigned char *Dest, unsigned int SrcLength, unsigned int C, unsigned int Cs)
 {
 #ifdef USE_MMX
 #if !defined(GCC__)
@@ -1496,14 +1856,14 @@ int SDL_imageFilterAddUintMMX(unsigned char *Src1, unsigned char *Dest, unsigned
 			/* ** Duplicate (int)C in 8 bytes of MM1 ** */
 			mov eax, C   	/* load C into EAX */
 			movd mm1, eax   	/* copy EAX into MM1 */
-			mov eax, TCs   	/* load Cs into EAX */
+			mov eax, Cs   	/* load Cs into EAX */
 			movd mm2, eax   	/* copy EAX into MM2 */
 			punpckldq mm1, mm2   	/* fill higher bytes of MM1 with C */
 			mov eax, Src1   	/* load Src1 address into eax */
 			mov edi, Dest   	/* load Dest address into edi */
 			mov ecx, SrcLength 	/* load loop counter (SIZE) into ecx */
 			shr ecx,  3 	/* counter/8 (MMX loads 8 bytes at a time) */
-			align 16                 	/* 16 byte allignment of the loop entry */
+			align 16                 	/* 16 byte alignment of the loop entry */
 L11023:
 		movq mm0, [eax]   	/* load 8 bytes from SrcDest into MM0 */
 		paddusb mm0,  mm1 	/* MM0=SrcDest+C (add 8 bytes with saturation) */
@@ -1528,7 +1888,7 @@ L11023:
 		"mov          %0, %%edi \n\t"	/* load Dest address into edi */
 		"mov          %2, %%ecx \n\t"	/* load loop counter (SIZE) into ecx */
 		"shr          $3, %%ecx \n\t"	/* counter/8 (MMX loads 8 bytes at a time) */
-		".align 16              \n\t"	/* 16 byte allignment of the loop entry */
+		".align 16              \n\t"	/* 16 byte alignment of the loop entry */
 		"1:                     \n\t" 
 		"movq    (%%eax), %%mm0 \n\t"	/* load 8 bytes from SrcDest into MM0 */
 		"paddusb   %%mm1, %%mm0 \n\t"	/* MM0=SrcDest+C (add 8 bytes with saturation) */
@@ -1542,14 +1902,25 @@ L11023:
 		:"m"(Src1),		/* %1 */
 		"m"(SrcLength),		/* %2 */
 		"m"(C),			/* %3 */
-		"m"(TCs)			/* %4 */
+		"m"(Cs)			/* %4 */
 		);
 #endif
-#endif
 	return (0);
+#else
+	return (-1);
+#endif
 }
 
-/*  SDL_imageFilterAddUint: D = saturation0(S - (Uint)C) */
+/*!
+\brief Filter using AddUint: D = saturation255((S[i] + Cs[i % 4]), Cs=Swap32((uint)C)
+
+\param Src1 Pointer to the start of the source byte array (S).
+\param Dest Pointer to the start of the destination byte array (D).
+\param length The number of bytes in the source array.
+\param C Constant to add (C).
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterAddUint(unsigned char *Src1, unsigned char *Dest, unsigned int length, unsigned int C)
 {
 	unsigned int i, j, istart, D;
@@ -1558,10 +1929,22 @@ int SDL_imageFilterAddUint(unsigned char *Src1, unsigned char *Dest, unsigned in
 	unsigned char *curdest;
 	int result;
 
+	/* Validate input parameters */
+	if ((Src1 == NULL) || (Dest == NULL))
+		return(-1);
+	if (length == 0)
+		return(0);
+
+	/* Special case: C==0 */
+	if (C == 0) {
+		memcpy(Src1, Dest, length);
+		return (0); 
+	}
+
 	if ((SDL_imageFilterMMXdetect()) && (length > 7)) {
 
 		/* MMX routine */
-		D=swap_32(C);
+		D=SWAP_32(C);
 		SDL_imageFilterAddUintMMX(Src1, Dest, length, C, D);
 
 		/* Check for unaligned bytes */
@@ -1601,8 +1984,17 @@ int SDL_imageFilterAddUint(unsigned char *Src1, unsigned char *Dest, unsigned in
 	return (0);
 }
 
+/*!
+\brief Internal MMX Filter using AddByteToHalf: D = saturation255(S/2 + C)
 
-/*  SDL_imageFilterAddByteToHalfMMX: D = saturation255(S/2 + C) */
+\param Src1 Pointer to the start of the source byte array (S).
+\param Dest Pointer to the start of the destination byte array (D).
+\param SrcLength The number of bytes in the source array.
+\param C Constant to add (C).
+\param Mask Pointer to 8 mask bytes of value 0x7F.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterAddByteToHalfMMX(unsigned char *Src1, unsigned char *Dest, unsigned int SrcLength, unsigned char C,
 									unsigned char *Mask)
 {
@@ -1626,7 +2018,7 @@ int SDL_imageFilterAddByteToHalfMMX(unsigned char *Src1, unsigned char *Dest, un
 			mov edi, Dest   	/* load Dest address into edi */
 			mov ecx,  SrcLength 	/* load loop counter (SIZE) into ecx */
 			shr ecx,  3 	/* counter/8 (MMX loads 8 bytes at a time) */
-			align 16                 	/* 16 byte allignment of the loop entry */
+			align 16                 	/* 16 byte alignment of the loop entry */
 L1022:
 		movq mm2, [eax]   	/* load 8 bytes from Src1 into MM2 */
 		psrlw mm2, 1   	/* shift 4 WORDS of MM2 1 bit to the right */
@@ -1659,7 +2051,7 @@ L1022:
 		"mov          %0, %%edi \n\t"	/* load Dest address into edi */
 		"mov          %2, %%ecx \n\t"	/* load loop counter (SIZE) into ecx */
 		"shr          $3, %%ecx \n\t"	/* counter/8 (MMX loads 8 bytes at a time) */
-		".align 16              \n\t"	/* 16 byte allignment of the loop entry */
+		".align 16              \n\t"	/* 16 byte alignment of the loop entry */
 		"1:                     \n\t" 
 		"movq    (%%eax), %%mm2 \n\t"	/* load 8 bytes from Src1 into MM2 */
 		"psrlw        $1, %%mm2 \n\t"	/* shift 4 WORDS of MM2 1 bit to the right */
@@ -1679,11 +2071,22 @@ L1022:
 		"m"(Mask)			/* %4 */
 		);
 #endif
-#endif
 	return (0);
+#else
+	return (-1);
+#endif
 }
 
-/*  SDL_imageFilterAddByteToHalf: D = saturation255(S/2 + C) */
+/*!
+\brief Filter using AddByteToHalf: D = saturation255(S/2 + C)
+
+\param Src1 Pointer to the start of the source byte array (S).
+\param Dest Pointer to the start of the destination byte array (D).
+\param length The number of bytes in the source array.
+\param C Constant to add (C).
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterAddByteToHalf(unsigned char *Src1, unsigned char *Dest, unsigned int length, unsigned char C)
 {
 	static unsigned char Mask[8] = { 0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F };
@@ -1692,6 +2095,12 @@ int SDL_imageFilterAddByteToHalf(unsigned char *Src1, unsigned char *Dest, unsig
 	unsigned char *cursrc1;
 	unsigned char *curdest;
 	int result;
+
+	/* Validate input parameters */
+	if ((Src1 == NULL) || (Dest == NULL))
+		return(-1);
+	if (length == 0)
+		return(0);
 
 	if ((SDL_imageFilterMMXdetect()) && (length > 7)) {
 
@@ -1730,7 +2139,16 @@ int SDL_imageFilterAddByteToHalf(unsigned char *Src1, unsigned char *Dest, unsig
 	return (0);
 }
 
-/*  SDL_imageFilterSubByteMMX: D = saturation0(S - C) */
+/*!
+\brief Internal MMX Filter using SubByte: D = saturation0(S - C)
+
+\param Src1 Pointer to the start of the source byte array (S).
+\param Dest Pointer to the start of the destination byte array (D).
+\param SrcLength The number of bytes in the source array.
+\param C Constant to subtract (C).
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterSubByteMMX(unsigned char *Src1, unsigned char *Dest, unsigned int SrcLength, unsigned char C)
 {
 #ifdef USE_MMX
@@ -1751,7 +2169,7 @@ int SDL_imageFilterSubByteMMX(unsigned char *Src1, unsigned char *Dest, unsigned
 			mov edi, Dest   	/* load Dest address into edi */
 			mov ecx,  SrcLength 	/* load loop counter (SIZE) into ecx */
 			shr ecx,  3 	/* counter/8 (MMX loads 8 bytes at a time) */
-			align 16                 	/* 16 byte allignment of the loop entry */
+			align 16                 	/* 16 byte alignment of the loop entry */
 L1023:
 		movq mm0, [eax]   	/* load 8 bytes from SrcDest into MM0 */
 		psubusb mm0,  mm1 	/* MM0=SrcDest-C (sub 8 bytes with saturation) */
@@ -1779,7 +2197,7 @@ L1023:
 		"mov          %0, %%edi \n\t"	/* load Dest address into edi */
 		"mov          %2, %%ecx \n\t"	/* load loop counter (SIZE) into ecx */
 		"shr          $3, %%ecx \n\t"	/* counter/8 (MMX loads 8 bytes at a time) */
-		".align 16              \n\t"	/* 16 byte allignment of the loop entry */
+		".align 16              \n\t"	/* 16 byte alignment of the loop entry */
 		"1: movq (%%eax), %%mm0 \n\t"	/* load 8 bytes from SrcDest into MM0 */
 		"psubusb   %%mm1, %%mm0 \n\t"	/* MM0=SrcDest-C (sub 8 bytes with saturation) */
 		"movq    %%mm0, (%%edi) \n\t"	/* store result in SrcDest */
@@ -1794,11 +2212,22 @@ L1023:
 		"m"(C)			/* %3 */
 		);
 #endif
-#endif
 	return (0);
+#else
+	return (-1);
+#endif
 }
 
-/*  SDL_imageFilterSubByte: D = saturation0(S - C) */
+/*!
+\brief Filter using SubByte: D = saturation0(S - C)
+
+\param Src1 Pointer to the start of the source byte array (S).
+\param Dest Pointer to the start of the destination byte array (D).
+\param length The number of bytes in the source arrays.
+\param C Constant to subtract (C).
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterSubByte(unsigned char *Src1, unsigned char *Dest, unsigned int length, unsigned char C)
 {
 	unsigned int i, istart;
@@ -1806,6 +2235,18 @@ int SDL_imageFilterSubByte(unsigned char *Src1, unsigned char *Dest, unsigned in
 	unsigned char *cursrc1;
 	unsigned char *curdest;
 	int result;
+
+	/* Validate input parameters */
+	if ((Src1 == NULL) || (Dest == NULL))
+		return(-1);
+	if (length == 0)
+		return(0);
+
+	/* Special case: C==0 */
+	if (C == 0) {
+		memcpy(Src1, Dest, length);
+		return (0); 
+	}
 
 	if ((SDL_imageFilterMMXdetect()) && (length > 7)) {
 
@@ -1843,8 +2284,18 @@ int SDL_imageFilterSubByte(unsigned char *Src1, unsigned char *Dest, unsigned in
 	return (0);
 }
 
-/*  SDL_imageFilterSubUintMMX: D = saturation0(S - (uint)C), Cs=swap_32(C) */
-int SDL_imageFilterSubUintMMX(unsigned char *Src1, unsigned char *Dest, unsigned int SrcLength, unsigned int C, unsigned int TCs)
+/*!
+\brief Internal MMX Filter using SubUint: D = saturation0(S[i] - C[i % 4]), Cs=Swap32((uint)C)
+
+\param Src1 Pointer to the start of the source byte array (S).
+\param Dest Pointer to the start of the destination byte array (D).
+\param SrcLength The number of bytes in the source array.
+\param C Constant to subtract (C).
+\param Cs Byteorder-swapped constant to subtract (Cs).
+
+\return Returns 0 for success or -1 for error.
+*/
+int SDL_imageFilterSubUintMMX(unsigned char *Src1, unsigned char *Dest, unsigned int SrcLength, unsigned int C, unsigned int Cs)
 {
 #ifdef USE_MMX
 #if !defined(GCC__)
@@ -1854,14 +2305,14 @@ int SDL_imageFilterSubUintMMX(unsigned char *Src1, unsigned char *Dest, unsigned
 			/* ** Duplicate (int)C in 8 bytes of MM1 ** */
 			mov eax, C   	/* load C into EAX */
 			movd mm1, eax   	/* copy EAX into MM1 */
-			mov eax, TCs   	/* load Cs into EAX */
+			mov eax, Cs   	/* load Cs into EAX */
 			movd mm2, eax   	/* copy EAX into MM2 */
 			punpckldq mm1, mm2   	/* fill higher bytes of MM1 with C */
 			mov eax, Src1   	/* load Src1 address into eax */
 			mov edi, Dest   	/* load Dest address into edi */
 			mov ecx,  SrcLength 	/* load loop counter (SIZE) into ecx */
 			shr ecx,  3 	/* counter/8 (MMX loads 8 bytes at a time) */
-			align 16                 	/* 16 byte allignment of the loop entry */
+			align 16                 	/* 16 byte alignment of the loop entry */
 L11024:
 		movq mm0, [eax]   	/* load 8 bytes from SrcDest into MM0 */
 		psubusb mm0, mm1 	/* MM0=SrcDest-C (sub 8 bytes with saturation) */
@@ -1886,7 +2337,7 @@ L11024:
 		"mov          %0, %%edi \n\t"	/* load Dest address into edi */
 		"mov          %2, %%ecx \n\t"	/* load loop counter (SIZE) into ecx */
 		"shr          $3, %%ecx \n\t"	/* counter/8 (MMX loads 8 bytes at a time) */
-		".align 16              \n\t"	/* 16 byte allignment of the loop entry */
+		".align 16              \n\t"	/* 16 byte alignment of the loop entry */
 		"1: movq (%%eax), %%mm0 \n\t"	/* load 8 bytes from SrcDest into MM0 */
 		"psubusb   %%mm1, %%mm0 \n\t"	/* MM0=SrcDest-C (sub 8 bytes with saturation) */
 		"movq    %%mm0, (%%edi) \n\t"	/* store result in SrcDest */
@@ -1899,14 +2350,25 @@ L11024:
 		:"m"(Src1),		/* %1 */
 		"m"(SrcLength),		/* %2 */
 		"m"(C),			/* %3 */
-		"m"(TCs)			/* %4 */
+		"m"(Cs)			/* %4 */
 		);
 #endif
-#endif
 	return (0);
+#else
+	return (-1);
+#endif
 }
 
-/*  SDL_imageFilterSubUint: D = saturation0(S - (Uint)C) */
+/*!
+\brief Filter using SubUint: D = saturation0(S[i] - C[i % 4]), Cs=Swap32((uint)C)
+
+\param Src1 Pointer to the start of the source byte array (S1).
+\param Dest Pointer to the start of the destination byte array (D).
+\param length The number of bytes in the source array.
+\param C Constant to subtract (C).
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterSubUint(unsigned char *Src1, unsigned char *Dest, unsigned int length, unsigned int C)
 {
 	unsigned int i, j, istart, D;
@@ -1915,10 +2377,22 @@ int SDL_imageFilterSubUint(unsigned char *Src1, unsigned char *Dest, unsigned in
 	unsigned char *curdest;
 	int result;
 
+	/* Validate input parameters */
+	if ((Src1 == NULL) || (Dest == NULL))
+		return(-1);
+	if (length == 0)
+		return(0);
+
+    /* Special case: C==0 */
+	if (C == 0) {
+		memcpy(Src1, Dest, length);
+		return (0); 
+	}
+
 	if ((SDL_imageFilterMMXdetect()) && (length > 7)) {
 
 		/* MMX routine */
-		D=swap_32(C);
+		D=SWAP_32(C);
 		SDL_imageFilterSubUintMMX(Src1, Dest, length, C, D);
 
 		/* Check for unaligned bytes */
@@ -1958,8 +2432,17 @@ int SDL_imageFilterSubUint(unsigned char *Src1, unsigned char *Dest, unsigned in
 	return (0);
 }
 
+/*!
+\brief Internal MMX Filter using ShiftRight: D = saturation0(S >> N)
 
-/*  SDL_imageFilterShiftRightMMX: D = saturation0(S >> N) */
+\param Src1 Pointer to the start of the source byte array (S).
+\param Dest Pointer to the start of the destination byte array (D).
+\param SrcLength The number of bytes in the source array.
+\param N Number of bit-positions to shift (N). Valid range is 0 to 8.
+\param Mask Byte array containing 8 bytes with 0x7F value.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterShiftRightMMX(unsigned char *Src1, unsigned char *Dest, unsigned int SrcLength, unsigned char N,
 								 unsigned char *Mask)
 {
@@ -1985,7 +2468,7 @@ L10240:                  	/* ** Prepare proper bit-Mask in MM1 ** */
 			mov edi, Dest   	/* load Dest address into edi */
 			mov ecx,  SrcLength 	/* load loop counter (SIZE) into ecx */
 			shr ecx,  3 	/* counter/8 (MMX loads 8 bytes at a time) */
-			align 16                 	/* 16 byte allignment of the loop entry */
+			align 16                 	/* 16 byte alignment of the loop entry */
 L10241:
 		movq mm0, [eax]   	/* load 8 bytes from SrcDest into MM0 */
 		psrlw mm0, mm3   	/* shift 4 WORDS of MM0 (N) bits to the right */
@@ -2018,7 +2501,7 @@ L10241:
 		"mov          %0, %%edi \n\t"	/* load Dest address into edi */
 		"mov          %2, %%ecx \n\t"	/* load loop counter (SIZE) into ecx */
 		"shr          $3, %%ecx \n\t"	/* counter/8 (MMX loads 8 bytes at a time) */
-		".align 16              \n\t"	/* 16 byte allignment of the loop entry */
+		".align 16              \n\t"	/* 16 byte alignment of the loop entry */
 		"2:                     \n\t" 
 		"movq    (%%eax), %%mm0 \n\t"	/* load 8 bytes from SrcDest into MM0 */
 		"psrlw     %%mm3, %%mm0 \n\t"	/* shift 4 WORDS of MM0 (N) bits to the right */
@@ -2037,11 +2520,22 @@ L10241:
 		"m"(Mask)			/* %4 */
 		);
 #endif
-#endif
 	return (0);
+#else
+	return (-1);
+#endif
 }
 
-/*  SDL_imageFilterShiftRight: D = saturation0(S >> N) */
+/*!
+\brief Filter using ShiftRight: D = saturation0(S >> N)
+
+\param Src1 Pointer to the start of the source byte array (S).
+\param Dest Pointer to the start of the destination byte array (D).
+\param length The number of bytes in the source array.
+\param N Number of bit-positions to shift (N). Valid range is 0 to 8.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterShiftRight(unsigned char *Src1, unsigned char *Dest, unsigned int length, unsigned char N)
 {
 	static unsigned char Mask[8] = { 0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F, 0x7F };
@@ -2049,9 +2543,21 @@ int SDL_imageFilterShiftRight(unsigned char *Src1, unsigned char *Dest, unsigned
 	unsigned char *cursrc1;
 	unsigned char *curdest;
 
+	/* Validate input parameters */
+	if ((Src1 == NULL) || (Dest == NULL))
+		return(-1);
+	if (length == 0)
+		return(0);
+
 	/* Check shift */
-	if ((N > 8) || (N < 1)) {
+	if (N > 8) {
 		return (-1);
+	}
+
+	/* Special case: N==0 */
+	if (N == 0) {
+		memcpy(Src1, Dest, length);
+		return (0); 
 	}
 
 	if ((SDL_imageFilterMMXdetect()) && (length > 7)) {
@@ -2087,7 +2593,16 @@ int SDL_imageFilterShiftRight(unsigned char *Src1, unsigned char *Dest, unsigned
 	return (0);
 }
 
-/*  SDL_imageFilterShiftRightUintMMX: D = Saturation0(S >> N) */
+/*!
+\brief Internal MMX Filter using ShiftRightUint: D = saturation0((uint)S[i] >> N)
+
+\param Src1 Pointer to the start of the source byte array (S1).
+\param Dest Pointer to the start of the destination byte array (D).
+\param SrcLength The number of bytes in the source array.
+\param N Number of bit-positions to shift (N).
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterShiftRightUintMMX(unsigned char *Src1, unsigned char *Dest, unsigned int SrcLength, unsigned char N)
 {
 #ifdef USE_MMX
@@ -2099,7 +2614,7 @@ int SDL_imageFilterShiftRightUintMMX(unsigned char *Src1, unsigned char *Dest, u
 			mov edi, Dest   	/* load Dest address into edi */
 			mov ecx, SrcLength   	/* load loop counter (SIZE) into ecx */
 			shr ecx, 3   	/* counter/8 (MMX loads 8 bytes at a time) */
-			align 16                 	/* 16 byte allignment of the loop entry */
+			align 16                 	/* 16 byte alignment of the loop entry */
 L13023:
 		movq mm0, [eax]   	/* load 8 bytes from SrcDest into MM0 */
 		psrld mm0, N
@@ -2118,7 +2633,7 @@ L13023:
 		"mov          %0, %%edi \n\t"	/* load Dest address into edi */
 		"mov          %2, %%ecx \n\t"	/* load loop counter (SIZE) into ecx */
 		"shr          $3, %%ecx \n\t"	/* counter/8 (MMX loads 8 bytes at a time) */
-		".align 16              \n\t"	/* 16 byte allignment of the loop entry */
+		".align 16              \n\t"	/* 16 byte alignment of the loop entry */
 		"1: movq (%%eax), %%mm0 \n\t"	/* load 8 bytes from SrcDest into MM0 */
 		"psrld   %3, %%mm0 \n\t"
 		"movq    %%mm0, (%%edi) \n\t"	/* store result in SrcDest */
@@ -2133,11 +2648,22 @@ L13023:
 		"m"(N)			/* %3 */
 		);
 #endif
-#endif
 	return (0);
+#else
+	return (-1);
+#endif
 }
 
-/*  SDL_imageFilterShiftRightUint: D = Saturation0((uint)S >> N) */
+/*!
+\brief Filter using ShiftRightUint: D = saturation0((uint)S[i] >> N)
+
+\param Src1 Pointer to the start of the source byte array (S1).
+\param Dest Pointer to the start of the destination byte array (D).
+\param length The number of bytes in the source array.
+\param N Number of bit-positions to shift (N). Valid range is 0 to 32.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterShiftRightUint(unsigned char *Src1, unsigned char *Dest, unsigned int length, unsigned char N)
 {
 	unsigned int i, istart;
@@ -2145,8 +2671,21 @@ int SDL_imageFilterShiftRightUint(unsigned char *Src1, unsigned char *Dest, unsi
 	unsigned int *icursrc1, *icurdest;
 	int result;
 
-	/* min. 1 bit and max. 32 bit shift is allowed */
-	if ((N > 32) || (N < 1)) return (-1);
+	/* Validate input parameters */
+	if ((Src1 == NULL) || (Dest == NULL))
+		return(-1);
+	if (length == 0)
+		return(0);
+
+	if (N > 32) {
+		return (-1);
+	}
+
+	/* Special case: N==0 */
+	if (N == 0) {
+		memcpy(Src1, Dest, length);
+		return (0); 
+	}
 
 	if ((SDL_imageFilterMMXdetect()) && (length > 7)) {
 
@@ -2185,7 +2724,16 @@ int SDL_imageFilterShiftRightUint(unsigned char *Src1, unsigned char *Dest, unsi
 	return (0);
 }
 
-/*  SDL_imageFilterMultByByteMMX: D = saturation255(S * C) */
+/*!
+\brief Internal MMX Filter using MultByByte: D = saturation255(S * C)
+
+\param Src1 Pointer to the start of the source byte array (S).
+\param Dest Pointer to the start of the destination byte array (D).
+\param SrcLength The number of bytes in the source array.
+\param C Constant to multiply with (C).
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterMultByByteMMX(unsigned char *Src1, unsigned char *Dest, unsigned int SrcLength, unsigned char C)
 {
 #ifdef USE_MMX
@@ -2209,7 +2757,7 @@ int SDL_imageFilterMultByByteMMX(unsigned char *Src1, unsigned char *Dest, unsig
 			shr ecx, 3   	/* counter/8 (MMX loads 8 bytes at a time) */
 			cmp al, 128   	/* if (C <= 128) execute more efficient code */
 			jg             L10251
-			align 16                 	/* 16 byte allignment of the loop entry */
+			align 16                 	/* 16 byte alignment of the loop entry */
 L10250:
 		movq mm3, [eax]   	/* load 8 bytes from Src1 into MM3 */
 		movq mm4, mm3   	/* copy MM3 into MM4  */
@@ -2224,7 +2772,7 @@ L10250:
 			dec              ecx    	/* decrease loop counter */
 			jnz            L10250    	/* check loop termination, proceed if required */
 			jmp            L10252
-			align 16                 	/* 16 byte allignment of the loop entry */
+			align 16                 	/* 16 byte alignment of the loop entry */
 L10251:
 		movq mm3, [eax]   	/* load 8 bytes from Src1 into MM3 */
 		movq mm4, mm3   	/* copy MM3 into MM4  */
@@ -2269,7 +2817,7 @@ L10252:
 		"mov          %2, %%ecx \n\t"	/* load loop counter (SIZE) into ecx */
 		"shr          $3, %%ecx \n\t"	/* counter/8 (MMX loads 8 bytes at a time) */
 		"cmp         $128, %%al \n\t"	/* if (C <= 128) execute more efficient code */
-		"jg                  2f \n\t" ".align 16              \n\t"	/* 16 byte allignment of the loop entry */
+		"jg                  2f \n\t" ".align 16              \n\t"	/* 16 byte alignment of the loop entry */
 		"1: movq (%%eax), %%mm3 \n\t"	/* load 8 bytes from Src1 into MM3 */
 		"movq      %%mm3, %%mm4 \n\t"	/* copy MM3 into MM4  */
 		"punpcklbw %%mm0, %%mm3 \n\t"	/* unpack low  bytes of SrcDest into words */
@@ -2282,7 +2830,7 @@ L10252:
 		"add          $8, %%edi \n\t"	/* increase Dest register pointer by 8 */
 		"dec              %%ecx \n\t"	/* decrease loop counter */
 		"jnz                 1b \n\t"	/* check loop termination, proceed if required */
-		"jmp                 3f \n\t" ".align 16              \n\t"	/* 16 byte allignment of the loop entry */
+		"jmp                 3f \n\t" ".align 16              \n\t"	/* 16 byte alignment of the loop entry */
 		"2: movq (%%eax), %%mm3 \n\t"	/* load 8 bytes from Src1 into MM3 */
 		"movq      %%mm3, %%mm4 \n\t"	/* copy MM3 into MM4  */
 		"punpcklbw %%mm0, %%mm3 \n\t"	/* unpack low  bytes of SrcDest into words */
@@ -2311,11 +2859,22 @@ L10252:
 		"m"(C)			/* %3 */
 		);
 #endif
-#endif
 	return (0);
+#else
+	return (-1);
+#endif
 }
 
-/*  SDL_imageFilterMultByByte: D = saturation255(S * C) */
+/*!
+\brief Filter using MultByByte: D = saturation255(S * C)
+
+\param Src1 Pointer to the start of the source byte array (S).
+\param Dest Pointer to the start of the destination byte array (D).
+\param length The number of bytes in the source arrays.
+\param C Constant to multiply with (C).
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterMultByByte(unsigned char *Src1, unsigned char *Dest, unsigned int length, unsigned char C)
 {
 	unsigned int i, istart;
@@ -2323,6 +2882,18 @@ int SDL_imageFilterMultByByte(unsigned char *Src1, unsigned char *Dest, unsigned
 	unsigned char *cursrc1;
 	unsigned char *curdest;
 	int result;
+
+	/* Validate input parameters */
+	if ((Src1 == NULL) || (Dest == NULL))
+		return(-1);
+	if (length == 0)
+		return(0);
+
+	/* Special case: C==1 */
+	if (C == 1) {
+		memcpy(Src1, Dest, length);
+		return (0); 
+	}
 
 	if ((SDL_imageFilterMMXdetect()) && (length > 7)) {
 
@@ -2360,7 +2931,17 @@ int SDL_imageFilterMultByByte(unsigned char *Src1, unsigned char *Dest, unsigned
 	return (0);
 }
 
-/*  SDL_imageFilterShiftRightAndMultByByteMMX: D = saturation255((S >> N) * C) */
+/*!
+\brief Internal MMX Filter using ShiftRightAndMultByByteMMX: D = saturation255((S >> N) * C) 
+
+\param Src1 Pointer to the start of the source byte array (S).
+\param Dest Pointer to the start of the destination byte array (D).
+\param SrcLength The number of bytes in the source array.
+\param N Number of bit-positions to shift (N). Valid range is 0 to 8.
+\param C Constant to multiply with (C).
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterShiftRightAndMultByByteMMX(unsigned char *Src1, unsigned char *Dest, unsigned int SrcLength, unsigned char N,
 											  unsigned char C)
 {
@@ -2386,7 +2967,7 @@ int SDL_imageFilterShiftRightAndMultByByteMMX(unsigned char *Src1, unsigned char
 			mov edi, Dest   	/* load Dest address into edi */
 			mov ecx, SrcLength   	/* load loop counter (SIZE) into ecx */
 			shr ecx, 3   	/* counter/8 (MMX loads 8 bytes at a time) */
-			align 16                 	/* 16 byte allignment of the loop entry */
+			align 16                 	/* 16 byte alignment of the loop entry */
 L1026:
 		movq mm3, [eax]   	/* load 8 bytes from Src1 into MM3 */
 		movq mm4, mm3   	/* copy MM3 into MM4  */
@@ -2425,7 +3006,7 @@ L1026:
 		"mov          %0, %%edi \n\t"	/* load Dest address into edi */
 		"mov          %2, %%ecx \n\t"	/* load loop counter (SIZE) into ecx */
 		"shr          $3, %%ecx \n\t"	/* counter/8 (MMX loads 8 bytes at a time) */
-		".align 16             \n\t"	/* 16 byte allignment of the loop entry */
+		".align 16             \n\t"	/* 16 byte alignment of the loop entry */
 		"1: movq (%%eax), %%mm3 \n\t"	/* load 8 bytes from Src1 into MM3 */
 		"movq      %%mm3, %%mm4 \n\t"	/* copy MM3 into MM4  */
 		"punpcklbw %%mm0, %%mm3 \n\t"	/* unpack low  bytes of SrcDest into words */
@@ -2448,11 +3029,23 @@ L1026:
 		"m"(C)			/* %4 */
 		);
 #endif
-#endif
 	return (0);
+#else
+	return (-1);
+#endif
 }
 
-/*  SDL_imageFilterShiftRightAndMultByByte: D = saturation255((S >> N) * C) */
+/*!
+\brief Filter using ShiftRightAndMultByByte: D = saturation255((S >> N) * C) 
+
+\param Src1 Pointer to the start of the source byte array (S).
+\param Dest Pointer to the start of the destination byte array (D).
+\param length The number of bytes in the source array.
+\param N Number of bit-positions to shift (N). Valid range is 0 to 8.
+\param C Constant to multiply with (C).
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterShiftRightAndMultByByte(unsigned char *Src1, unsigned char *Dest, unsigned int length, unsigned char N,
 										   unsigned char C)
 {
@@ -2462,9 +3055,21 @@ int SDL_imageFilterShiftRightAndMultByByte(unsigned char *Src1, unsigned char *D
 	unsigned char *curdest;
 	int result;
 
+	/* Validate input parameters */
+	if ((Src1 == NULL) || (Dest == NULL))
+		return(-1);
+	if (length == 0)
+		return(0);
+
 	/* Check shift */
-	if ((N > 8) || (N < 1)) {
+	if (N > 8) {
 		return (-1);
+	}
+
+	/* Special case: N==0 && C==1 */
+	if ((N == 0) && (C == 1)) {
+		memcpy(Src1, Dest, length);
+		return (0); 
 	}
 
 	if ((SDL_imageFilterMMXdetect()) && (length > 7)) {
@@ -2503,7 +3108,17 @@ int SDL_imageFilterShiftRightAndMultByByte(unsigned char *Src1, unsigned char *D
 	return (0);
 }
 
-/*  SDL_imageFilterShiftLeftByteMMX: D = (S << N) */
+/*!
+\brief Internal MMX Filter using ShiftLeftByte: D = (S << N)
+
+\param Src1 Pointer to the start of the source byte array (S).
+\param Dest Pointer to the start of the destination byte array (D).
+\param SrcLength The number of bytes in the source arrays.
+\param N Number of bit-positions to shift (N). Valid range is 0 to 8.
+\param Mask Byte array containing 8 bytes of 0xFE value.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterShiftLeftByteMMX(unsigned char *Src1, unsigned char *Dest, unsigned int SrcLength, unsigned char N,
 									unsigned char *Mask)
 {
@@ -2529,7 +3144,7 @@ L10270:                  	/* ** Prepare proper bit-Mask in MM1 ** */
 			mov edi, Dest   	/* load SrcDest address into edi */
 			mov ecx, SrcLength   	/* load loop counter (SIZE) into ecx */
 			shr ecx, 3   	/* counter/8 (MMX loads 8 bytes at a time) */
-			align 16                 	/* 16 byte allignment of the loop entry */
+			align 16                 	/* 16 byte alignment of the loop entry */
 L10271:
 		movq mm0, [eax]   	/* load 8 bytes from Src1 into MM0 */
 		psllw mm0, mm3   	/* shift 4 WORDS of MM0 (N) bits to the left */
@@ -2561,7 +3176,7 @@ L10271:
 		"mov          %0, %%edi \n\t"	/* load SrcDest address into edi */
 		"mov          %2, %%ecx \n\t"	/* load loop counter (SIZE) into ecx */
 		"shr          $3, %%ecx \n\t"	/* counter/8 (MMX loads 8 bytes at a time) */
-		".align 16              \n\t"	/* 16 byte allignment of the loop entry */
+		".align 16              \n\t"	/* 16 byte alignment of the loop entry */
 		"2: movq (%%eax), %%mm0 \n\t"	/* load 8 bytes from Src1 into MM0 */
 		"psllw     %%mm3, %%mm0 \n\t"	/* shift 4 WORDS of MM0 (N) bits to the left */
 		/*    "pand      %%mm1, %%mm0 \n\t"    // apply proper bit-Mask to 8 BYTES of MM0 */
@@ -2578,11 +3193,22 @@ L10271:
 		"m"(Mask)			/* %4 */
 		);
 #endif
-#endif
 	return (0);
+#else
+	return (-1);
+#endif
 }
 
-/*  SDL_imageFilterShiftLeftByte: D = (S << N) */
+/*!
+\brief Filter using ShiftLeftByte: D = (S << N)
+
+\param Src1 Pointer to the start of the source byte array (S).
+\param Dest Pointer to the start of the destination byte array (D).
+\param length The number of bytes in the source arrays.
+\param N Number of bit-positions to shift (N). Valid range is 0 to 8.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterShiftLeftByte(unsigned char *Src1, unsigned char *Dest, unsigned int length, unsigned char N)
 {
 	static unsigned char Mask[8] = { 0xFE, 0xFE, 0xFE, 0xFE, 0xFE, 0xFE, 0xFE, 0xFE };
@@ -2590,9 +3216,21 @@ int SDL_imageFilterShiftLeftByte(unsigned char *Src1, unsigned char *Dest, unsig
 	unsigned char *cursrc1, *curdest;
 	int result;
 
-	if ((N > 8) || (N < 1))
-		return (-1);		/* image size must be at least 8 bytes  */
-	/* and min. 1 bit and max. 8 bit shift is allowed */
+	/* Validate input parameters */
+	if ((Src1 == NULL) || (Dest == NULL))
+		return(-1);
+	if (length == 0)
+		return(0);
+
+	if (N > 8) {
+		return (-1);
+	}
+
+	/* Special case: N==0 */
+	if (N == 0) {
+		memcpy(Src1, Dest, length);
+		return (0); 
+	}
 
 	if ((SDL_imageFilterMMXdetect()) && (length > 7)) {
 
@@ -2627,7 +3265,16 @@ int SDL_imageFilterShiftLeftByte(unsigned char *Src1, unsigned char *Dest, unsig
 	return (0);
 }
 
-/*  SDL_imageFilterShiftLeftUintMMX: D = (S << N) */
+/*!
+\brief Internal MMX Filter using ShiftLeftUint: D = ((uint)S << N)
+
+\param Src1 Pointer to the start of the source byte array (S).
+\param Dest Pointer to the start of the destination byte array (D).
+\param SrcLength The number of bytes in the source array.
+\param N Number of bit-positions to shift (N). Valid range is 0 to 32.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterShiftLeftUintMMX(unsigned char *Src1, unsigned char *Dest, unsigned int SrcLength, unsigned char N)
 {
 #ifdef USE_MMX
@@ -2639,7 +3286,7 @@ int SDL_imageFilterShiftLeftUintMMX(unsigned char *Src1, unsigned char *Dest, un
 			mov edi, Dest   	/* load Dest address into edi */
 			mov ecx, SrcLength   	/* load loop counter (SIZE) into ecx */
 			shr ecx, 3   	/* counter/8 (MMX loads 8 bytes at a time) */
-			align 16                 	/* 16 byte allignment of the loop entry */
+			align 16                 	/* 16 byte alignment of the loop entry */
 L12023:
 		movq mm0, [eax]   	/* load 8 bytes from SrcDest into MM0 */
 		pslld mm0, N   	/* MM0=SrcDest+C (add 8 bytes with saturation) */
@@ -2658,7 +3305,7 @@ L12023:
 		"mov          %0, %%edi \n\t"	/* load Dest address into edi */
 		"mov          %2, %%ecx \n\t"	/* load loop counter (SIZE) into ecx */
 		"shr          $3, %%ecx \n\t"	/* counter/8 (MMX loads 8 bytes at a time) */
-		".align 16              \n\t"	/* 16 byte allignment of the loop entry */
+		".align 16              \n\t"	/* 16 byte alignment of the loop entry */
 		"1: movq (%%eax), %%mm0 \n\t"	/* load 8 bytes from SrcDest into MM0 */
 		"pslld   %3, %%mm0 \n\t"	/* MM0=SrcDest+C (add 8 bytes with saturation) */
 		"movq    %%mm0, (%%edi) \n\t"	/* store result in SrcDest */
@@ -2673,11 +3320,22 @@ L12023:
 		"m"(N)			/* %3 */
 		);
 #endif
-#endif
 	return (0);
+#else
+	return (-1);
+#endif
 }
 
-/*  SDL_imageFilterShiftLeftUint: D = ((uint)S << N) */
+/*!
+\brief Filter using ShiftLeftUint: D = ((uint)S << N)
+
+\param Src1 Pointer to the start of the source byte array (S).
+\param Dest Pointer to the start of the destination byte array (D).
+\param length The number of bytes in the source array.
+\param N Number of bit-positions to shift (N). Valid range is 0 to 32.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterShiftLeftUint(unsigned char *Src1, unsigned char *Dest, unsigned int length, unsigned char N)
 {
 	unsigned int i, istart;
@@ -2685,8 +3343,21 @@ int SDL_imageFilterShiftLeftUint(unsigned char *Src1, unsigned char *Dest, unsig
 	unsigned int *icursrc1, *icurdest;
 	int result;
 
-	/* min. 1 bit and max. 32 bit shift is allowed */
-	if ((N > 32) || (N < 1)) return (-1);
+	/* Validate input parameters */
+	if ((Src1 == NULL) || (Dest == NULL))
+		return(-1);
+	if (length == 0)
+		return(0);
+
+	if (N > 32) {
+		return (-1);
+	}
+
+	/* Special case: N==0 */
+	if (N == 0) {
+		memcpy(Src1, Dest, length);
+		return (0); 
+	}
 
 	if ((SDL_imageFilterMMXdetect()) && (length > 7)) {
 
@@ -2725,7 +3396,16 @@ int SDL_imageFilterShiftLeftUint(unsigned char *Src1, unsigned char *Dest, unsig
 	return (0);
 }
 
-/*  SDL_imageFilterShiftLeftMMX: D = saturation255(S << N) */
+/*!
+\brief Internal MMX Filter ShiftLeft: D = saturation255(S << N)
+
+\param Src1 Pointer to the start of the source byte array (S1).
+\param Dest Pointer to the start of the destination byte array (D).
+\param SrcLength The number of bytes in the source array.
+\param N Number of bit-positions to shift (N). Valid range is 0 to 8.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterShiftLeftMMX(unsigned char *Src1, unsigned char *Dest, unsigned int SrcLength, unsigned char N)
 {
 #ifdef USE_MMX
@@ -2743,7 +3423,7 @@ int SDL_imageFilterShiftLeftMMX(unsigned char *Src1, unsigned char *Dest, unsign
 			shr ecx, 3   	/* counter/8 (MMX loads 8 bytes at a time) */
 			cmp al, 7   	/* if (N <= 7) execute more efficient code */
 			jg             L10281
-			align 16                 	/* 16 byte allignment of the loop entry */
+			align 16                 	/* 16 byte alignment of the loop entry */
 L10280:
 		movq mm3, [eax]   	/* load 8 bytes from Src1 into MM3 */
 		movq mm4, mm3   	/* copy MM3 into MM4  */
@@ -2758,7 +3438,7 @@ L10280:
 			dec              ecx    	/* decrease loop counter */
 			jnz            L10280    	/* check loop termination, proceed if required */
 			jmp            L10282
-			align 16                 	/* 16 byte allignment of the loop entry */
+			align 16                 	/* 16 byte alignment of the loop entry */
 L10281:
 		movq mm3, [eax]   	/* load 8 bytes from Src1 into MM3 */
 		movq mm4, mm3   	/* copy MM3 into MM4  */
@@ -2796,7 +3476,7 @@ L10282:
 		"mov         %2, %%ecx  \n\t"	/* load loop counter (SIZE) into ecx */
 		"shr         $3, %%ecx  \n\t"	/* counter/8 (MMX loads 8 bytes at a time) */
 		"cmp           $7, %%al \n\t"	/* if (N <= 7) execute more efficient code */
-		"jg                  2f \n\t" ".align 16              \n\t"	/* 16 byte allignment of the loop entry */
+		"jg                  2f \n\t" ".align 16              \n\t"	/* 16 byte alignment of the loop entry */
 		"1: movq (%%eax), %%mm3 \n\t"	/* load 8 bytes from Src1 into MM3 */
 		"movq      %%mm3, %%mm4 \n\t"	/* copy MM3 into MM4  */
 		"punpcklbw %%mm0, %%mm3 \n\t"	/* unpack low  bytes of SrcDest into words */
@@ -2809,7 +3489,7 @@ L10282:
 		"add          $8, %%edi \n\t"	/* increase Dest register pointer by 8 */
 		"dec              %%ecx \n\t"	/* decrease loop counter */
 		"jnz                 1b \n\t"	/* check loop termination, proceed if required */
-		"jmp                 3f \n\t" ".align 16              \n\t"	/* 16 byte allignment of the loop entry */
+		"jmp                 3f \n\t" ".align 16              \n\t"	/* 16 byte alignment of the loop entry */
 		"2: movq (%%eax), %%mm3 \n\t"	/* load 8 bytes from Src1 into MM3 */
 		"movq      %%mm3, %%mm4 \n\t"	/* copy MM3 into MM4  */
 		"punpcklbw %%mm0, %%mm3 \n\t"	/* unpack low  bytes of SrcDest into words */
@@ -2838,20 +3518,43 @@ L10282:
 		"m"(N)			/* %3 */
 		);
 #endif
-#endif
 	return (0);
+#else
+	return (-1);
+#endif
 }
 
-/*  SDL_imageFilterShiftLeft: D = saturation255(S << N) */
+/*!
+\brief Filter ShiftLeft: D = saturation255(S << N)
+
+\param Src1 Pointer to the start of the source byte array (S1).
+\param Dest Pointer to the start of the destination byte array (D).
+\param length The number of bytes in the source array.
+\param N Number of bit-positions to shift (N). Valid range is 0 to 8.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterShiftLeft(unsigned char *Src1, unsigned char *Dest, unsigned int length, unsigned char N)
 {
 	unsigned int i, istart;
 	unsigned char *cursrc1, *curdest;
 	int result;
 
-	if ((N > 8) || (N < 1))
-		return (-1);		/* image size must be at least 8 bytes  */
-	/* and min. 1 bit and max. 8 bit shift is allowed */
+	/* Validate input parameters */
+	if ((Src1 == NULL) || (Dest == NULL))
+		return(-1);
+	if (length == 0)
+		return(0);
+
+	if (N > 8) {
+		return (-1);
+	}
+
+	/* Special case: N==0 */
+	if (N == 0) {
+		memcpy(Src1, Dest, length);
+		return (0); 
+	}
 
 	if ((SDL_imageFilterMMXdetect()) && (length > 7)) {
 
@@ -2888,7 +3591,16 @@ int SDL_imageFilterShiftLeft(unsigned char *Src1, unsigned char *Dest, unsigned 
 	return (0);
 }
 
-/*  SDL_imageFilterBinarizeUsingThresholdMMX: D = (S >= T) ? 255:0 */
+/*!
+\brief MMX BinarizeUsingThreshold: D = (S >= T) ? 255:0
+
+\param Src1 Pointer to the start of the source byte array (S).
+\param Dest Pointer to the start of the destination byte array (D).
+\param SrcLength The number of bytes in the source array.
+\param T The threshold boundary (inclusive).
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterBinarizeUsingThresholdMMX(unsigned char *Src1, unsigned char *Dest, unsigned int SrcLength, unsigned char T)
 {
 #ifdef USE_MMX
@@ -2961,16 +3673,39 @@ L1029:
 		"m"(T)			/* %3 */
 		);
 #endif
-#endif
 	return (0);
+#else
+	return (-1);
+#endif
 }
 
-/*  SDL_imageFilterBinarizeUsingThreshold: D = (S >= T) ? 255:0 */
+/*!
+\brief Filter using BinarizeUsingThreshold: D = (S >= T) ? 255:0
+
+\param Src1 Pointer to the start of the source byte array (S).
+\param Dest Pointer to the start of the destination byte array (D).
+\param length The number of bytes in the source array.
+\param T The threshold boundary (inclusive).
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterBinarizeUsingThreshold(unsigned char *Src1, unsigned char *Dest, unsigned int length, unsigned char T)
 {
 	unsigned int i, istart;
 	unsigned char *cursrc1;
 	unsigned char *curdest;
+
+	/* Validate input parameters */
+	if ((Src1 == NULL) || (Dest == NULL))
+		return(-1);
+	if (length == 0)
+		return(0);
+
+	/* Special case: T==0 */
+	if (T == 0) {
+		memset(Dest, 255, length);
+		return (0); 
+	}
 
 	if ((SDL_imageFilterMMXdetect()) && (length > 7)) {
 
@@ -3004,7 +3739,17 @@ int SDL_imageFilterBinarizeUsingThreshold(unsigned char *Src1, unsigned char *De
 	return (0);
 }
 
-/*  SDL_imageFilterClipToRangeMMX: D = (S >= Tmin) & (S <= Tmax) S:Tmin | Tmax */
+/*!
+\brief Internal MMX Filter using ClipToRange: D = (S >= Tmin) & (S <= Tmax) S:Tmin | Tmax
+
+\param Src1 Pointer to the start of the source byte array (S).
+\param Dest Pointer to the start of the destination byte array (D).
+\param SrcLength The number of bytes in the source array.
+\param Tmin Lower (inclusive) boundary of the clipping range.
+\param Tmax Upper (inclusive) boundary of the clipping range.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterClipToRangeMMX(unsigned char *Src1, unsigned char *Dest, unsigned int SrcLength, unsigned char Tmin,
 								  unsigned char Tmax)
 {
@@ -3039,7 +3784,7 @@ int SDL_imageFilterClipToRangeMMX(unsigned char *Src1, unsigned char *Dest, unsi
 			mov edi, Dest   	/* load Dest address into edi */
 			mov ecx, SrcLength   	/* load loop counter (SIZE) into ecx */
 			shr ecx, 3   	/* counter/8 (MMX loads 8 bytes at a time) */
-			align 16                 	/* 16 byte allignment of the loop entry */
+			align 16                 	/* 16 byte alignment of the loop entry */
 L1030:
 		movq mm0, [eax]   	/* load 8 bytes from Src1 into MM0 */
 		paddusb mm0, mm1   	/* MM0=SrcDest+(0xFF-Tmax) */
@@ -3081,7 +3826,7 @@ L1030:
 		"mov          %0, %%edi \n\t"	/* load Dest address into edi */
 		"mov          %2, %%ecx \n\t"	/* load loop counter (SIZE) into ecx */
 		"shr          $3, %%ecx \n\t"	/* counter/8 (MMX loads 8 bytes at a time) */
-		".align 16              \n\t"	/* 16 byte allignment of the loop entry */
+		".align 16              \n\t"	/* 16 byte alignment of the loop entry */
 		"1:                     \n\t" 
 		"movq    (%%eax), %%mm0 \n\t"	/* load 8 bytes from Src1 into MM0 */
 		"paddusb   %%mm1, %%mm0 \n\t"	/* MM0=SrcDest+(0xFF-Tmax) */
@@ -3100,17 +3845,41 @@ L1030:
 		"m"(Tmax)			/* %4 */
 		);
 #endif
-#endif
 	return (0);
+#else
+	return (-1);
+#endif
 }
 
-/*  SDL_imageFilterClipToRange: D = (S >= Tmin) & (S <= Tmax) S:Tmin | Tmax */
+/*!
+\brief Filter using ClipToRange: D = (S >= Tmin) & (S <= Tmax) S:Tmin | Tmax
+
+\param Src1 Pointer to the start of the source byte array (S).
+\param Dest Pointer to the start of the destination byte array (D).
+\param length The number of bytes in the source array.
+\param Tmin Lower (inclusive) boundary of the clipping range.
+\param Tmax Upper (inclusive) boundary of the clipping range.
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterClipToRange(unsigned char *Src1, unsigned char *Dest, unsigned int length, unsigned char Tmin,
 							   unsigned char Tmax)
 {
 	unsigned int i, istart;
 	unsigned char *cursrc1;
 	unsigned char *curdest;
+
+	/* Validate input parameters */
+	if ((Src1 == NULL) || (Dest == NULL))
+		return(-1);
+	if (length == 0)
+		return(0);
+
+	/* Special case: Tmin==0 && Tmax = 255 */
+	if ((Tmin == 0) && (Tmax == 25)) {
+		memcpy(Src1, Dest, length);
+		return (0); 
+	}
 
 	if ((SDL_imageFilterMMXdetect()) && (length > 7)) {
 
@@ -3150,7 +3919,19 @@ int SDL_imageFilterClipToRange(unsigned char *Src1, unsigned char *Dest, unsigne
 	return (0);
 }
 
-/*  SDL_imageFilterNormalizeLinearMMX: D = saturation255((Nmax - Nmin)/(Cmax - Cmin)*(S - Cmin) + Nmin) */
+/*!
+\brief Internal MMX Filter using NormalizeLinear: D = saturation255((Nmax - Nmin)/(Cmax - Cmin)*(S - Cmin) + Nmin)
+
+\param Src1 Pointer to the start of the source byte array (S).
+\param Dest Pointer to the start of the destination byte array (D).
+\param SrcLength The number of bytes in the source array.
+\param Cmin Normalization constant (Cmin).
+\param Cmax Normalization constant (Cmax).
+\param Nmin Normalization constant (Nmin).
+\param Nmax Normalization constant (Nmax).
+
+\return Returns 0 for success or -1 for error.
+*/
 int SDL_imageFilterNormalizeLinearMMX(unsigned char *Src1, unsigned char *Dest, unsigned int SrcLength, int Cmin, int Cmax,
 									  int Nmin, int Nmax)
 {
@@ -3197,7 +3978,7 @@ L10312:                  	/* ** Duplicate AX in 4 words of MM0 ** */
 			mov edi, Dest   	/* load Dest address into edi */
 			mov ecx, SrcLength   	/* load loop counter (SIZE) into ecx */
 			shr ecx, 3   	/* counter/8 (MMX loads 8 bytes at a time) */
-			align 16                 	/* 16 byte allignment of the loop entry */
+			align 16                 	/* 16 byte alignment of the loop entry */
 L1031:
 		movq mm3, [eax]   	/* load 8 bytes from Src1 into MM3 */
 		movq mm4, mm3   	/* copy MM3 into MM4  */
@@ -3265,7 +4046,7 @@ L1031:
 		"mov          %0, %%edi \n\t"	/* load Dest address into edi */
 		"mov          %2, %%ecx \n\t"	/* load loop counter (SIZE) into ecx */
 		"shr          $3, %%ecx \n\t"	/* counter/8 (MMX loads 8 bytes at a time) */
-		".align 16              \n\t"	/* 16 byte allignment of the loop entry */
+		".align 16              \n\t"	/* 16 byte alignment of the loop entry */
 		"1:                     \n\t" 
 		"movq    (%%eax), %%mm3 \n\t"	/* load 8 bytes from Src1 into MM3 */
 		"movq      %%mm3, %%mm4 \n\t"	/* copy MM3 into MM4  */
@@ -3302,14 +4083,24 @@ L1031:
 		"m"(Nmax)			/* %6 */
 		);
 #endif
-#endif
 	return (0);
+#else
+	return (-1);
+#endif
 }
 
 /*!
-\brief Filter using NormalizeLinear: D = saturation255((Nmax - Nmin)/(Cmax - Cmin)*(S - Cmin) + Nmin) 
+\brief Filter using NormalizeLinear: D = saturation255((Nmax - Nmin)/(Cmax - Cmin)*(S - Cmin) + Nmin)
 
-\return Returns 1 if filter was applied, 0 otherwise.
+\param Src Pointer to the start of the source byte array (S).
+\param Dest Pointer to the start of the destination byte array (D).
+\param length The number of bytes in the source array.
+\param Cmin Normalization constant.
+\param Cmax Normalization constant.
+\param Nmin Normalization constant.
+\param Nmax Normalization constant.
+
+\return Returns 0 for success or -1 for error.
 */
 int SDL_imageFilterNormalizeLinear(unsigned char *Src, unsigned char *Dest, unsigned int length, int Cmin, int Cmax, int Nmin,
 								   int Nmax)
@@ -3319,6 +4110,12 @@ int SDL_imageFilterNormalizeLinear(unsigned char *Src, unsigned char *Dest, unsi
 	unsigned char *curdest;
 	int dN, dC, factor;
 	int result;
+
+	/* Validate input parameters */
+	if ((Src == NULL) || (Dest == NULL))
+		return(-1);
+	if (length == 0)
+		return(0);
 
 	if ((SDL_imageFilterMMXdetect()) && (length > 7)) {
 
@@ -3379,6 +4176,10 @@ Note: Non-MMX implementation not available for this function.
 int SDL_imageFilterConvolveKernel3x3Divide(unsigned char *Src, unsigned char *Dest, int rows, int columns,
 										   signed short *Kernel, unsigned char Divisor)
 {
+	/* Validate input parameters */
+	if ((Src == NULL) || (Dest == NULL) || (Kernel == NULL))
+		return(-1);
+
 	if ((columns < 3) || (rows < 3) || (Divisor == 0))
 		return (-1);
 
@@ -3409,7 +4210,7 @@ int SDL_imageFilterConvolveKernel3x3Divide(unsigned char *Src, unsigned char *De
 L10320:
 			mov ecx, eax   	/* initialize COLUMS counter */
 				sub ecx, 2   	/* do not use first and last column */
-				align 16                 	/* 16 byte allignment of the loop entry */
+				align 16                 	/* 16 byte alignment of the loop entry */
 L10322:
 			/* ---, */
 			movq mm1, [esi]   	/* load 8 bytes of the image first row */
@@ -3482,7 +4283,7 @@ L10322:
 			/* --- */
 			".L10320:               \n\t" "mov       %%eax, %%ecx \n\t"	/* initialize COLUMS counter */
 			"sub          $2, %%ecx \n\t"	/* do not use first and last column */
-			".align 16              \n\t"	/* 16 byte allignment of the loop entry */
+			".align 16              \n\t"	/* 16 byte alignment of the loop entry */
 			".L10322:               \n\t"
 			/* --- */
 			"movq    (%%esi), %%mm1 \n\t"	/* load 8 bytes of the image first row */
@@ -3564,6 +4365,10 @@ Note: Non-MMX implementation not available for this function.
 int SDL_imageFilterConvolveKernel5x5Divide(unsigned char *Src, unsigned char *Dest, int rows, int columns,
 										   signed short *Kernel, unsigned char Divisor)
 {
+	/* Validate input parameters */
+	if ((Src == NULL) || (Dest == NULL) || (Kernel == NULL))
+		return(-1);
+
 	if ((columns < 5) || (rows < 5) || (Divisor == 0))
 		return (-1);
 
@@ -3591,7 +4396,7 @@ int SDL_imageFilterConvolveKernel5x5Divide(unsigned char *Src, unsigned char *De
 L10330:
 			mov ecx, eax   	/* initialize COLUMNS counter */
 				sub ecx, 4   	/* do not use first 2 and last 2 columns */
-				align 16                 	/* 16 byte allignment of the loop entry */
+				align 16                 	/* 16 byte alignment of the loop entry */
 L10332:
 			pxor mm7, mm7   	/* zero MM7 (accumulator) */
 				movd mm6, esi   	/* save ESI in MM6 */
@@ -3721,7 +4526,7 @@ L10332:
 			/* --- */
 			".L10330:               \n\t" "mov       %%eax, %%ecx \n\t"	/* initialize COLUMNS counter */
 			"sub          $4, %%ecx \n\t"	/* do not use first 2 and last 2 columns */
-			".align 16              \n\t"	/* 16 byte allignment of the loop entry */
+			".align 16              \n\t"	/* 16 byte alignment of the loop entry */
 			".L10332:               \n\t" "pxor      %%mm7, %%mm7 \n\t"	/* zero MM7 (accumulator) */
 			"movd      %%esi, %%mm6 \n\t"	/* save ESI in MM6 */
 			/* --- 1 */
@@ -3862,6 +4667,10 @@ Note: Non-MMX implementation not available for this function.
 int SDL_imageFilterConvolveKernel7x7Divide(unsigned char *Src, unsigned char *Dest, int rows, int columns,
 										   signed short *Kernel, unsigned char Divisor)
 {
+	/* Validate input parameters */
+	if ((Src == NULL) || (Dest == NULL) || (Kernel == NULL))
+		return(-1);
+
 	if ((columns < 7) || (rows < 7) || (Divisor == 0))
 		return (-1);
 
@@ -3889,7 +4698,7 @@ int SDL_imageFilterConvolveKernel7x7Divide(unsigned char *Src, unsigned char *De
 L10340:
 			mov ecx, eax   	/* initialize COLUMNS counter */
 				sub ecx, 6   	/* do not use first 3 and last 3 columns */
-				align 16                 	/* 16 byte allignment of the loop entry */
+				align 16                 	/* 16 byte alignment of the loop entry */
 L10342:
 			pxor mm7, mm7   	/* zero MM7 (accumulator) */
 				movd mm6, esi   	/* save ESI in MM6 */
@@ -4045,7 +4854,7 @@ L10342:
 			/* --- */
 			".L10340:               \n\t" "mov       %%eax, %%ecx \n\t"	/* initialize COLUMNS counter */
 			"sub          $6, %%ecx \n\t"	/* do not use first 3 and last 3 columns */
-			".align 16              \n\t"	/* 16 byte allignment of the loop entry */
+			".align 16              \n\t"	/* 16 byte alignment of the loop entry */
 			".L10342:               \n\t" "pxor      %%mm7, %%mm7 \n\t"	/* zero MM7 (accumulator) */
 			"movd      %%esi, %%mm6 \n\t"	/* save ESI in MM6 */
 			/* --- 1 */
@@ -4214,6 +5023,10 @@ Note: Non-MMX implementation not available for this function.
 int SDL_imageFilterConvolveKernel9x9Divide(unsigned char *Src, unsigned char *Dest, int rows, int columns,
 										   signed short *Kernel, unsigned char Divisor)
 {
+	/* Validate input parameters */
+	if ((Src == NULL) || (Dest == NULL) || (Kernel == NULL))
+		return(-1);
+
 	if ((columns < 9) || (rows < 9) || (Divisor == 0))
 		return (-1);
 
@@ -4242,7 +5055,7 @@ int SDL_imageFilterConvolveKernel9x9Divide(unsigned char *Src, unsigned char *De
 L10350:
 			mov ecx, eax   	/* initialize COLUMNS counter */
 				sub ecx, 8   	/* do not use first 4 and last 4 columns */
-				align 16                 	/* 16 byte allignment of the loop entry */
+				align 16                 	/* 16 byte alignment of the loop entry */
 L10352:
 			pxor mm7, mm7   	/* zero MM7 (accumulator) */
 				movd mm6, esi   	/* save ESI in MM6 */
@@ -4497,7 +5310,7 @@ L10352:
 			/* --- */
 			".L10350:               \n\t" "mov       %%eax, %%ecx \n\t"	/* initialize COLUMNS counter */
 			"sub          $8, %%ecx \n\t"	/* do not use first 4 and last 4 columns */
-			".align 16              \n\t"	/* 16 byte allignment of the loop entry */
+			".align 16              \n\t"	/* 16 byte alignment of the loop entry */
 			".L10352:               \n\t" "pxor      %%mm7, %%mm7 \n\t"	/* zero MM7 (accumulator) */
 			"movd      %%esi, %%mm6 \n\t"	/* save ESI in MM6 */
 			/* --- 1 */
@@ -4757,6 +5570,10 @@ Note: Non-MMX implementation not available for this function.
 int SDL_imageFilterConvolveKernel3x3ShiftRight(unsigned char *Src, unsigned char *Dest, int rows, int columns,
 											   signed short *Kernel, unsigned char NRightShift)
 {
+	/* Validate input parameters */
+	if ((Src == NULL) || (Dest == NULL) || (Kernel == NULL))
+		return(-1);
+
 	if ((columns < 3) || (rows < 3) || (NRightShift > 7))
 		return (-1);
 
@@ -4788,7 +5605,7 @@ int SDL_imageFilterConvolveKernel3x3ShiftRight(unsigned char *Src, unsigned char
 L10360:
 			mov ecx, eax   	/* initialize COLUMS counter */
 				sub ecx, 2   	/* do not use first and last column */
-				align 16                 	/* 16 byte allignment of the loop entry */
+				align 16                 	/* 16 byte alignment of the loop entry */
 L10362:
 			/* ---, */
 			movq mm1, [esi]   	/* load 8 bytes of the image first row */
@@ -4855,7 +5672,7 @@ L10362:
 			/* --- */
 			".L10360:               \n\t" "mov       %%eax, %%ecx \n\t"	/* initialize COLUMS counter */
 			"sub          $2, %%ecx \n\t"	/* do not use first and last column */
-			".align 16              \n\t"	/* 16 byte allignment of the loop entry */
+			".align 16              \n\t"	/* 16 byte alignment of the loop entry */
 			".L10362:               \n\t"
 			/* --- */
 			"movq    (%%esi), %%mm1 \n\t"	/* load 8 bytes of the image first row */
@@ -4929,6 +5746,10 @@ Note: Non-MMX implementation not available for this function.
 int SDL_imageFilterConvolveKernel5x5ShiftRight(unsigned char *Src, unsigned char *Dest, int rows, int columns,
 											   signed short *Kernel, unsigned char NRightShift)
 {
+	/* Validate input parameters */
+	if ((Src == NULL) || (Dest == NULL) || (Kernel == NULL))
+		return(-1);
+
 	if ((columns < 5) || (rows < 5) || (NRightShift > 7))
 		return (-1);
 
@@ -4956,7 +5777,7 @@ int SDL_imageFilterConvolveKernel5x5ShiftRight(unsigned char *Src, unsigned char
 L10370:
 			mov ecx, eax   	/* initialize COLUMNS counter */
 				sub ecx, 4   	/* do not use first 2 and last 2 columns */
-				align 16                 	/* 16 byte allignment of the loop entry */
+				align 16                 	/* 16 byte alignment of the loop entry */
 L10372:
 			pxor mm7, mm7   	/* zero MM7 (accumulator) */
 				movd mm6, esi   	/* save ESI in MM6 */
@@ -5085,7 +5906,7 @@ L10372:
 			/* --- */
 			".L10370:               \n\t" "mov       %%eax, %%ecx \n\t"	/* initialize COLUMNS counter */
 			"sub          $4, %%ecx \n\t"	/* do not use first 2 and last 2 columns */
-			".align 16              \n\t"	/* 16 byte allignment of the loop entry */
+			".align 16              \n\t"	/* 16 byte alignment of the loop entry */
 			".L10372:               \n\t" "pxor      %%mm7, %%mm7 \n\t"	/* zero MM7 (accumulator) */
 			"movd      %%esi, %%mm6 \n\t"	/* save ESI in MM6 */
 			/* --- 1 */
@@ -5225,6 +6046,10 @@ Note: Non-MMX implementation not available for this function.
 int SDL_imageFilterConvolveKernel7x7ShiftRight(unsigned char *Src, unsigned char *Dest, int rows, int columns,
 											   signed short *Kernel, unsigned char NRightShift)
 {
+	/* Validate input parameters */
+	if ((Src == NULL) || (Dest == NULL) || (Kernel == NULL))
+		return(-1);
+
 	if ((columns < 7) || (rows < 7) || (NRightShift > 7))
 		return (-1);
 
@@ -5252,7 +6077,7 @@ int SDL_imageFilterConvolveKernel7x7ShiftRight(unsigned char *Src, unsigned char
 L10380:
 			mov ecx, eax   	/* initialize COLUMNS counter */
 				sub ecx, 6   	/* do not use first 3 and last 3 columns */
-				align 16                 	/* 16 byte allignment of the loop entry */
+				align 16                 	/* 16 byte alignment of the loop entry */
 L10382:
 			pxor mm7, mm7   	/* zero MM7 (accumulator) */
 				movd mm6, esi   	/* save ESI in MM6 */
@@ -5411,7 +6236,7 @@ L10382:
 			/* --- */
 			".L10380:               \n\t" "mov       %%eax, %%ecx \n\t"	/* initialize COLUMNS counter */
 			"sub          $6, %%ecx \n\t"	/* do not use first 3 and last 3 columns */
-			".align 16              \n\t"	/* 16 byte allignment of the loop entry */
+			".align 16              \n\t"	/* 16 byte alignment of the loop entry */
 			".L10382:               \n\t" "pxor      %%mm7, %%mm7 \n\t"	/* zero MM7 (accumulator) */
 			"movd      %%esi, %%mm6 \n\t"	/* save ESI in MM6 */
 			/* --- 1 */
@@ -5583,6 +6408,10 @@ Note: Non-MMX implementation not available for this function.
 int SDL_imageFilterConvolveKernel9x9ShiftRight(unsigned char *Src, unsigned char *Dest, int rows, int columns,
 											   signed short *Kernel, unsigned char NRightShift)
 {
+	/* Validate input parameters */
+	if ((Src == NULL) || (Dest == NULL) || (Kernel == NULL))
+		return(-1);
+
 	if ((columns < 9) || (rows < 9) || (NRightShift > 7))
 		return (-1);
 
@@ -5611,7 +6440,7 @@ int SDL_imageFilterConvolveKernel9x9ShiftRight(unsigned char *Src, unsigned char
 L10390:
 			mov ecx, eax   	/* initialize COLUMNS counter */
 				sub ecx, 8   	/* do not use first 4 and last 4 columns */
-				align 16                 	/* 16 byte allignment of the loop entry */
+				align 16                 	/* 16 byte alignment of the loop entry */
 L10392:
 			pxor mm7, mm7   	/* zero MM7 (accumulator) */
 				movd mm6, esi   	/* save ESI in MM6 */
@@ -5882,7 +6711,7 @@ L10392:
 			/* --- */
 			".L10390:               \n\t" "mov       %%eax, %%ecx \n\t"	/* initialize COLUMNS counter */
 			"sub          $8, %%ecx \n\t"	/* do not use first 4 and last 4 columns */
-			".align 16              \n\t"	/* 16 byte allignment of the loop entry */
+			".align 16              \n\t"	/* 16 byte alignment of the loop entry */
 			".L10392:               \n\t" "pxor      %%mm7, %%mm7 \n\t"	/* zero MM7 (accumulator) */
 			"movd      %%esi, %%mm6 \n\t"	/* save ESI in MM6 */
 			/* --- 1 */
@@ -6148,8 +6977,8 @@ L10392:
 
 \param Src The source 2D byte array to sobel-filter. Should be different from destination.
 \param Dest The destination 2D byte array to store the result in. Should be different from source.
-\param rows Number of rows in source/destination array. Must be >7.
-\param columns Number of columns in source/destination array. Must be >2.
+\param rows Number of rows in source/destination array. Must be >2.
+\param columns Number of columns in source/destination array. Must be >7.
 
 Note: Non-MMX implementation not available for this function.
 
@@ -6157,6 +6986,10 @@ Note: Non-MMX implementation not available for this function.
 */
 int SDL_imageFilterSobelX(unsigned char *Src, unsigned char *Dest, int rows, int columns)
 {
+	/* Validate input parameters */
+	if ((Src == NULL) || (Dest == NULL))
+		return(-1);
+
 	if ((columns < 8) || (rows < 3))
 		return (-1);
 
@@ -6181,7 +7014,7 @@ L10400:
 				shr ecx, 3   	/* EBX/8 (MMX loads 8 bytes at a time) */
 				mov ebx, esi   	/* save ESI in EBX */
 				movd mm1, edi   	/* save EDI in MM1 */
-				align 16                 	/* 16 byte allignment of the loop entry */
+				align 16                 	/* 16 byte alignment of the loop entry */
 L10402:
 			/* ---, */
 			movq mm4, [esi]   	/* load 8 bytes from Src */
@@ -6288,7 +7121,7 @@ L10402:
 			"shr          $3, %%ecx \n\t"	/* EBX/8 (MMX loads 8 bytes at a time) */
 			"mov       %%esi, %%ebx \n\t"	/* save ESI in EBX */
 			"movd      %%edi, %%mm1 \n\t"	/* save EDI in MM1 */
-			".align 16              \n\t"	/* 16 byte allignment of the loop entry */
+			".align 16              \n\t"	/* 16 byte alignment of the loop entry */
 			".L10402:               \n\t"
 			/* --- */
 			"movq    (%%esi), %%mm4 \n\t"	/* load 8 bytes from Src */
@@ -6395,8 +7228,8 @@ L10402:
 
 \param Src The source 2D byte array to sobel-filter. Should be different from destination.
 \param Dest The destination 2D byte array to store the result in. Should be different from source.
-\param rows Number of rows in source/destination array. Must be >7.
-\param columns Number of columns in source/destination array. Must be >2.
+\param rows Number of rows in source/destination array. Must be >2.
+\param columns Number of columns in source/destination array. Must be >8.
 \param NRightShift The number of right bit shifts to apply to the filter sum. Must be <7.
 
 Note: Non-MMX implementation not available for this function.
@@ -6406,6 +7239,9 @@ Note: Non-MMX implementation not available for this function.
 int SDL_imageFilterSobelXShiftRight(unsigned char *Src, unsigned char *Dest, int rows, int columns,
 									unsigned char NRightShift)
 {
+	/* Validate input parameters */
+	if ((Src == NULL) || (Dest == NULL))
+		return(-1);
 	if ((columns < 8) || (rows < 3) || (NRightShift > 7))
 		return (-1);
 
@@ -6433,7 +7269,7 @@ L10410:
 				shr ecx, 3   	/* EBX/8 (MMX loads 8 bytes at a time) */
 				mov ebx, esi   	/* save ESI in EBX */
 				mov edx, edi   	/* save EDI in EDX */
-				align 16                 	/* 16 byte allignment of the loop entry */
+				align 16                 	/* 16 byte alignment of the loop entry */
 L10412:
 			/* ---, */
 			movq mm4, [esi]   	/* load 8 bytes from Src */
@@ -6555,7 +7391,7 @@ L10412:
 			"shr          $3, %%ecx \n\t"	/* EBX/8 (MMX loads 8 bytes at a time) */
 			"mov       %%esi, %%ebx \n\t"	/* save ESI in EBX */
 			"mov       %%edi, %%edx \n\t"	/* save EDI in EDX */
-			".align 16              \n\t"	/* 16 byte allignment of the loop entry */
+			".align 16              \n\t"	/* 16 byte alignment of the loop entry */
 			".L10412:               \n\t"
 			/* --- */
 			"movq    (%%esi), %%mm4 \n\t"	/* load 8 bytes from Src */

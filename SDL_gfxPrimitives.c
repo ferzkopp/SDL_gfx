@@ -741,7 +741,7 @@ int _filledRectAlpha(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 
 }
 
 /*!
-/brief Draw filled rectangle of RGBA color with alpha blending.
+\brief Draw filled rectangle of RGBA color with alpha blending.
 
 \param dst The surface to draw on.
 \param x1 X coordinate of the first corner (upper left) of the rectangle.
@@ -791,7 +791,7 @@ int filledRectAlpha(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y
 }
 
 /*!
-/brief Internal function to draw horizontal line of RGBA color with alpha blending.
+\brief Internal function to draw horizontal line of RGBA color with alpha blending.
 
 \param dst The surface to draw on.
 \param x1 X coordinate of the first point (i.e. left) of the line.
@@ -808,7 +808,7 @@ int _HLineAlpha(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y, Uint32 color)
 
 
 /*!
-/brief Internal function to draw vertical line of RGBA color with alpha blending.
+\brief Internal function to draw vertical line of RGBA color with alpha blending.
 
 \param dst The surface to draw on.
 \param x X coordinate of the points of the line.
