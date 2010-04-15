@@ -96,6 +96,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				Description=""
+				CommandLine="&#x0D;&#x0A;"
 			/>
 		</Configuration>
 		<Configuration
@@ -178,6 +180,8 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				Description="Copy dependent DLLs"
+				CommandLine="copy $(&lt;ProjectDir&gt;)..\..\sdlgfx\Debug\SDL_gfx.dll $(&lt;TargetDir&gt;)&#x0D;&#x0A;copy $(&lt;ProjectDir&gt;)..\..\SDL-1.2.14\VisualC\SDL\Debug\SDL.dll $(&lt;TargetDir&gt;)"
 			/>
 		</Configuration>
 	</Configurations>

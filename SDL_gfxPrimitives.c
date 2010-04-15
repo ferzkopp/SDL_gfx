@@ -12,6 +12,7 @@ LGPL (c) A. Schiffler
 #include <string.h>
 
 #include "SDL_gfxPrimitives.h"
+#include "SDL_rotozoom.h"
 #include "SDL_gfxPrimitives_font.h"
 
 /* -===================- */
@@ -370,6 +371,7 @@ int _putPixelAlpha(SDL_Surface *dst, Sint16 x, Sint16 y, Uint32 color, Uint8 alp
 				Bshift = format->Bshift;
 				Ashift = format->Ashift;
 
+				A = 0;
 				R = ((dc & Rmask) + (((((color & Rmask) - (dc & Rmask)) >> Rshift) * alpha >> 8) << Rshift)) & Rmask;
 				G = ((dc & Gmask) + (((((color & Gmask) - (dc & Gmask)) >> Gshift) * alpha >> 8) << Gshift)) & Gmask;
 				B = ((dc & Bmask) + (((((color & Bmask) - (dc & Bmask)) >> Bshift) * alpha >> 8) << Bshift)) & Bmask;
@@ -583,6 +585,8 @@ int _filledRectAlpha(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 
 			dG = (color & Gmask);
 			dB = (color & Bmask);
 			dA = (color & Amask);
+			
+			A = 0;
 
 			for (y = y1; y <= y2; y++) {
 				row = (Uint16 *) dst->pixels + y * dst->pitch / 2;
@@ -595,8 +599,10 @@ int _filledRectAlpha(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 
 					if (Amask)
 					{
 						A = ((*pixel & Amask) + ((dA - (*pixel & Amask)) * alpha >> 8)) & Amask;
+						*pixel = R | G | B | A;
+					} else {
+						*pixel = R | G | B;
 					}
-					*pixel = R | G | B | A;
 				}
 			}
 		}
@@ -667,6 +673,7 @@ int _filledRectAlpha(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 
 			dG = (color & Gmask);
 			dB = (color & Bmask);
 			dA = (color & Amask);
+
 			for (y = y1; y <= y2; y++) {
 				row = (Uint32 *) dst->pixels + y * dst->pitch / 4;
 				for (x = x1; x <= x2; x++) {
@@ -678,8 +685,10 @@ int _filledRectAlpha(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 
 					if (Amask)
 					{
 						A = ((*pixel & Amask) + ((((dA - (*pixel & Amask)) >> Ashift) * alpha >> 8) << Ashift)) & Amask;
+						*pixel = R | G | B | A;
+					} else {
+						*pixel = R | G | B;
 					}
-					*pixel = R | G | B | A;
 				}
 			}
 		}
@@ -5329,22 +5338,37 @@ static const unsigned char *currentFontdata = gfxPrimitivesFontdata;
 /*!
 \brief Width of the current font. Default is 8. 
 */
-static int charWidth = 8;
+static Uint32 charWidth = 8;
 
 /*!
 \brief Height of the current font. Default is 8. 
 */
-static int charHeight = 8;
+static Uint32 charHeight = 8;
+
+/*!
+\brief Width for rendering. Autocalculated.
+*/
+static Uint32 charWidthLocal = 8;
+
+/*!
+\brief Height for rendering. Autocalculated.
+*/
+static Uint32 charHeightLocal = 8;
 
 /*!
 \brief Pitch of the current font in bytes. Default is 1. 
 */
-static int charPitch = 1;
+static Uint32 charPitch = 1;
+
+/*!
+\brief Characters 90deg clockwise rotations. Default is 0. Max is 3. 
+*/
+static Uint32 charRotation = 0;
 
 /*!
 \brief Character data size in bytes of the current font. Default is 8. 
 */
-static int charSize = 8;
+static Uint32 charSize = 8;
 
 /*!
 \brief Sets or resets the current global font data.
@@ -5359,11 +5383,11 @@ The font data array is organized in follows:
 \param cw Width of character in bytes. Ignored if fontdata==NULL.
 \param ch Height of character in bytes. Ignored if fontdata==NULL.
 */
-void gfxPrimitivesSetFont(const void *fontdata, int cw, int ch)
+void gfxPrimitivesSetFont(const void *fontdata, Uint32 cw, Uint32 ch)
 {
 	int i;
 
-	if (fontdata) {
+	if ((fontdata) && (cw) && (ch)) {
 		currentFontdata = fontdata;
 		charWidth = cw;
 		charHeight = ch;
@@ -5376,10 +5400,63 @@ void gfxPrimitivesSetFont(const void *fontdata, int cw, int ch)
 	charPitch = (charWidth+7)/8;
 	charSize = charPitch * charHeight;
 
+	/* Maybe flip width/height for rendering */
+	if ((charRotation==1) || (charRotation==3))
+	{
+		charWidthLocal = charHeight;
+		charHeightLocal = charWidth;
+	}
+	else
+	{
+		charWidthLocal = charWidth;
+		charHeightLocal = charHeight;
+	}
+
+	/* Clear character cache */
 	for (i = 0; i < 256; i++) {
 		if (gfxPrimitivesFont[i]) {
 			SDL_FreeSurface(gfxPrimitivesFont[i]);
 			gfxPrimitivesFont[i] = NULL;
+		}
+	}
+}
+
+/*!
+\brief Sets current global font character rotation steps. 
+
+Default is 0 (no rotation). 1 = 90deg clockwise. 2 = 180deg clockwise. 3 = 270deg clockwise.
+Changing the rotation, will reset the character cache.
+
+\param rotation Number of 90deg clockwise steps to rotate
+*/
+void gfxPrimitivesSetFontRotation(Uint32 rotation)
+{
+	int i;
+
+	rotation = rotation & 3;
+	if (charRotation != rotation)
+	{
+		/* Store rotation */
+		charRotation = rotation;
+
+		/* Maybe flip width/height for rendering */
+		if ((charRotation==1) || (charRotation==3))
+		{
+			charWidthLocal = charHeight;
+			charHeightLocal = charWidth;
+		}
+		else
+		{
+			charWidthLocal = charWidth;
+			charHeightLocal = charHeight;
+		}
+
+		/* Clear character cache */
+		for (i = 0; i < 256; i++) {
+			if (gfxPrimitivesFont[i]) {
+				SDL_FreeSurface(gfxPrimitivesFont[i]);
+				gfxPrimitivesFont[i] = NULL;
+			}
 		}
 	}
 }
@@ -5406,13 +5483,15 @@ int characterColor(SDL_Surface * dst, Sint16 x, Sint16 y, char c, Uint32 color)
 	SDL_Rect srect;
 	SDL_Rect drect;
 	int result;
-	int ix, iy;
+	Uint32 ix, iy;
 	const unsigned char *charpos;
 	Uint8 *curpos;
 	int forced_redraw;
 	Uint8 patt, mask;
 	Uint8 *linepos;
-	int pitch;
+	Uint32 pitch;
+	SDL_Surface *rotatedCharacter;
+	Uint32 ci;
 
 	/*
 	* Check visibility of clipping rectangle
@@ -5427,7 +5506,7 @@ int characterColor(SDL_Surface * dst, Sint16 x, Sint16 y, char c, Uint32 color)
 	*/
 
 	left = dst->clip_rect.x;
-	x2 = x + charWidth;
+	x2 = x + charWidthLocal;
 	if (x2<left) {
 		return(0);
 	} 
@@ -5437,7 +5516,7 @@ int characterColor(SDL_Surface * dst, Sint16 x, Sint16 y, char c, Uint32 color)
 		return(0);
 	} 
 	top = dst->clip_rect.y;
-	y2 = y + charHeight;
+	y2 = y + charHeightLocal;
 	if (y2<top) {
 		return(0);
 	} 
@@ -5452,29 +5531,33 @@ int characterColor(SDL_Surface * dst, Sint16 x, Sint16 y, char c, Uint32 color)
 	*/
 	srect.x = 0;
 	srect.y = 0;
-	srect.w = charWidth;
-	srect.h = charHeight;
+	srect.w = charWidthLocal;
+	srect.h = charHeightLocal;
 
 	/*
 	* Setup destination rectangle
 	*/
 	drect.x = x;
 	drect.y = y;
-	drect.w = charWidth;
-	drect.h = charHeight;
+	drect.w = charWidthLocal;
+	drect.h = charHeightLocal;
+
+	/* Character index in cache */
+	ci = (unsigned char) c;
 
 	/*
-	* Create new charWidth x charHeight bitmap surface if not already present 
+	* Create new charWidth x charHeight bitmap surface if not already present.
+	* Might get rotated later.
 	*/
-	if (gfxPrimitivesFont[(unsigned char) c] == NULL) {
-		gfxPrimitivesFont[(unsigned char) c] =
+	if (gfxPrimitivesFont[ci] == NULL) {
+		gfxPrimitivesFont[ci] =
 			SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_HWSURFACE | SDL_SRCALPHA,
 			charWidth, charHeight, 32,
 			0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
 		/*
 		* Check pointer 
 		*/
-		if (gfxPrimitivesFont[(unsigned char) c] == NULL) {
+		if (gfxPrimitivesFont[ci] == NULL) {
 			return (-1);
 		}
 		/*
@@ -5488,23 +5571,23 @@ int characterColor(SDL_Surface * dst, Sint16 x, Sint16 y, char c, Uint32 color)
 	/*
 	* Check if color has changed 
 	*/
-	if ((gfxPrimitivesFontColor[(unsigned char) c] != color) || (forced_redraw)) {
+	if ((gfxPrimitivesFontColor[ci] != color) || (forced_redraw)) {
 		/*
 		* Redraw character 
 		*/
-		SDL_SetAlpha(gfxPrimitivesFont[(unsigned char) c], SDL_SRCALPHA, 255);
-		gfxPrimitivesFontColor[(unsigned char) c] = color;
+		SDL_SetAlpha(gfxPrimitivesFont[ci], SDL_SRCALPHA, 255);
+		gfxPrimitivesFontColor[ci] = color;
 
 		/* Lock font-surface */
-		if (SDL_LockSurface(gfxPrimitivesFont[(unsigned char) c]) != 0)
+		if (SDL_LockSurface(gfxPrimitivesFont[ci]) != 0)
 			return (-1);
 
 		/*
 		* Variable setup 
 		*/
-		charpos = currentFontdata + (unsigned char) c * charSize;
-		linepos = (Uint8 *) gfxPrimitivesFont[(unsigned char) c]->pixels;
-		pitch = gfxPrimitivesFont[(unsigned char) c]->pitch;
+		charpos = currentFontdata + ci * charSize;
+		linepos = (Uint8 *) gfxPrimitivesFont[ci]->pixels;
+		pitch = gfxPrimitivesFont[ci]->pitch;
 
 		/*
 		* Drawing loop 
@@ -5523,19 +5606,27 @@ int characterColor(SDL_Surface * dst, Sint16 x, Sint16 y, char c, Uint32 color)
 					*(Uint32 *)curpos = color;
 				else
 					*(Uint32 *)curpos = 0;
-				curpos += 4;;
+				curpos += 4;
 			}
 			linepos += pitch;
 		}
 
 		/* Unlock font-surface */
-		SDL_UnlockSurface(gfxPrimitivesFont[(unsigned char) c]);
+		SDL_UnlockSurface(gfxPrimitivesFont[ci]);
+
+		/* Maybe rotate and replace cached image */
+		if (charRotation>0)
+		{
+			rotatedCharacter = rotateSurface90Degrees(gfxPrimitivesFont[ci], charRotation);
+            SDL_FreeSurface(gfxPrimitivesFont[ci]);
+			gfxPrimitivesFont[ci] = rotatedCharacter;
+		}
 	}
 
 	/*
 	* Draw bitmap onto destination surface 
 	*/
-	result = SDL_BlitSurface(gfxPrimitivesFont[(unsigned char) c], &srect, dst, &drect);
+	result = SDL_BlitSurface(gfxPrimitivesFont[ci], &srect, dst, &drect);
 
 	return (result);
 }
@@ -5579,12 +5670,27 @@ of the character width of the current global font.
 int stringColor(SDL_Surface * dst, Sint16 x, Sint16 y, const char *s, Uint32 color)
 {
 	int result = 0;
-	int curx = x;
+	Sint16 curx = x;
+	Sint16 cury = y;
 	const char *curchar = s;
 
 	while (*curchar && !result) {
-		result |= characterColor(dst, curx, y, *curchar, color);
-		curx += charWidth;
+		result |= characterColor(dst, curx, cury, *curchar, color);
+		switch (charRotation)
+		{
+			case 0:
+				curx += charWidthLocal;
+				break;
+			case 2:
+				curx -= charWidthLocal;
+				break;
+			case 1:
+				cury += charHeightLocal;
+				break;
+			case 3:
+				cury -= charHeightLocal;
+				break;
+		}
 		curchar++;
 	}
 

@@ -23,8 +23,8 @@ Copyright (C) A. Schiffler, August 2001, GPL
 #include "SDL/SDL_gfxPrimitives.h"
 #endif
 
-#define WIDTH	640
-#define HEIGHT	200
+#define WIDTH	1024
+#define HEIGHT	768
 
 void WaitForEvent()
 {
@@ -76,97 +76,224 @@ int FileExists(const char * filename)
 
 #define NUM_SDLGFX_FONTS	7
 
+/* Filenames of font files */
+static	char *fontfile[NUM_SDLGFX_FONTS] = {
+	"",
+	"5x7.fnt",
+	"7x13.fnt",
+	"7x13B.fnt",
+	"7x13O.fnt",
+	"9x18.fnt",
+	"9x18B.fnt",
+};
+
+/* Width of font characters */
+static	int  fontw[NUM_SDLGFX_FONTS] = {
+	8,
+	5,
+	7,
+	7,
+	7,
+	9,
+	9,
+};	
+
+/* Height of fonts characters */
+static	int  fonth[NUM_SDLGFX_FONTS] = {
+	8,
+	7,
+	13,
+	13,
+	13,
+	18,
+	18,
+};
+
+/* Bytes of fontfiles */
+static int  fontsize[NUM_SDLGFX_FONTS] = {
+	0,
+	1792,
+	3328,
+	3328,
+	3328,
+	9216,
+	9216,
+};	
+
+/* Helper that searches and loads a fontfile */
+char *LoadFontFile(int i)
+{
+	char *myfont;
+	char filename[128];
+	FILE *file;
+
+	/* Check index */
+	if (i==0)
+	{
+		return NULL;
+	}
+
+	/* Allocate memory for font data */
+	myfont=(char *)malloc(fontsize[i]);
+	if (myfont) {
+		if (strcmp(fontfile[i],"default")) {
+			/* Load a font data */
+			sprintf(filename,"../Fonts/%s",fontfile[i]);
+			if (!FileExists(filename))
+			{
+				sprintf(filename,"..\\Fonts\\%s",fontfile[i]);
+				if (!FileExists(filename))
+				{
+					sprintf(filename,"..\\..\\..\\Fonts\\%s",fontfile[i]);
+					if (!FileExists(filename))
+					{
+						fprintf(stderr,"Cannot find fontfile: %s\n", fontfile[i]);
+					}
+				}
+			}
+			file = fopen(filename,"r");
+			fread(myfont,fontsize[i],1,file);
+			fclose(file);
+		}
+	}
+
+	return myfont;
+}
+
 void Draw(SDL_Surface *screen)
 {
-	int i;
-	FILE *file;
+	int i, rotation;
 	char *myfont;
-	char *fontfile[NUM_SDLGFX_FONTS] = {
-		"default",
-		"5x7.fnt",
-		"7x13.fnt",
-		"7x13B.fnt",
-		"7x13O.fnt",
-		"9x18.fnt",
-		"9x18B.fnt",
-	};
-	int  fontw[NUM_SDLGFX_FONTS] = {
-		8,
-		5,
-		7,
-		7,
-		7,
-		9,
-		9,
-	};	
-	int  fonth[NUM_SDLGFX_FONTS] = {
-		8,
-		7,
-		13,
-		13,
-		13,
-		18,
-		18,
-	};	
-	int  fontsize[NUM_SDLGFX_FONTS] = {
-		1,
-		1792,
-		3328,
-		3328,
-		3328,
-		9216,
-		9216,
-	};	
 	char mytext[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-	int x,y;
-	char filename[128];
+	int x,y,yold;
 
 	/* Black screen */
 	ClearScreen(screen);
+	y=0; 
+
+	/* Try all horizontal rotations */
+	rotation = 0;
+	gfxPrimitivesSetFontRotation(rotation);
 
 	/* Render all fonts */ 
-	y=0; 
 	for (i=0; i<NUM_SDLGFX_FONTS; i++) {
-		fprintf(stderr,"Drawing Font: size %ix%i, file '%s', %i bytes\n",fontw[i], fonth[i], fontfile[i],fontsize[i]);
+		fprintf(stderr,"Drawing Font: size %ix%i, file '%s', %i bytes, rotation %i\n",fontw[i], fonth[i], fontfile[i],fontsize[i], rotation);
 		/* Reset line pos */
 		x=4;
-		/* Allocate memory for font data */
-		myfont=(char *)malloc(fontsize[i]);
-		if (myfont) {
-			if (strcmp(fontfile[i],"default")) {
-				/* Load a font data */
-				sprintf(filename,"../Fonts/%s",fontfile[i]);
-				if (!FileExists(filename))
-				{
-					sprintf(filename,"..\\Fonts\\%s",fontfile[i]);
-					if (!FileExists(filename))
-					{
-						sprintf(filename,"..\\..\\..\\Fonts\\%s",fontfile[i]);
-						if (!FileExists(filename))
-						{
-							fprintf(stderr,"Cannot find fontfile: %s\n", fontfile[i]);
-						}
-					}
-				}
-				file = fopen(filename,"r");
-				fread(myfont,fontsize[i],1,file);
-				fclose(file);
-				/* Set font data and use it */
-				gfxPrimitivesSetFont(myfont,fontw[i],fonth[i]);
-			}   
-			y += fonth[i];
-			stringRGBA(screen,x,y,fontfile[i],255,255,255,255);
-			x += 128;
-			stringRGBA(screen,x,y,mytext,255,255,255,255);
-			y += 10;
+		myfont = NULL;
+		if (i>0) {
+			myfont=LoadFontFile(i);
+		}
+		/* Set font data and use it */
+		gfxPrimitivesSetFont(myfont,fontw[i],fonth[i]);
+		y += fonth[i];
+		stringRGBA(screen,x,y,fontfile[i],255,255,255,255);
+		x += 100;
+		stringRGBA(screen,x,y,mytext,255,255,255,255);
+		y += 10;
+		if (i>0)
+		{
 			/* Clean up font-data */
 			free(myfont);
 		}
 	}
 
-	/* Display by flipping screens */
-	SDL_Flip(screen); 
+	y += 20;
+
+	yold = y;
+
+	rotation = 2;
+	gfxPrimitivesSetFontRotation(rotation);
+
+	/* Render all fonts */ 
+	for (i=0; i<NUM_SDLGFX_FONTS; i++) {
+		fprintf(stderr,"Drawing Font: size %ix%i, file '%s', %i bytes, rotation %i\n",fontw[i], fonth[i], fontfile[i],fontsize[i], rotation);
+		/* Reset line pos */
+		x=WIDTH - 14;
+		myfont = NULL;
+		if (i>0) {
+			myfont=LoadFontFile(i);
+		}
+		/* Set font data and use it */
+		gfxPrimitivesSetFont(myfont,fontw[i],fonth[i]);
+		y += fonth[i];
+		stringRGBA(screen,x,y,fontfile[i],255,255,255,255);
+		x -= 100;
+		stringRGBA(screen,x,y,mytext,255,255,255,255);
+		y += 10;
+		if (i>0)
+		{
+			/* Clean up font-data */
+			free(myfont);
+		}
+	}
+
+	y += 20;
+
+	/* Try all vertical rotations */
+	rotation = 1;
+	gfxPrimitivesSetFontRotation(rotation);
+
+	x = 14;
+
+	/* Render all fonts */ 
+	for (i=0; i<NUM_SDLGFX_FONTS; i++) {
+		fprintf(stderr,"Drawing Font: size %ix%i, file '%s', %i bytes, rotation %i\n",fontw[i], fonth[i], fontfile[i],fontsize[i], rotation);
+		/* Reset line pos */
+		y=yold;
+		myfont = NULL;
+		if (i>0) {
+			myfont=LoadFontFile(i);
+		}
+		/* Set font data and use it */
+		gfxPrimitivesSetFont(myfont,fontw[i],fonth[i]);
+		x += fonth[i];
+		stringRGBA(screen,x,y,fontfile[i],255,255,255,255);
+		y += 100;
+		stringRGBA(screen,x,y,mytext,255,255,255,255);
+		x += 10;
+		if (i>0)
+		{
+			/* Clean up font-data */
+			free(myfont);
+		}
+	}
+
+	x += 20;
+
+	rotation = 3;
+	gfxPrimitivesSetFontRotation(rotation);
+
+	/* Render all fonts */ 
+	for (i=0; i<NUM_SDLGFX_FONTS; i++) {
+		fprintf(stderr,"Drawing Font: size %ix%i, file '%s', %i bytes, rotation %i\n",fontw[i], fonth[i], fontfile[i],fontsize[i], rotation);
+		/* Reset line pos */
+		y=HEIGHT - 14;
+		myfont = NULL;
+		if (i>0) {
+			if (i>0) {
+				myfont=LoadFontFile(i);
+			}
+			/* Set font data and use it */
+			gfxPrimitivesSetFont(myfont,fontw[i],fonth[i]);
+			x += fonth[i];
+			stringRGBA(screen,x,y,fontfile[i],255,255,255,255);
+			y -= 100;
+			stringRGBA(screen,x,y,mytext,255,255,255,255);
+			x += 10;
+			if (i>0)
+			{
+				/* Clean up font-data */
+				free(myfont);
+			}
+		}
+
+		/* Display by flipping screens */
+		SDL_Flip(screen); 
+	}
 }
+
+/* ======== */
 
 int main(int argc, char *argv[])
 {

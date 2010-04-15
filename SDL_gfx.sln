@@ -11,10 +11,19 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestGfxPrimitives", "Test\T
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestABGR", "Test\TestABGR.vcproj", "{AE22EFD3-7F7D-48C0-AF3D-EF190406BEDC}"
+	ProjectSection(ProjectDependencies) = postProject
+		{AE22EFD3-6E6D-48C0-AF3D-EF190406BEDC} = {AE22EFD3-6E6D-48C0-AF3D-EF190406BEDC}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestFonts", "Test\TestFonts.vcproj", "{AE33EFD3-6F6D-48C0-AF3D-EF190406BEDC}"
+	ProjectSection(ProjectDependencies) = postProject
+		{AE22EFD3-6E6D-48C0-AF3D-EF190406BEDC} = {AE22EFD3-6E6D-48C0-AF3D-EF190406BEDC}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestFramerate", "Test\TestFramerate.vcproj", "{AE22EFD3-6F6D-21C0-AF2D-EF190406BEDC}"
+	ProjectSection(ProjectDependencies) = postProject
+		{AE22EFD3-6E6D-48C0-AF3D-EF190406BEDC} = {AE22EFD3-6E6D-48C0-AF3D-EF190406BEDC}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

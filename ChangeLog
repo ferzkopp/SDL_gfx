@@ -14,6 +14,9 @@ Ver 2.0.21 -
   a 32bit surface (contributed by Zbigniew Holdys)
 * Disable MMX for 64bit platforms due to lack of support for
   pusha/popa (contributed by Olivier Boudeville)
+* Update all library functions for doxygen markup. Add doxygen
+  configuration file.
+* Added font rotation support and updated TestFonts sample
 
 Ver 2.0.20 - Wed Sep 23 18:42:02 PDT 2009
 * Fix for 1-pixel postponement with 8bit scaling 
