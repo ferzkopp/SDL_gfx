@@ -815,7 +815,6 @@ int SDL_imageFilterMultNorASM(unsigned char *Src1, unsigned char *Src2, unsigned
 L10141:
 		mov al, [edx]   /* load a byte from Src1 */
 		mul [esi] 	/* mul with a byte from Src2 */
-L10142:
 		mov [edi], al   /* move a byte result to Dest */
 			inc edx 	/* increment Src1, Src2, Dest */
 			inc esi 		/* pointer registers by one */
@@ -1842,11 +1841,11 @@ int SDL_imageFilterAddByte(unsigned char *Src1, unsigned char *Dest, unsigned in
 \param Dest Pointer to the start of the destination byte array (D).
 \param SrcLength The number of bytes in the source array.
 \param C Constant to add (C).
-\param Cs Byteorder-swapped constant to add (Cs).
+\param D Byteorder-swapped constant to add (Cs).
 
 \return Returns 0 for success or -1 for error.
 */
-int SDL_imageFilterAddUintMMX(unsigned char *Src1, unsigned char *Dest, unsigned int SrcLength, unsigned int C, unsigned int Cs)
+int SDL_imageFilterAddUintMMX(unsigned char *Src1, unsigned char *Dest, unsigned int SrcLength, unsigned int C, unsigned int D)
 {
 #ifdef USE_MMX
 #if !defined(GCC__)
@@ -1856,7 +1855,7 @@ int SDL_imageFilterAddUintMMX(unsigned char *Src1, unsigned char *Dest, unsigned
 			/* ** Duplicate (int)C in 8 bytes of MM1 ** */
 			mov eax, C   	/* load C into EAX */
 			movd mm1, eax   	/* copy EAX into MM1 */
-			mov eax, Cs   	/* load Cs into EAX */
+			mov eax, D   	/* load D into EAX */
 			movd mm2, eax   	/* copy EAX into MM2 */
 			punpckldq mm1, mm2   	/* fill higher bytes of MM1 with C */
 			mov eax, Src1   	/* load Src1 address into eax */
@@ -1881,7 +1880,7 @@ L11023:
 		/* ** Duplicate (int)C in 8 bytes of MM1 ** */
 		"mov          %3, %%eax \n\t"	/* load C into EAX */
 		"movd      %%eax, %%mm1 \n\t"	/* copy EAX into MM1 */
-		"mov          %4, %%eax \n\t"	/* load Cs into EAX */
+		"mov          %4, %%eax \n\t"	/* load D into EAX */
 		"movd      %%eax, %%mm2 \n\t"	/* copy EAX into MM2 */
 		"punpckldq %%mm2, %%mm1 \n\t"	/* fill higher bytes of MM1 with C */
 		"mov          %1, %%eax \n\t"	/* load Src1 address into eax */
@@ -1902,7 +1901,7 @@ L11023:
 		:"m"(Src1),		/* %1 */
 		"m"(SrcLength),		/* %2 */
 		"m"(C),			/* %3 */
-		"m"(Cs)			/* %4 */
+		"m"(D)			/* %4 */
 		);
 #endif
 	return (0);
@@ -2285,17 +2284,17 @@ int SDL_imageFilterSubByte(unsigned char *Src1, unsigned char *Dest, unsigned in
 }
 
 /*!
-\brief Internal MMX Filter using SubUint: D = saturation0(S[i] - C[i % 4]), Cs=Swap32((uint)C)
+\brief Internal MMX Filter using SubUint: D = saturation0(S[i] - Cs[i % 4]), Cs=Swap32((uint)C)
 
 \param Src1 Pointer to the start of the source byte array (S).
 \param Dest Pointer to the start of the destination byte array (D).
 \param SrcLength The number of bytes in the source array.
 \param C Constant to subtract (C).
-\param Cs Byteorder-swapped constant to subtract (Cs).
+\param D Byteorder-swapped constant to subtract (Cs).
 
 \return Returns 0 for success or -1 for error.
 */
-int SDL_imageFilterSubUintMMX(unsigned char *Src1, unsigned char *Dest, unsigned int SrcLength, unsigned int C, unsigned int Cs)
+int SDL_imageFilterSubUintMMX(unsigned char *Src1, unsigned char *Dest, unsigned int SrcLength, unsigned int C, unsigned int D)
 {
 #ifdef USE_MMX
 #if !defined(GCC__)
@@ -2305,7 +2304,7 @@ int SDL_imageFilterSubUintMMX(unsigned char *Src1, unsigned char *Dest, unsigned
 			/* ** Duplicate (int)C in 8 bytes of MM1 ** */
 			mov eax, C   	/* load C into EAX */
 			movd mm1, eax   	/* copy EAX into MM1 */
-			mov eax, Cs   	/* load Cs into EAX */
+			mov eax, D   	/* load D into EAX */
 			movd mm2, eax   	/* copy EAX into MM2 */
 			punpckldq mm1, mm2   	/* fill higher bytes of MM1 with C */
 			mov eax, Src1   	/* load Src1 address into eax */
@@ -2330,7 +2329,7 @@ L11024:
 		/* ** Duplicate (int)C in 8 bytes of MM1 ** */
 		"mov          %3, %%eax \n\t"	/* load C into EAX */
 		"movd      %%eax, %%mm1 \n\t"	/* copy EAX into MM1 */
-		"mov          %4, %%eax \n\t"	/* load Cs into EAX */
+		"mov          %4, %%eax \n\t"	/* load D into EAX */
 		"movd      %%eax, %%mm2 \n\t"	/* copy EAX into MM2 */
 		"punpckldq %%mm2, %%mm1 \n\t"	/* fill higher bytes of MM1 with C */
 		"mov          %1, %%eax \n\t"	/* load Src1 address into eax */
@@ -2350,7 +2349,7 @@ L11024:
 		:"m"(Src1),		/* %1 */
 		"m"(SrcLength),		/* %2 */
 		"m"(C),			/* %3 */
-		"m"(Cs)			/* %4 */
+		"m"(D)			/* %4 */
 		);
 #endif
 	return (0);
@@ -2360,7 +2359,7 @@ L11024:
 }
 
 /*!
-\brief Filter using SubUint: D = saturation0(S[i] - C[i % 4]), Cs=Swap32((uint)C)
+\brief Filter using SubUint: D = saturation0(S[i] - Cs[i % 4]), Cs=Swap32((uint)C)
 
 \param Src1 Pointer to the start of the source byte array (S1).
 \param Dest Pointer to the start of the destination byte array (D).

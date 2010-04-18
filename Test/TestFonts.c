@@ -144,10 +144,15 @@ char *LoadFontFile(int i)
 				sprintf(filename,"..\\Fonts\\%s",fontfile[i]);
 				if (!FileExists(filename))
 				{
-					sprintf(filename,"..\\..\\..\\Fonts\\%s",fontfile[i]);
+					sprintf(filename,"..\\..\\Fonts\\%s",fontfile[i]);
 					if (!FileExists(filename))
 					{
-						fprintf(stderr,"Cannot find fontfile: %s\n", fontfile[i]);
+						sprintf(filename,"..\\..\\..\\Fonts\\%s",fontfile[i]);
+						if (!FileExists(filename))
+						{
+							fprintf(stderr,"Cannot find fontfile: %s\n", fontfile[i]);
+							exit(-1);
+						}
 					}
 				}
 			}
