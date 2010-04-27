@@ -21,14 +21,24 @@ extern "C" {
 
 	/* --------- Definitions */
 
-	/* Some rates in Hz */
-
+/*!
+\brief Highest possible rate supported by framerate controller in Hz (1/s).
+*/
 #define FPS_UPPER_LIMIT		200
+
+/*!
+\brief Lowest possible rate supported by framerate controller in Hz (1/s).
+*/
 #define FPS_LOWER_LIMIT		1
+
+/*!
+\brief Default rate of framerate controller in Hz (1/s).
+*/
 #define FPS_DEFAULT		30
 
-	/* --------- Structure variables */
-
+/*! 
+\brief Structure holding the state and timing information of the framerate controller. 
+*/
 	typedef struct {
 		Uint32 framecount;
 		float rateticks;

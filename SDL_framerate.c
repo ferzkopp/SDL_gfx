@@ -31,6 +31,7 @@ void SDL_initFramerate(FPSmanager * manager)
 \brief Set the framerate in Hz 
 
 Sets a new framerate for the manager and reset delay interpolation.
+Rate values must be between FPS_LOWER_LIMIT and FPS_UPPER_LIMIT inclusive to be accepted.
 
 \param manager Pointer to the framerate manager.
 \param rate The new framerate in Hz (frames per second).

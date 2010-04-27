@@ -1,7 +1,8 @@
 /*!
 
 
-\mainpage SDL_gfx - SDL graphics drawing primitives and other support functions
+\mainpage SDL_gfx - SDL graphics drawing primitives, rotozoom and other supporting functions
+
 
 \section contact_sec Contact and License
 
@@ -12,6 +13,7 @@ contact information.
 This library is licenced under the LGPL, see the file LICENSE for details. 
 
 LGPL (c) A. Schiffler
+
 
 \section intro_sec Introduction
 
@@ -412,5 +414,9 @@ See the source code .c files for some sample code and implementation hints.
 
 - Added Symbian and Windows 64bit fix with lrint function by Rene 
   Dudfield, renesd at gmail dot com - thanks Rene.
+
+\section changelog_sec Change Log
+
+\verbinclude ChangeLog
 
 */
