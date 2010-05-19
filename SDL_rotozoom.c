@@ -744,7 +744,7 @@ void transformSurfaceY(SDL_Surface * src, SDL_Surface * dst, int cx, int cy, int
 Specialized 90 degree rotator which rotates a 'src' surface in 90 degree 
 increments clockwise returning a new surface. Faster than rotozoomer since
 not scanning or interpolation takes place. Input surface must be 32 bit.
-(Code contributed by Jeff Schiller.)
+(code contributed by J. Schiller, improved by C. Allport and A. Schiffler)
 
 \param src Source surface to rotate.
 \param numClockwiseTurns Number of clockwise 90 degree turns to apply to the source.
@@ -754,7 +754,10 @@ not scanning or interpolation takes place. Input surface must be 32 bit.
 SDL_Surface* rotateSurface90Degrees(SDL_Surface* src, int numClockwiseTurns) 
 {
 	int row, col, newWidth, newHeight;
+	int bpp, src_ipr, dst_ipr;
 	SDL_Surface* dst;
+	Uint32* srcBuf;
+	Uint32* dstBuf;
 
 	/* Has to be a valid surface pointer and only 32-bit surfaces (for now) */
 	if (!src || src->format->BitsPerPixel != 32) { return NULL; }
@@ -775,24 +778,52 @@ SDL_Surface* rotateSurface90Degrees(SDL_Surface* src, int numClockwiseTurns)
 		return NULL;
 	}
 
-	if(numClockwiseTurns != 0) {
-		SDL_LockSurface(src);
+	if (SDL_MUSTLOCK(dst)) {
 		SDL_LockSurface(dst);
-		switch(numClockwiseTurns) {
+	}
+	if (SDL_MUSTLOCK(dst)) {
+		SDL_LockSurface(dst);
+	}
+
+	/* Calculate int-per-row */
+	bpp = src->format->BitsPerPixel / 8;
+	src_ipr = src->pitch / bpp;
+	dst_ipr = dst->pitch / bpp;
+
+	switch(numClockwiseTurns) {
+		case 0: /* Make a copy of the surface */
+			{
+				/* Unfortunately SDL_BlitSurface cannot be used to make a copy of the surface
+				   since it does not preserve alpha. */
+
+				if (src->pitch == dst->pitch) {
+					/* If the pitch is the same for both surfaces, the memory can be copied all at once. */
+					memcpy(dst->pixels, src->pixels, (src->h * src->pitch));
+				}
+				else
+				{
+					/* If the pitch differs, copy each row separately */
+					srcBuf = (Uint32*)(src->pixels); 
+					dstBuf = (Uint32*)(dst->pixels);
+					for (row = 0; row < src->h; row++) {
+						memcpy(dstBuf, srcBuf, dst->w * bpp);
+						srcBuf += src_ipr;
+						dstBuf += dst_ipr;
+					} /* end for(col) */
+				} /* end for(row) */
+			}
+			break;
 
 			/* rotate clockwise */
-	 case 1: /* rotated 90 degrees clockwise */
+		case 1: /* rotated 90 degrees clockwise */
 		 {
-			 Uint32* srcBuf = NULL;
-			 Uint32* dstBuf = NULL;
-
 			 for (row = 0; row < src->h; ++row) {
-				 srcBuf = (Uint32*)(src->pixels) + (row*src->pitch/4);
+				 srcBuf = (Uint32*)(src->pixels) + (row * src_ipr);
 				 dstBuf = (Uint32*)(dst->pixels) + (dst->w - row - 1);
 				 for (col = 0; col < src->w; ++col) {
 					 *dstBuf = *srcBuf;
 					 ++srcBuf;
-					 dstBuf += dst->pitch/4;
+					 dstBuf += dst_ipr;
 				 } 
 				 /* end for(col) */
 			 } 
@@ -800,15 +831,12 @@ SDL_Surface* rotateSurface90Degrees(SDL_Surface* src, int numClockwiseTurns)
 		 }
 		 break;
 
-	 case 2: /* rotated 180 degrees clockwise */
+		case 2: /* rotated 180 degrees clockwise */
 		 {
-			 Uint32* srcBuf = NULL;
-			 Uint32* dstBuf = NULL;
-
-			 for(row = 0; row < src->h; ++row) {
-				 srcBuf = (Uint32*)(src->pixels) + (row*src->pitch/4);
-				 dstBuf = (Uint32*)(dst->pixels) + ((dst->h - row - 1)*dst->pitch/4) + (dst->w - 1);
-				 for(col = 0; col < src->w; ++col) {
+			 for (row = 0; row < src->h; ++row) {
+				 srcBuf = (Uint32*)(src->pixels) + (row * src_ipr);
+				 dstBuf = (Uint32*)(dst->pixels) + ((dst->h - row - 1) * dst_ipr) + (dst->w - 1);
+				 for (col = 0; col < src->w; ++col) {
 					 *dstBuf = *srcBuf;
 					 ++srcBuf;
 					 --dstBuf;
@@ -817,35 +845,29 @@ SDL_Surface* rotateSurface90Degrees(SDL_Surface* src, int numClockwiseTurns)
 		 }
 		 break;
 
-	 case 3:
+		case 3:
 		 {
-			 Uint32* srcBuf = NULL;
-			 Uint32* dstBuf = NULL;
-
-			 for(row = 0; row < src->h; ++row) {
-				 srcBuf = (Uint32*)(src->pixels) + (row*src->pitch/4);
-				 dstBuf = (Uint32*)(dst->pixels) + row + ((dst->h - 1)*dst->pitch/4);
-				 for(col = 0; col < src->w; ++col) {
+			 for (row = 0; row < src->h; ++row) {
+				 srcBuf = (Uint32*)(src->pixels) + (row * src_ipr);
+				 dstBuf = (Uint32*)(dst->pixels) + row + ((dst->h - 1) * dst_ipr);
+				 for (col = 0; col < src->w; ++col) {
 					 *dstBuf = *srcBuf;
 					 ++srcBuf;
-					 dstBuf -= dst->pitch/4;
+					 dstBuf -= dst_ipr;
 				 } 
 			 } 
 		 }
 		 break;
-		} 
-		/* end switch */
-
-		SDL_UnlockSurface(src);
-		SDL_UnlockSurface(dst);
 	} 
-	/* end if numClockwiseTurns > 0 */
-	else {
-		/* simply copy surface to output */
-		if(SDL_BlitSurface(src, NULL, dst, NULL)) {
-			return NULL;
-		}
+	/* end switch */
+
+	if (SDL_MUSTLOCK(src)) {
+		SDL_UnlockSurface(src);
 	}
+	if (SDL_MUSTLOCK(dst)) {
+		SDL_UnlockSurface(dst);
+	}
+
 	return dst;
 }
 
@@ -1091,7 +1113,10 @@ SDL_Surface *rotozoomSurfaceXY(SDL_Surface * src, double angle, double zoomx, do
 		/*
 		* Lock source surface 
 		*/
-		SDL_LockSurface(rz_src);
+		if (SDL_MUSTLOCK(rz_src)) {
+			SDL_LockSurface(rz_src);
+		}
+
 		/*
 		* Check which kind of surface we have 
 		*/
@@ -1127,7 +1152,9 @@ SDL_Surface *rotozoomSurfaceXY(SDL_Surface * src, double angle, double zoomx, do
 		/*
 		* Unlock source surface 
 		*/
-		SDL_UnlockSurface(rz_src);
+		if (SDL_MUSTLOCK(rz_src)) {
+			SDL_UnlockSurface(rz_src);
+		}
 
 	} else {
 
@@ -1171,7 +1198,10 @@ SDL_Surface *rotozoomSurfaceXY(SDL_Surface * src, double angle, double zoomx, do
 		/*
 		* Lock source surface 
 		*/
-		SDL_LockSurface(rz_src);
+		if (SDL_MUSTLOCK(rz_src)) {
+			SDL_LockSurface(rz_src);
+		}
+
 		/*
 		* Check which kind of surface we have 
 		*/
@@ -1202,7 +1232,9 @@ SDL_Surface *rotozoomSurfaceXY(SDL_Surface * src, double angle, double zoomx, do
 		/*
 		* Unlock source surface 
 		*/
-		SDL_UnlockSurface(rz_src);
+		if (SDL_MUSTLOCK(rz_src)) {
+			SDL_UnlockSurface(rz_src);
+		}
 	}
 
 	/*
@@ -1353,7 +1385,10 @@ SDL_Surface *zoomSurface(SDL_Surface * src, double zoomx, double zoomy, int smoo
 	/*
 	* Lock source surface 
 	*/
-	SDL_LockSurface(rz_src);
+	if (SDL_MUSTLOCK(rz_src)) {
+		SDL_LockSurface(rz_src);
+	}
+
 	/*
 	* Check which kind of surface we have 
 	*/
@@ -1383,7 +1418,9 @@ SDL_Surface *zoomSurface(SDL_Surface * src, double zoomx, double zoomy, int smoo
 	/*
 	* Unlock source surface 
 	*/
-	SDL_UnlockSurface(rz_src);
+	if (SDL_MUSTLOCK(rz_src)) {
+		SDL_UnlockSurface(rz_src);
+	}
 
 	/*
 	* Cleanup temp surface 
@@ -1485,7 +1522,10 @@ SDL_Surface *shrinkSurface(SDL_Surface *src, int factorx, int factory)
 	/*
 	* Lock source surface 
 	*/
-	SDL_LockSurface(rz_src);
+	if (SDL_MUSTLOCK(rz_src)) {
+		SDL_LockSurface(rz_src);
+	}
+
 	/*
 	* Check which kind of surface we have 
 	*/
@@ -1512,10 +1552,13 @@ SDL_Surface *shrinkSurface(SDL_Surface *src, int factorx, int factory)
 		_shrinkSurfaceY(rz_src, rz_dst, factorx, factory);
 		SDL_SetColorKey(rz_dst, SDL_SRCCOLORKEY | SDL_RLEACCEL, rz_src->format->colorkey);
 	}
+
 	/*
 	* Unlock source surface 
 	*/
-	SDL_UnlockSurface(rz_src);
+	if (SDL_MUSTLOCK(rz_src)) {
+		SDL_UnlockSurface(rz_src);
+	}
 
 	/*
 	* Cleanup temp surface 
@@ -1523,7 +1566,7 @@ SDL_Surface *shrinkSurface(SDL_Surface *src, int factorx, int factory)
 	if (src_converted) {
 		SDL_FreeSurface(rz_src);
 	}
-	
+
 	/*
 	* Return destination surface 
 	*/

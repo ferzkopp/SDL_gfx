@@ -378,7 +378,7 @@ See the source code .c files for some sample code and implementation hints.
 
 - Idea for polygonColorMT and texturePolygonMT routines for
   multithreaded operation contributed by "unknown" -
-  Thanks anyways.
+  Thank you.
 
 - Multiple patches applied and repackaged version 2.0.18
   by Paul, sweetlilmre at gmail.com - Thanks Paul and
@@ -414,6 +414,9 @@ See the source code .c files for some sample code and implementation hints.
 
 - Added Symbian and Windows 64bit fix with lrint function by Rene 
   Dudfield, renesd at gmail dot com - thanks Rene.
+
+- Fixes for Rotate90 0-degree case by Chris Allport, chris dot allport
+  at gmail dot com - thanks Chris.
 
 \section changelog_sec Change Log
 

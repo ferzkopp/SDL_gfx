@@ -17,6 +17,9 @@ Ver 2.0.21 -
 * Update all library functions for doxygen markup. Add doxygen
   configuration file.
 * Added font rotation support and updated TestFonts sample
+* Fixed rotate90 for 0 degree case
+  (contributed by Chris Allport)
+* Updated TestRotozoom with rotate90 case and message display
 
 Ver 2.0.20 - Wed Sep 23 18:42:02 PDT 2009
 * Fix for 1-pixel postponement with 8bit scaling 
