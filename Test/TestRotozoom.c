@@ -31,7 +31,7 @@ int custom_smooth=0;
 int delay;
 
 /* Curren message */
-char *messageText[128];
+char *messageText;
 
 void HandleEvent()
 {
@@ -71,8 +71,7 @@ void RotatePicture (SDL_Surface *screen, SDL_Surface *picture, int rotate, int f
 	int framecount, framemax, frameinc;
 	double angle, zoomf, zoomfx, zoomfy;
 
-	fprintf(stderr, messageText);
-	fprintf(stderr, "\n");
+	fprintf(stderr, "%s\n", messageText);
 
 	/* Rotate and display the picture */
 	framemax=4*360; frameinc=1;
@@ -192,8 +191,7 @@ void ZoomPicture (SDL_Surface *screen, SDL_Surface *picture, int smooth)
 	int framecount, framemax, frameinc;
 	double zoomxf,zoomyf;
 
-	fprintf(stderr, messageText);
-	fprintf(stderr, "\n");
+	fprintf(stderr, "%s\n", messageText);
 
 	/* Zoom and display the picture */
 	framemax=4*360; frameinc=1;
@@ -241,8 +239,7 @@ void RotatePicture90Degrees (SDL_Surface *screen, SDL_Surface *picture)
 	int framecount, framemax, frameinc;
 	int numClockwiseTurns;
 
-	fprintf(stderr, messageText);
-	fprintf(stderr, "\n");
+	fprintf(stderr, "%s\n", messageText);
 
 	/* Rotate and display the picture */
 	framemax = 21;
@@ -294,8 +291,7 @@ void CustomTest(SDL_Surface *screen, SDL_Surface *picture, double a, double x, d
 	SDL_Surface *rotozoom_picture;
 	SDL_Rect dest;
 
-	fprintf(stderr, messageText);
-	fprintf(stderr, "\n");
+	fprintf(stderr, "%s\n", messageText);
 
 	printf ("  Frame: C   Rotate: angle=%.2f  Zoom: fx=%.2f fy=%.2f \n",a,x,y);
 
@@ -330,7 +326,7 @@ void Draw (SDL_Surface *screen, int start)
 
 	/* --------- 8 bit test -------- */
 
-	start=25;
+	start=0;
 
 	if (start<=6) {
 
@@ -598,9 +594,10 @@ int main ( int argc, char *argv[] )
 	int desired_bpp;
 	Uint32 video_flags;
 	int start;
-
+	
 	/* Title */
 	fprintf(stderr,"SDL_rotozoom test\n");
+	messageText = (char *)malloc(128);
 
 	/* Set default options and check command-line */
 	w = 640;
@@ -744,7 +741,8 @@ int main ( int argc, char *argv[] )
 	SDL_WM_SetCaption("SDL_rotozoom test", "rotozoom");
 
 	/* Do all the drawing work */
-	Draw (screen, start);
+	Draw (screen, start);	
+	free(messageText);
 
 	return(0);
 }

@@ -126,6 +126,7 @@ char *LoadFontFile(int i)
 	char *myfont;
 	char filename[128];
 	FILE *file;
+	int bytesRead;
 
 	/* Check index */
 	if (i==0)
@@ -157,7 +158,7 @@ char *LoadFontFile(int i)
 				}
 			}
 			file = fopen(filename,"r");
-			fread(myfont,fontsize[i],1,file);
+			bytesRead = fread(myfont,fontsize[i],1,file);
 			fclose(file);
 		}
 	}

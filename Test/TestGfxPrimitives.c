@@ -91,7 +91,7 @@ void ClearScreen(SDL_Surface *screen, char *title)
 {
 	int x,y;
 	float stepx, stepy, fx, fy, fxy;
-	char titletext[256];
+	char titletext[257];
 	Uint32 color;
 
 	/* Setup clear color color */

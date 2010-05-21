@@ -343,11 +343,19 @@ int _SDL_gfxBlitRGBACall(SDL_Surface * src, SDL_Rect * srcrect, SDL_Surface * ds
 		/*
 		* Set up the blit information 
 		*/
+#if (SDL_MINOR_VERSION == 3)
+		info.s_pixels = (Uint8 *) src->pixels               + (Uint16) srcrect->y * src->pitch + (Uint16) srcrect->x * src->format->BytesPerPixel;
+#else
 		info.s_pixels = (Uint8 *) src->pixels + src->offset + (Uint16) srcrect->y * src->pitch + (Uint16) srcrect->x * src->format->BytesPerPixel;
+#endif
 		info.s_width = srcrect->w;
 		info.s_height = srcrect->h;
 		info.s_skip = src->pitch - info.s_width * src->format->BytesPerPixel;
+#if (SDL_MINOR_VERSION == 3)
+		info.d_pixels = (Uint8 *) dst->pixels               + (Uint16) dstrect->y * dst->pitch + (Uint16) dstrect->x * dst->format->BytesPerPixel;
+#else
 		info.d_pixels = (Uint8 *) dst->pixels + dst->offset + (Uint16) dstrect->y * dst->pitch + (Uint16) dstrect->x * dst->format->BytesPerPixel;
+#endif
 		info.d_width = dstrect->w;
 		info.d_height = dstrect->h;
 		info.d_skip = dst->pitch - info.d_width * dst->format->BytesPerPixel;

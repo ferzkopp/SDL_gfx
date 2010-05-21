@@ -56,6 +56,24 @@ to a situation where the program can segfault.
 */
 #define VALUE_LIMIT	0.001
 
+/*!
+\brief Returns colorkey info for a surface
+*/
+Uint32 _colorkey(SDL_Surface *src)
+{
+	Uint32 key = 0; 
+#if (SDL_MINOR_VERSION == 3)
+ 	SDL_GetColorKey(src, &key);
+#else
+ 	if (src) 
+ 	{
+ 		key = src->format->colorkey;
+	}
+#endif
+ 	return key;
+}
+
+
 /*! 
 \brief Internal 32 bit integer-factor averaging Shrinker.
 
@@ -711,8 +729,8 @@ void transformSurfaceY(SDL_Surface * src, SDL_Surface * dst, int cx, int cy, int
 	gap = dst->pitch - dst->w;
 	/*
 	* Clear surface to colorkey 
-	*/
-	memset(pc, (unsigned char) (src->format->colorkey & 0xff), dst->pitch * dst->h);
+	*/ 	
+	memset(pc, (unsigned char) (_colorkey(src) & 0xff), dst->pitch * dst->h);
 	/*
 	* Iterate through destination surface 
 	*/
@@ -1008,9 +1026,9 @@ SDL_Surface *rotozoomSurfaceXY(SDL_Surface * src, double angle, double zoomx, do
 	if (src == NULL)
 		return (NULL);
 
-	if( src->flags & SDL_SRCCOLORKEY )
+	if (src->flags & SDL_SRCCOLORKEY)
 	{
-		colorkey = src->format->colorkey;
+		colorkey = _colorkey(src);
 		SDL_GetRGB(colorkey, src->format, &r, &g, &b);
 		colorKeyAvailable = 1;
 	}
@@ -1132,7 +1150,7 @@ SDL_Surface *rotozoomSurfaceXY(SDL_Surface * src, double angle, double zoomx, do
 			* Turn on source-alpha support 
 			*/
 			SDL_SetAlpha(rz_dst, SDL_SRCALPHA, 255);
-			SDL_SetColorKey(rz_dst, SDL_SRCCOLORKEY | SDL_RLEACCEL, rz_src->format->colorkey);
+			SDL_SetColorKey(rz_dst, SDL_SRCCOLORKEY | SDL_RLEACCEL, _colorkey(rz_src));
 		} else {
 			/*
 			* Copy palette and colorkey info 
@@ -1147,7 +1165,7 @@ SDL_Surface *rotozoomSurfaceXY(SDL_Surface * src, double angle, double zoomx, do
 			transformSurfaceY(rz_src, rz_dst, dstwidthhalf, dstheighthalf,
 				(int) (sanglezoominv), (int) (canglezoominv),
 				flipx, flipy);
-			SDL_SetColorKey(rz_dst, SDL_SRCCOLORKEY | SDL_RLEACCEL, rz_src->format->colorkey);
+			SDL_SetColorKey(rz_dst, SDL_SRCCOLORKEY | SDL_RLEACCEL, _colorkey(rz_src));
 		}
 		/*
 		* Unlock source surface 
@@ -1214,7 +1232,7 @@ SDL_Surface *rotozoomSurfaceXY(SDL_Surface * src, double angle, double zoomx, do
 			* Turn on source-alpha support 
 			*/
 			SDL_SetAlpha(rz_dst, SDL_SRCALPHA, 255);
-			SDL_SetColorKey(rz_dst, SDL_SRCCOLORKEY | SDL_RLEACCEL, rz_src->format->colorkey);
+			SDL_SetColorKey(rz_dst, SDL_SRCCOLORKEY | SDL_RLEACCEL, _colorkey(rz_src));
 		} else {
 			/*
 			* Copy palette and colorkey info 
@@ -1227,7 +1245,7 @@ SDL_Surface *rotozoomSurfaceXY(SDL_Surface * src, double angle, double zoomx, do
 			* Call the 8bit transformation routine to do the zooming 
 			*/
 			_zoomSurfaceY(rz_src, rz_dst, flipx, flipy);
-			SDL_SetColorKey(rz_dst, SDL_SRCCOLORKEY | SDL_RLEACCEL, rz_src->format->colorkey);
+			SDL_SetColorKey(rz_dst, SDL_SRCCOLORKEY | SDL_RLEACCEL, _colorkey(rz_src));
 		}
 		/*
 		* Unlock source surface 
@@ -1413,7 +1431,7 @@ SDL_Surface *zoomSurface(SDL_Surface * src, double zoomx, double zoomy, int smoo
 		* Call the 8bit transformation routine to do the zooming 
 		*/
 		_zoomSurfaceY(rz_src, rz_dst, flipx, flipy);
-		SDL_SetColorKey(rz_dst, SDL_SRCCOLORKEY | SDL_RLEACCEL, rz_src->format->colorkey);
+		SDL_SetColorKey(rz_dst, SDL_SRCCOLORKEY | SDL_RLEACCEL, _colorkey(rz_src));
 	}
 	/*
 	* Unlock source surface 
@@ -1550,7 +1568,7 @@ SDL_Surface *shrinkSurface(SDL_Surface *src, int factorx, int factory)
 		* Call the 8bit transformation routine to do the shrinking 
 		*/
 		_shrinkSurfaceY(rz_src, rz_dst, factorx, factory);
-		SDL_SetColorKey(rz_dst, SDL_SRCCOLORKEY | SDL_RLEACCEL, rz_src->format->colorkey);
+		SDL_SetColorKey(rz_dst, SDL_SRCCOLORKEY | SDL_RLEACCEL, _colorkey(rz_src));
 	}
 
 	/*
