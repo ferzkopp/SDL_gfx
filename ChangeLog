@@ -1,7 +1,7 @@
 CHANGES/VERSION
 ===============
 
-Ver 2.0.21 -
+Ver 2.0.21 - Thu May 27 21:14:37 PDT 2010
 * Add VC9 project files, source code formatting, fix compiler 
   warnings, move VC8 project files, remove leftover autoconf/m4 files
 * Move static transfer lookup array from .h to .c 
@@ -20,6 +20,8 @@ Ver 2.0.21 -
 * Fixed rotate90 for 0 degree case
   (contributed by Chris Allport)
 * Updated TestRotozoom with rotate90 case and message display
+* Added support for SDL 1.3
+* Added doxygen generated documentation.
 
 Ver 2.0.20 - Wed Sep 23 18:42:02 PDT 2009
 * Fix for 1-pixel postponement with 8bit scaling 
