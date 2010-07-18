@@ -30,6 +30,12 @@ Copyright (C) A. Schiffler, June 2001, GPL
 /* Coordinates */
 static Sint16 rx1[NUM_RANDOM], rx2[NUM_RANDOM], ry1[NUM_RANDOM], ry2[NUM_RANDOM];
 
+/* Triangles */
+static Sint16 tx1[NUM_RANDOM][3], tx2[NUM_RANDOM][3], ty1[NUM_RANDOM][3], ty2[NUM_RANDOM][3];
+
+/* Squares (made of 2 triangles) */
+static Sint16 sx1[NUM_RANDOM][6], sx2[NUM_RANDOM][6], sy1[NUM_RANDOM][6], sy2[NUM_RANDOM][6];
+
 /* Radii and offsets */
 static Sint16 rr1[NUM_RANDOM], rr2[NUM_RANDOM];
 
@@ -47,17 +53,66 @@ void InitRandomPoints()
 	float af;
 
 	for (i=0; i<NUM_RANDOM; i++) {
+		/* Random points in the 4 quadrants */
 		rx1[i]=rand() % (WIDTH/2);
 		rx2[i]=WIDTH/2+rx1[i];
 		ry1[i]=60+(rand() % ((HEIGHT-80)/2));
 		ry2[i]=20+((HEIGHT-80)/2)+ry1[i];
+
+		/* 5-Pixel Triangle */
+		tx1[i][0]=rx1[i];
+		tx2[i][0]=rx2[i];
+		ty1[i][0]=ry1[i];
+		ty2[i][0]=ry2[i];
+		tx1[i][1]=rx1[i]+1;
+		tx2[i][1]=rx2[i]+1;
+		ty1[i][1]=ry1[i]+2;
+		ty2[i][1]=ry2[i]+2;
+		tx1[i][2]=rx1[i]+2;
+		tx2[i][2]=rx2[i]+2;
+		ty1[i][2]=ry1[i]+1;
+		ty2[i][2]=ry2[i]+1;
+
+		/* 10x10 square made from 3 triangles */
+		sx1[i][0]=rx1[i];
+		sx2[i][0]=rx2[i];
+		sy1[i][0]=ry1[i];
+		sy2[i][0]=ry2[i];
+		sx1[i][1]=rx1[i]+10;
+		sx2[i][1]=rx2[i]+10;
+		sy1[i][1]=ry1[i];
+		sy2[i][1]=ry2[i];
+		sx1[i][2]=rx1[i];
+		sx2[i][2]=rx2[i];
+		sy1[i][2]=ry1[i]+10;
+		sy2[i][2]=ry2[i]+10;
+		sx1[i][3]=rx1[i];
+		sx2[i][3]=rx2[i];
+		sy1[i][3]=ry1[i]+10;
+		sy2[i][3]=ry2[i]+10;
+		sx1[i][4]=rx1[i]+10;
+		sx2[i][4]=rx2[i]+10;
+		sy1[i][4]=ry1[i];
+		sy2[i][4]=ry2[i];
+		sx1[i][5]=rx1[i]+10;
+		sx2[i][5]=rx2[i]+10;
+		sy1[i][5]=ry1[i]+10;
+		sy2[i][5]=ry2[i]+10;
+
+		/* Random Radii */
 		rr1[i]=rand() % 32;
 		rr2[i]=rand() % 32;
+
+		/* Random Angles */
 		a1[i]=rand() % 360;
 		a2[i]=rand() % 360;
+
+		/* Random Colors */
 		rr[i]=rand() & 255;
 		rg[i]=rand() & 255;
 		rb[i]=rand() & 255;
+
+		/* X-position dependent Alpha */
 		af=((float)rx1[i]/(float)(WIDTH/2));
 		ra[i]=(int)(255.0*af);
 	} 
@@ -126,7 +181,7 @@ void ClearScreen(SDL_Surface *screen, char *title)
 	vlineRGBA(screen, WIDTH/2, 20, HEIGHT, 255,255,255,255);
 	strncpy(titletext,"Current Primitive: ",256);
 	strncat(titletext,title,256);
-	strncat(titletext,"  -  Click for continue. Key to Quit.",256);
+	strncat(titletext,"  -  Click to continue. Key to Quit.",256);
 	stringRGBA (screen, WIDTH/2-4*strlen(titletext),10-4,titletext,255,255,255,255);
 	strncpy(titletext,"A=255 on Black",256);
 	stringRGBA (screen, WIDTH/4-4*strlen(titletext),50-4,titletext,255,255,255,255);
@@ -1508,6 +1563,284 @@ void BenchmarkFilledPie(SDL_Surface *screen)
 	stringRGBA (screen, 3*WIDTH/4-4*strlen(titletext),30-4,titletext,255,255,255,255);
 }
 
+void TestTrigon(SDL_Surface *screen)
+{
+	int i;
+	char r,g,b;
+
+	/* Create random points */
+	srand((int)time(NULL));
+	InitRandomPoints();
+
+	/* Draw A=255 */
+	SetClip(screen,0,60,WIDTH/2,60+(HEIGHT-80)/2);
+	for (i=0; i<NUM_RANDOM; i++) {
+		trigonRGBA(screen, tx1[i][0], ty1[i][0], tx1[i][1], ty1[i][1], tx1[i][2], ty1[i][2], rr[i], rg[i], rb[i], 255);
+	}
+
+	/* Draw A=various */
+	SetClip(screen,WIDTH/2,60,WIDTH,60+(HEIGHT-80)/2);
+	for (i=0; i<NUM_RANDOM; i++) {
+		trigonRGBA(screen, tx2[i][0], ty1[i][0], tx2[i][1], ty1[i][1], tx2[i][2], ty1[i][2], rr[i], rg[i], rb[i], ra[i]);
+	}
+
+	/* Draw A=various */
+	SetClip(screen,WIDTH/2,80+(HEIGHT-80)/2,WIDTH,HEIGHT);
+	for (i=0; i<NUM_RANDOM; i++) {
+		trigonRGBA(screen, tx2[i][0], ty2[i][0], tx2[i][1], ty2[i][1], tx2[i][2], ty2[i][2], rr[i], rg[i], rb[i], ra[i]);
+	}
+
+	/* Draw Colortest */
+	SetClip(screen,0,80+(HEIGHT-80)/2,WIDTH/2,HEIGHT);
+	for (i=0; i<NUM_RANDOM; i++) {
+		if (rx1[i] < (WIDTH/6))  {
+			r=255; g=0; b=0; 
+		} else if (rx1[i] < (WIDTH/3) ) {
+			r=0; g=255; b=0; 
+		} else {
+			r=0; g=0; b=255; 
+		}
+		trigonRGBA(screen, tx1[i][0], ty2[i][0], tx1[i][1], ty2[i][1], tx1[i][2], ty2[i][2], r, g, b, 255);
+	}
+}
+
+void BenchmarkTrigon(SDL_Surface *screen)
+{
+	int i,j;
+	int repeat;
+	Uint32 time1, time2;
+	char titletext[256];
+
+	/* Create random points */
+	srand((int)time(NULL));
+	InitRandomPoints();
+
+	/* Draw A=255 */
+	repeat=50;
+	SetClip(screen,0,60,WIDTH/2,60+(HEIGHT-80)/2);
+	time1=SDL_GetTicks();
+	for (j=0; j<repeat; j++) {
+		for (i=0; i<NUM_RANDOM; i++) {
+			trigonRGBA(screen, tx1[i][0], ty1[i][0], tx1[i][1], ty1[i][1], tx1[i][2], ty1[i][2], rr[i], rg[i], rb[i], 255);
+		}
+	}
+	time2=SDL_GetTicks();
+	/* Results */
+	SetClip(screen,0,0,WIDTH-1,HEIGHT-1);
+	sprintf (titletext, "%.0f per sec",1000.0*(float)(NUM_RANDOM*repeat)/(float)(time2-time1));
+	stringRGBA (screen, WIDTH/4-4*strlen(titletext),30-4,titletext,255,255,255,255);
+
+	/* Draw A=various */
+	repeat=10;
+	SetClip(screen,WIDTH/2,60,WIDTH,60+(HEIGHT-80)/2);
+	time1=SDL_GetTicks();
+	for (j=0; j<repeat; j++) {
+		for (i=0; i<NUM_RANDOM; i++) {
+			trigonRGBA(screen, tx2[i][0], ty1[i][0], tx2[i][1], ty1[i][1], tx2[i][2], ty1[i][2], rr[i], rg[i], rb[i], ra[i]);
+		}
+	}
+	time2=SDL_GetTicks();
+
+	/* Results */
+	SetClip(screen,0,0,WIDTH-1,HEIGHT-1);
+	sprintf (titletext, "%.0f per sec",1000.0*(float)(NUM_RANDOM*repeat)/(float)(time2-time1));
+	stringRGBA (screen, 3*WIDTH/4-4*strlen(titletext),30-4,titletext,255,255,255,255);
+}
+
+void TestTexturedTrigon(SDL_Surface *screen)
+{
+	int i;
+	char r,g,b;
+	SDL_Surface *texture;
+
+	/* Create random points */
+	srand((int)time(NULL));
+	InitRandomPoints();
+
+	/* Create texture */
+	texture = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_HWSURFACE | SDL_SRCALPHA,
+		2, 2, 32,
+		0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
+
+	/* Draw A=255 */
+	boxRGBA(texture,0,0,1,1,255,255,255,255); 
+	SetClip(screen,0,60,WIDTH/2,60+(HEIGHT-80)/2);
+	for (i=0; i<NUM_RANDOM; i++) {
+		texturedPolygon(screen, &tx1[i][0], &ty1[i][0], 3, texture, 0, 0);
+	}
+
+	/* Draw A=various */
+	boxRGBA(texture,0,0,1,1,255,255,255,ra[i]); 
+	SetClip(screen,WIDTH/2,60,WIDTH,60+(HEIGHT-80)/2);
+	for (i=0; i<NUM_RANDOM; i++) {
+		texturedPolygon(screen, &tx2[i][0], &ty1[i][0], 3, texture, 0, 0);
+	}
+
+	/* Draw A=various */
+	boxRGBA(texture,0,0,1,1,255,255,255,ra[i]); 
+	SetClip(screen,WIDTH/2,80+(HEIGHT-80)/2,WIDTH,HEIGHT);
+	for (i=0; i<NUM_RANDOM; i++) {
+		texturedPolygon(screen, &tx2[i][0], &ty2[i][0], 3, texture, 0, 0);
+	}
+
+	/* Draw Colortest */
+	SetClip(screen,0,80+(HEIGHT-80)/2,WIDTH/2,HEIGHT);
+	for (i=0; i<NUM_RANDOM; i++) {
+		if (rx1[i] < (WIDTH/6))  {
+			r=255; g=0; b=0; 
+		} else if (rx1[i] < (WIDTH/3) ) {
+			r=0; g=255; b=0; 
+		} else {
+			r=0; g=0; b=255; 
+		}
+		boxRGBA(texture,0,0,1,1,r,g,b,255); 
+		texturedPolygon(screen, &tx1[i][0], &ty2[i][0], 3, texture, 0, 0);
+	}
+
+	SDL_FreeSurface(texture);
+}
+
+void BenchmarkTexturedTrigon(SDL_Surface *screen)
+{
+	int i,j;
+	int repeat;
+	Uint32 time1, time2;
+	char titletext[256];
+	SDL_Surface *texture;
+
+	/* Create random points */
+	srand((int)time(NULL));
+	InitRandomPoints();
+
+	/* Create texture */
+	texture = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_HWSURFACE | SDL_SRCALPHA,
+		2, 2, 32,
+		0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
+
+	/* Draw A=255 */
+	boxRGBA(texture,0,0,1,1,255,255,255,255); 
+	repeat=50;
+	SetClip(screen,0,60,WIDTH/2,60+(HEIGHT-80)/2);
+	time1=SDL_GetTicks();
+	for (j=0; j<repeat; j++) {
+		for (i=0; i<NUM_RANDOM; i++) {
+			texturedPolygon(screen, &tx1[i][0], &ty1[i][0], 3, texture, 0, 0);
+		}
+	}
+	time2=SDL_GetTicks();
+	/* Results */
+	SetClip(screen,0,0,WIDTH-1,HEIGHT-1);
+	sprintf (titletext, "%.0f per sec",1000.0*(float)(NUM_RANDOM*repeat)/(float)(time2-time1));
+	stringRGBA (screen, WIDTH/4-4*strlen(titletext),30-4,titletext,255,255,255,255);
+
+	/* Draw A=255 */
+	boxRGBA(texture,0,0,1,1,255,255,255,255); 
+	repeat=10;
+	SetClip(screen,WIDTH/2,60,WIDTH,60+(HEIGHT-80)/2);
+	time1=SDL_GetTicks();
+	for (j=0; j<repeat; j++) {
+		for (i=0; i<NUM_RANDOM; i++) {
+			texturedPolygon(screen, &tx2[i][0], &ty1[i][0], 3, texture, 0, 0);
+		}
+	}
+	time2=SDL_GetTicks();
+
+	/* Results */
+	SetClip(screen,0,0,WIDTH-1,HEIGHT-1);
+	sprintf (titletext, "%.0f per sec",1000.0*(float)(NUM_RANDOM*repeat)/(float)(time2-time1));
+	stringRGBA (screen, 3*WIDTH/4-4*strlen(titletext),30-4,titletext,255,255,255,255);
+
+	SDL_FreeSurface(texture);
+}
+
+void TestSquarePolygon(SDL_Surface *screen)
+{
+	int i;
+	char r,g,b;
+
+	/* Create random points */
+	srand((int)time(NULL));
+	InitRandomPoints();
+
+	/* Draw A=255 */
+	SetClip(screen,0,60,WIDTH/2,60+(HEIGHT-80)/2);
+	for (i=0; i<NUM_RANDOM; i++) {
+		polygonRGBA(screen, &sx1[i][0], &sy1[i][0], 3, rr[i], rg[i], rb[i], 255);
+		polygonRGBA(screen, &sx1[i][3], &sy1[i][3], 3, rr[i], rg[i], rb[i], 255);
+	}
+
+	/* Draw A=various */
+	SetClip(screen,WIDTH/2,60,WIDTH,60+(HEIGHT-80)/2);
+	for (i=0; i<NUM_RANDOM; i++) {
+		polygonRGBA(screen, &sx2[i][0], &sy1[i][0], 3, rr[i], rg[i], rb[i], ra[i]);
+		polygonRGBA(screen, &sx2[i][3], &sy1[i][3], 3, rr[i], rg[i], rb[i], ra[i]);
+	}
+
+	/* Draw A=various */
+	SetClip(screen,WIDTH/2,80+(HEIGHT-80)/2,WIDTH,HEIGHT);
+	for (i=0; i<(NUM_RANDOM-3); i += 3) {
+		polygonRGBA(screen, &sx2[i][0], &sy2[i][0], 3, rr[i], rg[i], rb[i], ra[i]);
+		polygonRGBA(screen, &sx2[i][3], &sy2[i][3], 3, rr[i], rg[i], rb[i], ra[i]);
+	}
+
+	/* Draw Colortest */
+	SetClip(screen,0,80+(HEIGHT-80)/2,WIDTH/2,HEIGHT);
+	for (i=0; i<NUM_RANDOM; i++) {
+		if (rx1[i] < (WIDTH/6))  {
+			r=255; g=0; b=0; 
+		} else if (rx1[i] < (WIDTH/3) ) {
+			r=0; g=255; b=0; 
+		} else {
+			r=0; g=0; b=255; 
+		}
+		polygonRGBA(screen, &sx1[i][0], &sy2[i][0], 3, r, g, b, 255);
+		polygonRGBA(screen, &sx1[i][3], &sy2[i][3], 3, r, g, b, 255);
+	}
+}
+
+void BenchmarkSquarePolygon(SDL_Surface *screen)
+{
+	int i,j;
+	int repeat;
+	Uint32 time1, time2;
+	char titletext[256];
+
+	/* Create random points */
+	srand((int)time(NULL));
+	InitRandomPoints();
+
+	/* Draw A=255 */
+	repeat=50;
+	SetClip(screen,0,60,WIDTH/2,60+(HEIGHT-80)/2);
+	time1=SDL_GetTicks();
+	for (j=0; j<repeat; j++) {
+		for (i=0; i<NUM_RANDOM; i++) {
+			polygonRGBA(screen, &sx1[i][0], &sy1[i][0], 6, rr[i], rg[i], rb[i], 255);
+		}
+	}
+	time2=SDL_GetTicks();
+	/* Results */
+	SetClip(screen,0,0,WIDTH-1,HEIGHT-1);
+	sprintf (titletext, "%.0f per sec",1000.0*(float)(NUM_RANDOM*repeat)/(float)(time2-time1));
+	stringRGBA (screen, WIDTH/4-4*strlen(titletext),30-4,titletext,255,255,255,255);
+
+	/* Draw A=various */
+	repeat=10;
+	SetClip(screen,WIDTH/2,60,WIDTH,60+(HEIGHT-80)/2);
+	time1=SDL_GetTicks();
+	for (j=0; j<repeat; j++) {
+		for (i=0; i<NUM_RANDOM; i++) {
+			polygonRGBA(screen, &sx2[i][0], &sy1[i][0], 6, rr[i], rg[i], rb[i], ra[i]);
+		}
+	}
+	time2=SDL_GetTicks();
+
+	/* Results */
+	SetClip(screen,0,0,WIDTH-1,HEIGHT-1);
+	sprintf (titletext, "%.0f per sec",1000.0*(float)(NUM_RANDOM*repeat)/(float)(time2-time1));
+	stringRGBA (screen, 3*WIDTH/4-4*strlen(titletext),30-4,titletext,255,255,255,255);
+}
+
 void TestPolygon(SDL_Surface *screen)
 {
 	int i;
@@ -1773,6 +2106,96 @@ void BenchmarkFilledPolygon(SDL_Surface *screen)
 	stringRGBA (screen, 3*WIDTH/4-4*strlen(titletext),30-4,titletext,255,255,255,255);
 }
 
+void TestFilledSquarePolygon(SDL_Surface *screen)
+{
+	int i;
+	char r,g,b;
+
+	/* Create random points */
+	srand((int)time(NULL));
+	InitRandomPoints();
+
+	/* Draw A=255 */
+	SetClip(screen,0,60,WIDTH/2,60+(HEIGHT-80)/2);
+	for (i=0; i<NUM_RANDOM; i++) {
+		filledPolygonRGBA(screen, &sx1[i][0], &sy1[i][0], 3, rr[i], rg[i], rb[i], 255);
+		filledPolygonRGBA(screen, &sx1[i][3], &sy1[i][3], 3, rr[i], rg[i], rb[i], 255);
+	}
+
+	/* Draw A=various */
+	SetClip(screen,WIDTH/2,60,WIDTH,60+(HEIGHT-80)/2);
+	for (i=0; i<NUM_RANDOM; i++) {
+		filledPolygonRGBA(screen, &sx2[i][0], &sy1[i][0], 3, rr[i], rg[i], rb[i], ra[i]);
+		filledPolygonRGBA(screen, &sx2[i][3], &sy1[i][3], 3, rr[i], rg[i], rb[i], ra[i]);
+	}
+
+	/* Draw A=various */
+	SetClip(screen,WIDTH/2,80+(HEIGHT-80)/2,WIDTH,HEIGHT);
+	for (i=0; i<(NUM_RANDOM-3); i += 3) {
+		filledPolygonRGBA(screen, &sx2[i][0], &sy2[i][0], 3, rr[i], rg[i], rb[i], ra[i]);
+		filledPolygonRGBA(screen, &sx2[i][3], &sy2[i][3], 3, rr[i], rg[i], rb[i], ra[i]);
+	}
+
+	/* Draw Colortest */
+	SetClip(screen,0,80+(HEIGHT-80)/2,WIDTH/2,HEIGHT);
+	for (i=0; i<NUM_RANDOM; i++) {
+		if (rx1[i] < (WIDTH/6))  {
+			r=255; g=0; b=0; 
+		} else if (rx1[i] < (WIDTH/3) ) {
+			r=0; g=255; b=0; 
+		} else {
+			r=0; g=0; b=255; 
+		}
+		filledPolygonRGBA(screen, &sx1[i][0], &sy2[i][0], 3, r, g, b, 255);
+		filledPolygonRGBA(screen, &sx1[i][3], &sy2[i][3], 3, r, g, b, 255);
+	}
+}
+
+void BenchmarkFilledSquarePolygon(SDL_Surface *screen)
+{
+	int i,j;
+	int repeat;
+	Uint32 time1, time2;
+	char titletext[256];
+
+	/* Create random points */
+	srand((int)time(NULL));
+	InitRandomPoints();
+
+	/* Draw A=255 */
+	repeat=50;
+	SetClip(screen,0,60,WIDTH/2,60+(HEIGHT-80)/2);
+	time1=SDL_GetTicks();
+	for (j=0; j<repeat; j++) {
+		for (i=0; i<NUM_RANDOM; i++) {
+			filledPolygonRGBA(screen, &sx1[i][0], &sy1[i][0], 3, rr[i], rg[i], rb[i], 255);
+			filledPolygonRGBA(screen, &sx1[i][3], &sy1[i][3], 3, rr[i], rg[i], rb[i], 255);
+		}
+	}
+	time2=SDL_GetTicks();
+	/* Results */
+	SetClip(screen,0,0,WIDTH-1,HEIGHT-1);
+	sprintf (titletext, "%.0f per sec",1000.0*(float)(NUM_RANDOM*repeat)/(float)(time2-time1));
+	stringRGBA (screen, WIDTH/4-4*strlen(titletext),30-4,titletext,255,255,255,255);
+
+	/* Draw A=various */
+	repeat=10;
+	SetClip(screen,WIDTH/2,60,WIDTH,60+(HEIGHT-80)/2);
+	time1=SDL_GetTicks();
+	for (j=0; j<repeat; j++) {
+		for (i=0; i<NUM_RANDOM; i++) {
+			filledPolygonRGBA(screen, &sx2[i][0], &sy1[i][0], 3, rr[i], rg[i], rb[i], ra[i]);
+			filledPolygonRGBA(screen, &sx2[i][3], &sy1[i][3], 3, rr[i], rg[i], rb[i], ra[i]);
+		}
+	}
+	time2=SDL_GetTicks();
+
+	/* Results */
+	SetClip(screen,0,0,WIDTH-1,HEIGHT-1);
+	sprintf (titletext, "%.0f per sec",1000.0*(float)(NUM_RANDOM*repeat)/(float)(time2-time1));
+	stringRGBA (screen, 3*WIDTH/4-4*strlen(titletext),30-4,titletext,255,255,255,255);
+}
+
 void TestTexturedPolygon(SDL_Surface *screen)
 {
 	int i;
@@ -1787,7 +2210,9 @@ void TestTexturedPolygon(SDL_Surface *screen)
 
 	/* Draw A=255 */
 	SetClip(screen,0,60,WIDTH/2,60+(HEIGHT-80)/2);
+	SDL_SetAlpha(texture, SDL_SRCALPHA, 255);
 	for (i=0; i<(NUM_RANDOM/2-3); i += 3) {
+		SDL_SetAlpha(texture, SDL_SRCALPHA, 255);
 		texturedPolygon(screen, &rx1[i], &ry1[i], 3, texture, rr1[i], rr2[i]);
 	}
 
@@ -1801,10 +2226,12 @@ void TestTexturedPolygon(SDL_Surface *screen)
 	/* Draw A=various */
 	SetClip(screen,WIDTH/2,80+(HEIGHT-80)/2,WIDTH,HEIGHT);
 	for (i=0; i<(NUM_RANDOM/2-3); i += 3) {
+		SDL_SetAlpha(texture, SDL_SRCALPHA, ra[i]);
 		texturedPolygon(screen, &rx2[i], &ry2[i], 3, texture, rr1[i], rr2[i]);
 	}
 
 	/* Draw Colortest */
+	SDL_SetAlpha(texture, SDL_SRCALPHA, 255);
 	SetClip(screen,0,80+(HEIGHT-80)/2,WIDTH/2,HEIGHT);
 	for (i=0; i<(NUM_RANDOM/2-3); i += 3) {
 		rx1[i+1]=rx1[i]+rr1[i];
@@ -1814,6 +2241,7 @@ void TestTexturedPolygon(SDL_Surface *screen)
 		texturedPolygon(screen, &rx1[i], &ry2[i], 3, texture, 0, 0);
 	}
 
+	SDL_FreeSurface(texture);
 }
 
 void BenchmarkTexturedPolygon(SDL_Surface *screen)
@@ -1833,6 +2261,7 @@ void BenchmarkTexturedPolygon(SDL_Surface *screen)
 
 	/* Draw A=255 */
 	repeat=20;
+	SDL_SetAlpha(texture, SDL_SRCALPHA, 255);
 	SetClip(screen,0,60,WIDTH/2,60+(HEIGHT-80)/2);
 	time1=SDL_GetTicks();
 	for (j=0; j<repeat; j++) {
@@ -1862,6 +2291,121 @@ void BenchmarkTexturedPolygon(SDL_Surface *screen)
 	SetClip(screen,0,0,WIDTH-1,HEIGHT-1);
 	sprintf (titletext, "%.0f per sec",1000.0*(float)(((NUM_RANDOM/2-3)/3)*repeat)/(float)(time2-time1));
 	stringRGBA (screen, 3*WIDTH/4-4*strlen(titletext),30-4,titletext,255,255,255,255);
+
+	SDL_FreeSurface(texture);
+}
+
+void TestTexturedSquarePolygon(SDL_Surface *screen)
+{
+	int i;
+	char r,g,b;
+	SDL_Surface *texture;
+
+	/* Load texture surface */
+	texture = SDL_LoadBMP("texture.bmp");
+
+	/* Create random points */
+	srand((int)time(NULL));
+	InitRandomPoints();
+
+	/* Draw A=255 */
+	SDL_SetAlpha(texture, SDL_SRCALPHA, 255);
+	SetClip(screen,0,60,WIDTH/2,60+(HEIGHT-80)/2);
+	for (i=0; i<NUM_RANDOM; i++) {
+		texturedPolygon(screen, &sx1[i][0], &sy1[i][0], 3, texture, rr1[i], rr2[i]);
+		texturedPolygon(screen, &sx1[i][3], &sy1[i][3], 3, texture, rr1[i], rr2[i]);
+	}
+
+	/* Draw A=various */
+	SetClip(screen,WIDTH/2,60,WIDTH,60+(HEIGHT-80)/2);
+	for (i=0; i<NUM_RANDOM; i++) {
+		SDL_SetAlpha(texture, SDL_SRCALPHA, ra[i]);
+		texturedPolygon(screen, &sx2[i][0], &sy1[i][0], 3, texture, rr1[i], rr2[i]);
+		texturedPolygon(screen, &sx2[i][3], &sy1[i][3], 3, texture, rr1[i], rr2[i]);
+	}
+
+	/* Draw A=various */
+	SetClip(screen,WIDTH/2,80+(HEIGHT-80)/2,WIDTH,HEIGHT);
+	for (i=0; i<(NUM_RANDOM-3); i += 3) {
+		SDL_SetAlpha(texture, SDL_SRCALPHA, ra[i]);
+		texturedPolygon(screen, &sx2[i][0], &sy2[i][0], 3, texture, rr1[i], rr2[i]);
+		texturedPolygon(screen, &sx2[i][3], &sy2[i][3], 3, texture, rr1[i], rr2[i]);
+	}
+
+	/* Create texture */
+	SDL_FreeSurface(texture);
+	texture = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_HWSURFACE | SDL_SRCALPHA,
+		2, 2, 32,
+		0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
+
+	/* Draw Colortest */
+	SetClip(screen,0,80+(HEIGHT-80)/2,WIDTH/2,HEIGHT);
+	for (i=0; i<NUM_RANDOM; i++) {
+		if (rx1[i] < (WIDTH/6))  {
+			r=255; g=0; b=0; 
+		} else if (rx1[i] < (WIDTH/3) ) {
+			r=0; g=255; b=0; 
+		} else {
+			r=0; g=0; b=255; 
+		}
+		boxRGBA(texture,0,0,1,1,r,g,b,255); 
+		texturedPolygon(screen, &sx1[i][0], &sy2[i][0], 3, texture, 0, 0);
+		texturedPolygon(screen, &sx1[i][3], &sy2[i][3], 3, texture, 0, 0);
+	}
+
+	SDL_FreeSurface(texture);
+}
+
+void BenchmarkTexturedSquarePolygon(SDL_Surface *screen)
+{
+	int i,j;
+	int repeat;
+	Uint32 time1, time2;
+	char titletext[256];
+	SDL_Surface *texture;
+
+	/* Load texture surface */
+	texture = SDL_LoadBMP("texture.bmp");
+
+	/* Create random points */
+	srand((int)time(NULL));
+	InitRandomPoints();
+
+	/* Draw shift */
+	repeat=50;
+	SDL_SetAlpha(texture, SDL_SRCALPHA, 255);
+	SetClip(screen,0,60,WIDTH/2,60+(HEIGHT-80)/2);
+	time1=SDL_GetTicks();
+	for (j=0; j<repeat; j++) {
+		for (i=0; i<NUM_RANDOM; i++) {
+			texturedPolygon(screen, &sx1[i][0], &sy1[i][0], 3, texture, rr1[i], rr2[i]);
+			texturedPolygon(screen, &sx1[i][3], &sy1[i][3], 3, texture, rr1[i], rr2[i]);
+		}
+	}
+	time2=SDL_GetTicks();
+	/* Results */
+	SetClip(screen,0,0,WIDTH-1,HEIGHT-1);
+	sprintf (titletext, "%.0f per sec",1000.0*(float)(NUM_RANDOM*repeat)/(float)(time2-time1));
+	stringRGBA (screen, WIDTH/4-4*strlen(titletext),30-4,titletext,255,255,255,255);
+
+	/* Draw no shift */
+	repeat=10;
+	SetClip(screen,WIDTH/2,60,WIDTH,60+(HEIGHT-80)/2);
+	time1=SDL_GetTicks();
+	for (j=0; j<repeat; j++) {
+		for (i=0; i<NUM_RANDOM; i++) {
+			texturedPolygon(screen, &sx2[i][0], &sy1[i][0], 3, texture, 0, 0);
+			texturedPolygon(screen, &sx2[i][3], &sy1[i][3], 3, texture, 0, 0);
+		}
+	}
+	time2=SDL_GetTicks();
+
+	/* Results */
+	SetClip(screen,0,0,WIDTH-1,HEIGHT-1);
+	sprintf (titletext, "%.0f per sec",1000.0*(float)(NUM_RANDOM*repeat)/(float)(time2-time1));
+	stringRGBA (screen, 3*WIDTH/4-4*strlen(titletext),30-4,titletext,255,255,255,255);
+
+	SDL_FreeSurface(texture);
 }
 
 void TestBezier(SDL_Surface *screen)
@@ -2184,8 +2728,35 @@ int main(int argc, char *argv[])
 				 oldprim=curprim; 
 				 break;
 
-				 /* --- Polygon */
+				 /* --- 3-Pixel Trigon */
 			 case 18:
+				 ClearScreen(screen, "5-Pixel Trigon");
+				 TestTrigon(screen);
+				 BenchmarkTrigon(screen);
+				 /* Next primitive */ 			  
+				 oldprim=curprim; 
+				 break;
+
+				 /* --- 3-Pixel Textured Trigon */
+			 case 19:
+				 ClearScreen(screen, "5-Pixel Textured Trigon");
+				 TestTexturedTrigon(screen);
+				 BenchmarkTexturedTrigon(screen);
+				 /* Next primitive */ 			  
+				 oldprim=curprim; 
+				 break;
+
+				 /* --- Square Polygon */
+			 case 20:
+				 ClearScreen(screen, "Square Polygon");
+				 TestSquarePolygon(screen);
+				 BenchmarkSquarePolygon(screen);
+				 /* Next primitive */ 			  
+				 oldprim=curprim; 
+				 break;
+
+				 /* --- Polygon */
+			 case 21:
 				 ClearScreen(screen, "Polygon");
 				 TestPolygon(screen);
 				 BenchmarkPolygon(screen);
@@ -2194,7 +2765,7 @@ int main(int argc, char *argv[])
 				 break;
 
 				 /* --- AA-Polygon */
-			 case 19:
+			 case 22:
 				 ClearScreen(screen, "AA-Polygon");
 				 TestAAPolygon(screen);
 				 BenchmarkAAPolygon(screen);
@@ -2203,7 +2774,7 @@ int main(int argc, char *argv[])
 				 break;
 
 				 /* ---- Filled Polygon */ 
-			 case 20:
+			 case 23:
 				 ClearScreen(screen, "Filled Polygon");
 				 TestFilledPolygon(screen);
 				 BenchmarkFilledPolygon(screen);
@@ -2211,8 +2782,17 @@ int main(int argc, char *argv[])
 				 oldprim=curprim; 
 				 break;
 
+				 /* ---- Filled Square Polygon */ 
+			 case 24:
+				 ClearScreen(screen, "Square from 2 Filled Polygons");
+				 TestFilledSquarePolygon(screen);
+				 BenchmarkFilledSquarePolygon(screen);
+				 /* Next primitive */ 			  
+				 oldprim=curprim; 
+				 break;
+
 				 /* ---- Textured Polygon */ 
-			 case 21:
+			 case 25:
 				 ClearScreen(screen, "Textured Polygon");
 				 TestTexturedPolygon(screen);
 				 BenchmarkTexturedPolygon(screen);
@@ -2220,8 +2800,17 @@ int main(int argc, char *argv[])
 				 oldprim=curprim; 
 				 break;
 
+				 /* ---- Textured Square Polygon */ 
+			 case 26:
+				 ClearScreen(screen, "Textured Square Polygon");
+				 TestTexturedSquarePolygon(screen);
+				 BenchmarkTexturedSquarePolygon(screen);
+				 /* Next primitive */ 			  
+				 oldprim=curprim; 
+				 break;
+
 				 /* ---- Bezier Curve */ 
-			 case 22:
+			 case 27:
 				 ClearScreen(screen, "Bezier Curve");
 				 TestBezier(screen);
 				 BenchmarkBezier(screen);
@@ -2248,9 +2837,12 @@ int main(int argc, char *argv[])
 		while ( SDL_PollEvent(&event) ) {
 			switch (event.type) {
 				case SDL_MOUSEBUTTONDOWN:
-					if ( event.button.button == 1 ) {
+					if ( event.button.button == SDL_BUTTON_LEFT ) {
 						/* Switch to next graphics */
 						curprim++;
+					} else if ( event.button.button == SDL_BUTTON_RIGHT ) {
+						/* Switch to prev graphics */
+						curprim--;
 					}
 					break;
 				case SDL_KEYDOWN:

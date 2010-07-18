@@ -2237,16 +2237,6 @@ int _aalineColor(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, 
 	dy = yy1 - yy0;
 
 	/*
-	* Adjust for negative dx and set xdir 
-	*/
-	if (dx >= 0) {
-		xdir = 1;
-	} else {
-		xdir = -1;
-		dx = (-dx);
-	}
-
-	/*
 	* Check for special cases 
 	*/
 	if (dx == 0) {
@@ -2258,7 +2248,7 @@ int _aalineColor(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, 
 			return (vlineColor(dst, x1, y1, y2, color));
 		} else {
 			if (dy>0) {
-				return (vlineColor(dst, x1, y1, y2-1, color));
+				return (vlineColor(dst, x1, yy0, yy0+dy, color));
 			} else {
 				return (pixelColor(dst, x1, y1, color));
 			}
@@ -2272,7 +2262,7 @@ int _aalineColor(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, 
 			return (hlineColor(dst, x1, x2, y1, color));
 		} else {
 			if (dx>0) {
-				return (hlineColor(dst, x1, x2-1, y1, color));
+				return (hlineColor(dst, xx0, xx0+dx, y1, color));
 			} else {
 				return (pixelColor(dst, x1, y1, color));
 			}
@@ -2282,6 +2272,16 @@ int _aalineColor(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, 
 		* Diagonal line (with endpoint)
 		*/
 		return (lineColor(dst, x1, y1, x2, y2, color));
+	}
+
+	/*
+	* Adjust for negative dx and set xdir 
+	*/
+	if (dx >= 0) {
+		xdir = 1;
+	} else {
+		xdir = -1;
+		dx = (-dx);
 	}
 
 	/*
