@@ -2749,9 +2749,9 @@ SDL_VERSION=1.2.0
 
 MAJOR_VERSION=2
 MINOR_VERSION=0
-MICRO_VERSION=20
-INTERFACE_AGE=2
-BINARY_AGE=7
+MICRO_VERSION=22
+INTERFACE_AGE=3
+BINARY_AGE=8
 VERSION=$MAJOR_VERSION.$MINOR_VERSION.$MICRO_VERSION
 
 
@@ -22314,8 +22314,8 @@ esac
 
 cat >>$CONFIG_STATUS <<_ACEOF || ac_write_fail=1
 # Files that config.status was made for.
-config_files="$ac_config_files"
-config_commands="$ac_config_commands"
+config_files="`echo $ac_config_files`"
+config_commands="`echo $ac_config_commands`"
 
 _ACEOF
 

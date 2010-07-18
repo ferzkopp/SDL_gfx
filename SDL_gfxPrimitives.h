@@ -25,7 +25,7 @@ extern "C" {
 
 #define SDL_GFXPRIMITIVES_MAJOR	2
 #define SDL_GFXPRIMITIVES_MINOR	0
-#define SDL_GFXPRIMITIVES_MICRO	21
+#define SDL_GFXPRIMITIVES_MICRO	22
 
 	/* ----- W32 DLL interface */
 

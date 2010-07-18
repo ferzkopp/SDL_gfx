@@ -815,7 +815,6 @@ int _HLineAlpha(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y, Uint32 color)
 	return (filledRectAlpha(dst, x1, y, x2, y, color));
 }
 
-
 /*!
 \brief Internal function to draw vertical line of RGBA color with alpha blending.
 
@@ -1114,7 +1113,6 @@ int hlineColor(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y, Uint32 color)
 	Uint8 *pixel, *pixellast;
 	int dx;
 	int pixx, pixy;
-	Sint16 w;
 	Sint16 xtmp;
 	int result = -1;
 	Uint8 *colorptr;
@@ -1165,9 +1163,9 @@ int hlineColor(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y, Uint32 color)
 	}
 
 	/*
-	* Calculate width 
+	* Calculate width difference
 	*/
-	w = x2 - x1 + 1;
+	dx = x2 - x1;
 
 	/*
 	* Alpha check 
@@ -1200,7 +1198,6 @@ int hlineColor(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y, Uint32 color)
 		/*
 		* More variable setup 
 		*/
-		dx = w;
 		pixx = dst->format->BytesPerPixel;
 		pixy = dst->pitch;
 		pixel = ((Uint8 *) dst->pixels) + pixx * (int) x1 + pixy * (int) y;
@@ -1210,7 +1207,7 @@ int hlineColor(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y, Uint32 color)
 		*/
 		switch (dst->format->BytesPerPixel) {
 	case 1:
-		memset(pixel, color, dx);
+		memset(pixel, color, dx + 1);
 		break;
 	case 2:
 		pixellast = pixel + dx + dx;
@@ -1257,7 +1254,7 @@ int hlineColor(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y, Uint32 color)
 		/*
 		* Alpha blending blit 
 		*/
-		result = _HLineAlpha(dst, x1, x1 + w, y, color);
+		result = _HLineAlpha(dst, x1, x1 + dx, y, color);
 	}
 
 	return (result);
