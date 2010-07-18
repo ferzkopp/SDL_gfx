@@ -1118,6 +1118,7 @@ int hlineColor(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y, Uint32 color)
 	Sint16 xtmp;
 	int result = -1;
 	Uint8 *colorptr;
+	Uint8 color3[3];
 
 	/*
 	* Check visibility of clipping rectangle
@@ -1166,7 +1167,7 @@ int hlineColor(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y, Uint32 color)
 	/*
 	* Calculate width 
 	*/
-	w = x2 - x1;
+	w = x2 - x1 + 1;
 
 	/*
 	* Alpha check 
@@ -1209,7 +1210,7 @@ int hlineColor(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y, Uint32 color)
 		*/
 		switch (dst->format->BytesPerPixel) {
 	case 1:
-		memset(pixel, color, dx+1);
+		memset(pixel, color, dx);
 		break;
 	case 2:
 		pixellast = pixel + dx + dx;
@@ -1219,16 +1220,17 @@ int hlineColor(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y, Uint32 color)
 		break;
 	case 3:
 		pixellast = pixel + dx + dx + dx;
+		if (SDL_BYTEORDER == SDL_BIG_ENDIAN) {
+			color3[0] = (color >> 16) & 0xff;
+			color3[1] = (color >> 8) & 0xff;
+			color3[2] = color & 0xff;
+		} else {
+			color3[0] = color & 0xff;
+			color3[1] = (color >> 8) & 0xff;
+			color3[2] = (color >> 16) & 0xff;
+		}
 		for (; pixel <= pixellast; pixel += pixx) {
-			if (SDL_BYTEORDER == SDL_BIG_ENDIAN) {
-				pixel[0] = (color >> 16) & 0xff;
-				pixel[1] = (color >> 8) & 0xff;
-				pixel[2] = color & 0xff;
-			} else {
-				pixel[0] = color & 0xff;
-				pixel[1] = (color >> 8) & 0xff;
-				pixel[2] = (color >> 16) & 0xff;
-			}
+			memcpy(pixel, color3, 3);
 		}
 		break;
 	default:		/* case 4 */
@@ -5063,7 +5065,7 @@ int _HLineTextured(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y, SDL_Surfac
 	/*
 	 * Calculate width to draw
 	 */
-	w = x2 - x1;
+	w = x2 - x1 + 1;
 
 	/*
 	 * Determine where in the texture we start drawing
