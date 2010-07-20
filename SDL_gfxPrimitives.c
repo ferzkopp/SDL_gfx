@@ -3637,7 +3637,7 @@ int ellipseRGBA(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rx, Sint16 ry, Uin
 /* Win32 does not have lrint, so provide a local inline version */
 /*  detect MinGW and Symbian and avoid function */
 /*  detect 64bit and use intrinsic version */
-#if defined(WIN32) && !defined(__MINGW_H) && !defined(__SYMBIAN32__)
+#if (defined(WIN32) || defined(WIN64)) && !defined(__MINGW_H) && !defined(__SYMBIAN32__)
 #ifdef _M_X64
 #include <emmintrin.h>
 static __inline long 
@@ -3653,7 +3653,7 @@ lrint (double flt)
 	_asm
 	{
 		fld flt
-			fistp intgr
+		fistp intgr
 	};
 	return intgr;
 }
