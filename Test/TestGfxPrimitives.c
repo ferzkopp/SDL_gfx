@@ -515,7 +515,86 @@ void BenchmarkRectangle(SDL_Surface *screen)
 	SetClip(screen,0,0,WIDTH-1,HEIGHT-1);
 	sprintf (titletext, "%.0f per sec",1000.0*(float)((NUM_RANDOM/2)*repeat)/(float)(time2-time1));
 	stringRGBA (screen, 3*WIDTH/4-4*strlen(titletext),30-4,titletext,255,255,255,255);
+}
 
+void TestRoundedRectangle(SDL_Surface *screen)
+{
+	int i;
+	char r,g,b;
+
+	/* Create random points */
+	srand((int)time(NULL));
+	InitRandomPoints();
+
+	/* Draw A=255 */
+	SetClip(screen,0,60,WIDTH/2,60+(HEIGHT-80)/2);
+	for (i=0; i<NUM_RANDOM; i += 2) {
+		roundedRectangleRGBA(screen, rx1[i], ry1[i], rx1[i+1], ry1[i+1], 4, rr[i], rg[i], rb[i], 255);
+	}
+
+	/* Draw A=various */
+	SetClip(screen,WIDTH/2,60,WIDTH,60+(HEIGHT-80)/2);
+	for (i=0; i<NUM_RANDOM; i += 2) {
+		roundedRectangleRGBA(screen, rx2[i], ry1[i], rx2[i+1], ry1[i+1], 4, rr[i], rg[i], rb[i], ra[i]);
+	}
+
+	/* Draw A=various */
+	SetClip(screen,WIDTH/2,80+(HEIGHT-80)/2,WIDTH,HEIGHT);
+	for (i=0; i<NUM_RANDOM; i += 2) {
+		roundedRectangleRGBA(screen, rx2[i], ry2[i], rx2[i+1], ry2[i+1], 4, rr[i], rg[i], rb[i], ra[i]);
+	}
+
+	/* Draw Colortest */
+	SetClip(screen,0,80+(HEIGHT-80)/2,WIDTH/2,HEIGHT);
+	for (i=0; i<NUM_RANDOM; i += 2) {
+		if (rx1[i] < (WIDTH/6))  {
+			r=255; g=0; b=0; 
+		} else if (rx1[i] < (WIDTH/3) ) {
+			r=0; g=255; b=0; 
+		} else {
+			r=0; g=0; b=255; 
+		}
+		roundedRectangleRGBA(screen, rx1[i], ry2[i], rx1[i]+rr1[i], ry2[i]+rr2[i], 4, r, g, b, 255);
+	}
+}
+
+void BenchmarkRoundedRectangle(SDL_Surface *screen)
+{
+	int i,j;
+	int repeat;
+	Uint32 time1, time2;
+	char titletext[256];
+
+	/* Draw A=255 */
+	repeat=200;
+	SetClip(screen,0,60,WIDTH/2,60+(HEIGHT-80)/2);
+	time1=SDL_GetTicks();
+	for (j=0; j<repeat; j++) {
+		for (i=0; i<NUM_RANDOM; i += 2) {
+			roundedRectangleRGBA(screen, rx1[i], ry1[i], rx1[i+1], ry1[i+1], 4, rr[i], rg[i], rb[i], 255);
+		}
+	}
+	time2=SDL_GetTicks();
+	/* Results */
+	SetClip(screen,0,0,WIDTH-1,HEIGHT-1);
+	sprintf (titletext, "%.0f per sec",1000.0*(float)((NUM_RANDOM/2)*repeat)/(float)(time2-time1));
+	stringRGBA (screen, WIDTH/4-4*strlen(titletext),30-4,titletext,255,255,255,255);
+
+	/* Draw A=various */
+	repeat=10;
+	SetClip(screen,WIDTH/2,60,WIDTH,60+(HEIGHT-80)/2);
+	time1=SDL_GetTicks();
+	for (j=0; j<repeat; j++) {
+		for (i=0; i<NUM_RANDOM; i += 2) {
+			roundedRectangleRGBA(screen, rx2[i], ry1[i], rx2[i+1], ry1[i+1], 4, rr[i], rg[i], rb[i], ra[i]);
+		}
+	}
+	time2=SDL_GetTicks();
+
+	/* Results */
+	SetClip(screen,0,0,WIDTH-1,HEIGHT-1);
+	sprintf (titletext, "%.0f per sec",1000.0*(float)((NUM_RANDOM/2)*repeat)/(float)(time2-time1));
+	stringRGBA (screen, 3*WIDTH/4-4*strlen(titletext),30-4,titletext,255,255,255,255);
 }
 
 void TestBoxTwo(SDL_Surface *screen)
@@ -2818,7 +2897,22 @@ int main(int argc, char *argv[])
 				 oldprim=curprim; 
 				 break;
 
-				 /* --- Reset */ 
+				 /* ---- Rounded Rectangle */ 
+			 case 28:
+				 ClearScreen(screen, "Rounded Rectangle");
+				 TestRoundedRectangle(screen);
+				 BenchmarkRoundedRectangle(screen);
+				 /* Next primitive */ 			  
+				 oldprim=curprim; 
+				 break;
+
+				 /* --- Wrap start*/
+			 case 0:
+				 oldprim=0;
+				 curprim=28;
+				 break;
+
+				 /* --- Wrap end */ 
 			 default:
 				 oldprim=0;
 				 curprim=1;

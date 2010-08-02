@@ -1484,44 +1484,19 @@ int vlineRGBA(SDL_Surface * dst, Sint16 x, Sint16 y1, Sint16 y2, Uint8 r, Uint8 
 int rectangleColor(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint32 color)
 {
 	int result;
-	Sint16 w, h, xtmp, ytmp;
+	Sint16 tmp;
+
+	/* Check destination surface */
+	if (dst == NULL)
+	{
+		return -1;
+	}
 
 	/*
 	* Check visibility of clipping rectangle
 	*/
 	if ((dst->clip_rect.w==0) || (dst->clip_rect.h==0)) {
-		return(0);
-	}
-
-	/*
-	* Swap x1, x2 if required 
-	*/
-	if (x1 > x2) {
-		xtmp = x1;
-		x1 = x2;
-		x2 = xtmp;
-	}
-
-	/*
-	* Swap y1, y2 if required 
-	*/
-	if (y1 > y2) {
-		ytmp = y1;
-		y1 = y2;
-		y2 = ytmp;
-	}
-
-	/*
-	* Calculate width&height 
-	*/
-	w = x2 - x1;
-	h = y2 - y1;
-
-	/*
-	* Sanity check 
-	*/
-	if ((w < 0) || (h < 0)) {
-		return (0);
+		return 0;
 	}
 
 	/*
@@ -1540,6 +1515,24 @@ int rectangleColor(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2
 	}
 
 	/*
+	* Swap x1, x2 if required 
+	*/
+	if (x1 > x2) {
+		tmp = x1;
+		x1 = x2;
+		x2 = tmp;
+	}
+
+	/*
+	* Swap y1, y2 if required 
+	*/
+	if (y1 > y2) {
+		tmp = y1;
+		y1 = y2;
+		y2 = tmp;
+	}
+
+	/*
 	* Draw rectangle 
 	*/
 	result = 0;
@@ -1547,10 +1540,11 @@ int rectangleColor(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2
 	result |= hlineColor(dst, x1, x2, y2, color);
 	y1 += 1;
 	y2 -= 1;
-	if (y1<=y2) {
+	if (y1 <= y2) {
 		result |= vlineColor(dst, x1, y1, y2, color);
 		result |= vlineColor(dst, x2, y1, y2, color);
 	}
+
 	return (result);
 
 }
@@ -1577,6 +1571,173 @@ int rectangleRGBA(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2,
 	*/
 	return (rectangleColor
 		(dst, x1, y1, x2, y2, ((Uint32) r << 24) | ((Uint32) g << 16) | ((Uint32) b << 8) | (Uint32) a));
+}
+
+/*!
+\brief Draw rounded-corner rectangle with blending.
+
+\param dst The surface to draw on.
+\param x1 X coordinate of the first point (i.e. top right) of the rectangle.
+\param y1 Y coordinate of the first point (i.e. top right) of the rectangle.
+\param x2 X coordinate of the second point (i.e. bottom left) of the rectangle.
+\param y2 Y coordinate of the second point (i.e. bottom left) of the rectangle.
+\param rad The radius of the corner arc.
+\param color The color value of the rectangle to draw (0xRRGGBBAA). 
+
+\returns Returns 0 on success, -1 on failure.
+*/
+int roundedRectangleColor(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Sint16 rad, Uint32 color)
+{
+	int result;
+	Sint16 w, h, tmp;
+	Sint16 xx1, xx2, yy1, yy2;
+
+	/* 
+	 * Check destination surface 
+	 */
+	if (dst == NULL)
+	{
+		return -1;
+	}
+
+	/*
+	* Check radius vor valid range
+	*/
+	if (rad < 0) {
+		return -1;
+	}
+
+	/*
+	* Special case - no rounding
+	*/
+	if (rad == 0) {
+		return rectangleColor(dst, x1, y1, x2, y2, color);
+	}
+
+	/*
+	* Check visibility of clipping rectangle
+	*/
+	if ((dst->clip_rect.w==0) || (dst->clip_rect.h==0)) {
+		return 0;
+	}
+
+	/*
+	* Test for special cases of straight lines or single point 
+	*/
+	if (x1 == x2) {
+		if (y1 == y2) {
+			return (pixelColor(dst, x1, y1, color));
+		} else {
+			return (vlineColor(dst, x1, y1, y2, color));
+		}
+	} else {
+		if (y1 == y2) {
+			return (hlineColor(dst, x1, x2, y1, color));
+		}
+	}
+
+	/*
+	* Swap x1, x2 if required 
+	*/
+	if (x1 > x2) {
+		tmp = x1;
+		x1 = x2;
+		x2 = tmp;
+	}
+
+	/*
+	* Swap y1, y2 if required 
+	*/
+	if (y1 > y2) {
+		tmp = y1;
+		y1 = y2;
+		y2 = tmp;
+	}
+
+	/*
+	* Calculate width&height 
+	*/
+	w = x2 - x1;
+	h = y2 - y1;
+
+	/*
+	 * Maybe adjust radius
+	 */
+	if ((rad * 2) > w)  
+	{
+		rad = w / 2;
+	}
+	if ((rad * 2) > h)
+	{
+		rad = h / 2;
+	}
+
+	/*
+	 * Draw corners
+	 */
+	result = 0;
+    xx1 = x1 + rad;
+	xx2 = x2 - rad;
+    yy1 = y1 + rad;
+	yy2 = y2 - rad;
+	result |= arcColor(dst, xx1, yy1, rad, 180, 270, color);
+	result |= arcColor(dst, xx2, yy1, rad, 270, 360, color);
+	result |= arcColor(dst, xx1, yy2, rad,  90, 180, color);
+	result |= arcColor(dst, xx2, yy2, rad,   0,  90, color);
+
+	/*
+	 * Draw lines
+	 */
+	if (xx1 <= xx2) {
+		result |= hlineColor(dst, xx1, xx2, y1, color);
+		result |= hlineColor(dst, xx1, xx2, y2, color);
+	}
+	if (yy1 <= yy2) {
+		result |= vlineColor(dst, x1, yy1, yy2, color);
+		result |= vlineColor(dst, x2, yy1, yy2, color);
+	}
+
+	return result;
+}
+
+/*!
+\brief Draw rounded-corner rectangle with blending.
+
+\param dst The surface to draw on.
+\param x1 X coordinate of the first point (i.e. top right) of the rectangle.
+\param y1 Y coordinate of the first point (i.e. top right) of the rectangle.
+\param x2 X coordinate of the second point (i.e. bottom left) of the rectangle.
+\param y2 Y coordinate of the second point (i.e. bottom left) of the rectangle.
+\param rad The radius of the corner arc.
+\param r The red value of the rectangle to draw. 
+\param g The green value of the rectangle to draw. 
+\param b The blue value of the rectangle to draw. 
+\param a The alpha value of the rectangle to draw. 
+
+\returns Returns 0 on success, -1 on failure.
+*/
+int roundedRectangleRGBA(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Sint16 rad, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+{
+	/*
+	* Draw 
+	*/
+	return (roundedRectangleColor
+		(dst, x1, y1, x2, y2, rad, ((Uint32) r << 24) | ((Uint32) g << 16) | ((Uint32) b << 8) | (Uint32) a));
+}
+
+/* Rounded-Corner Filled rectangle (Box) */
+
+int roundedBoxColor(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Sint16 rad, Uint32 color)
+{
+	/* Not implemented yet */
+	return -1;
+}
+
+int roundedBoxRGBA(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2,
+		Sint16 y2, Sint16 rad, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+{
+	/* Not implemented yet */
+	return -1;
 }
 
 /* --------- Clipping routines for line */
@@ -2712,8 +2873,8 @@ renders pixels accordingly.
 \param x X coordinate of the center of the arc.
 \param y Y coordinate of the center of the arc.
 \param rad Radius in pixels of the arc.
-\param start Starting radius in degrees of the arc.
-\param end Ending radius in degrees of the arc.
+\param start Starting radius in degrees of the arc. 0 degrees is down, increasing counterclockwise.
+\param end Ending radius in degrees of the arc. 0 degrees is down, increasing counterclockwise.
 \param color The color value of the arc to draw (0xRRGGBBAA). 
 
 \returns Returns 0 on success, -1 on failure.
@@ -3080,8 +3241,8 @@ int arcColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Sint16 start, Si
 \param x X coordinate of the center of the arc.
 \param y Y coordinate of the center of the arc.
 \param rad Radius in pixels of the arc.
-\param start Starting radius in degrees of the arc.
-\param end Ending radius in degrees of the arc.
+\param start Starting radius in degrees of the arc. 0 degrees is down, increasing counterclockwise.
+\param end Ending radius in degrees of the arc. 0 degrees is down, increasing counterclockwise.
 \param r The red value of the arc to draw. 
 \param g The green value of the arc to draw. 
 \param b The blue value of the arc to draw. 
