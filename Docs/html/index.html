@@ -18,7 +18,7 @@
   </div>
 </div>
 <div class="contents">
-<h1>SDL_gfx - SDL graphics drawing primitives, rotozoom and other supporting functions </h1><h3 class="version">2.0.21 </h3><h2><a class="anchor" id="contact_sec">
+<h1>SDL_gfx - SDL graphics drawing primitives, rotozoom and other supporting functions </h1><h3 class="version">2.0.22 </h3><h2><a class="anchor" id="contact_sec">
 Contact and License</a></h2>
 <p>Email aschiffler at ferzkopp.net to contact the author or better check author's homepage at <a href="http://www.ferzkopp.net">http://www.ferzkopp.net</a> for the most up-to-date contact information.</p>
 <p>This library is licenced under the LGPL, see the file LICENSE for details.</p>
@@ -308,7 +308,15 @@ Change Log</a></h2>
 <div class="fragment"><pre class="fragment">CHANGES/VERSION
 ===============
 
-Ver 2.0.21 -
+Ver 2.0.22 - in progress
+* Fixed line width calculation for normal and textured polygons
+  (patch contributed by Daniel (SupSuper) 
+* Fixed version setup in configure.in
+* Added rounded rectangle and rounded box functions
+* Updated test program for roundedbox + left/right-click support
+* Fixed pie calculation (line-case detection, end-angle clipping)
+
+Ver 2.0.21 - Thu May 27 21:14:37 PDT 2010
 * Add VC9 project files, source code formatting, fix compiler 
   warnings, move VC8 project files, remove leftover autoconf/m4 files
 * Move static transfer lookup array from .h to .c 
@@ -328,6 +336,7 @@ Ver 2.0.21 -
   (contributed by Chris Allport)
 * Updated TestRotozoom with rotate90 case and message display
 * Added support for SDL 1.3
+* Added doxygen generated documentation.
 
 Ver 2.0.20 - Wed Sep 23 18:42:02 PDT 2009
 * Fix for 1-pixel postponement with 8bit scaling 

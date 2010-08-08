@@ -585,7 +585,7 @@ int _filledRectAlpha(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 
 			dG = (color & Gmask);
 			dB = (color & Bmask);
 			dA = (color & Amask);
-			
+
 			A = 0;
 
 			for (y = y1; y <= y2; y++) {
@@ -1186,14 +1186,14 @@ int hlineColor(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y, Uint32 color)
 			color = SDL_MapRGBA(dst->format, colorptr[3], colorptr[2], colorptr[1], colorptr[0]);
 		}
 
-	/*
-	* Lock the surface 
-	*/
-	if (SDL_MUSTLOCK(dst)) {
-		if (SDL_LockSurface(dst) < 0) {
-			return (-1);
+		/*
+		* Lock the surface 
+		*/
+		if (SDL_MUSTLOCK(dst)) {
+			if (SDL_LockSurface(dst) < 0) {
+				return (-1);
+			}
 		}
-	}
 
 		/*
 		* More variable setup 
@@ -1372,14 +1372,14 @@ int vlineColor(SDL_Surface * dst, Sint16 x, Sint16 y1, Sint16 y2, Uint32 color)
 			color = SDL_MapRGBA(dst->format, colorptr[3], colorptr[2], colorptr[1], colorptr[0]);
 		}
 
-	/*
-	* Lock the surface 
-	*/
-	if (SDL_MUSTLOCK(dst)) {
-		if (SDL_LockSurface(dst) < 0) {
-			return (-1);
+		/*
+		* Lock the surface 
+		*/
+		if (SDL_MUSTLOCK(dst)) {
+			if (SDL_LockSurface(dst) < 0) {
+				return (-1);
+			}
 		}
-	}
 
 		/*
 		* More variable setup 
@@ -1593,8 +1593,8 @@ int roundedRectangleColor(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Si
 	Sint16 xx1, xx2, yy1, yy2;
 
 	/* 
-	 * Check destination surface 
-	 */
+	* Check destination surface 
+	*/
 	if (dst == NULL)
 	{
 		return -1;
@@ -1661,8 +1661,8 @@ int roundedRectangleColor(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Si
 	h = y2 - y1;
 
 	/*
-	 * Maybe adjust radius
-	 */
+	* Maybe adjust radius
+	*/
 	if ((rad * 2) > w)  
 	{
 		rad = w / 2;
@@ -1673,12 +1673,12 @@ int roundedRectangleColor(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Si
 	}
 
 	/*
-	 * Draw corners
-	 */
+	* Draw corners
+	*/
 	result = 0;
-    xx1 = x1 + rad;
+	xx1 = x1 + rad;
 	xx2 = x2 - rad;
-    yy1 = y1 + rad;
+	yy1 = y1 + rad;
 	yy2 = y2 - rad;
 	result |= arcColor(dst, xx1, yy1, rad, 180, 270, color);
 	result |= arcColor(dst, xx2, yy1, rad, 270, 360, color);
@@ -1686,8 +1686,8 @@ int roundedRectangleColor(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Si
 	result |= arcColor(dst, xx2, yy2, rad,   0,  90, color);
 
 	/*
-	 * Draw lines
-	 */
+	* Draw lines
+	*/
 	if (xx1 <= xx2) {
 		result |= hlineColor(dst, xx1, xx2, y1, color);
 		result |= hlineColor(dst, xx1, xx2, y2, color);
@@ -1725,19 +1725,160 @@ int roundedRectangleRGBA(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sin
 		(dst, x1, y1, x2, y2, rad, ((Uint32) r << 24) | ((Uint32) g << 16) | ((Uint32) b << 8) | (Uint32) a));
 }
 
-/* Rounded-Corner Filled rectangle (Box) */
+/*!
+\brief Draw rounded-corner box (filled rectangle) with blending.
 
+\param dst The surface to draw on.
+\param x1 X coordinate of the first point (i.e. top right) of the box.
+\param y1 Y coordinate of the first point (i.e. top right) of the box.
+\param x2 X coordinate of the second point (i.e. bottom left) of the box.
+\param y2 Y coordinate of the second point (i.e. bottom left) of the box.
+\param rad The radius of the corner arcs of the box.
+\param color The color value of the box to draw (0xRRGGBBAA). 
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int roundedBoxColor(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Sint16 rad, Uint32 color)
 {
-	/* Not implemented yet */
-	return -1;
+	int result;
+	Sint16 w, h, tmp;
+	Sint16 xx1, xx2, yy1, yy2;
+
+	/* 
+	* Check destination surface 
+	*/
+	if (dst == NULL)
+	{
+		return -1;
+	}
+
+	/*
+	* Check radius vor valid range
+	*/
+	if (rad < 0) {
+		return -1;
+	}
+
+	/*
+	* Special case - no rounding
+	*/
+	if (rad == 0) {
+		return rectangleColor(dst, x1, y1, x2, y2, color);
+	}
+
+	/*
+	* Check visibility of clipping rectangle
+	*/
+	if ((dst->clip_rect.w==0) || (dst->clip_rect.h==0)) {
+		return 0;
+	}
+
+	/*
+	* Test for special cases of straight lines or single point 
+	*/
+	if (x1 == x2) {
+		if (y1 == y2) {
+			return (pixelColor(dst, x1, y1, color));
+		} else {
+			return (vlineColor(dst, x1, y1, y2, color));
+		}
+	} else {
+		if (y1 == y2) {
+			return (hlineColor(dst, x1, x2, y1, color));
+		}
+	}
+
+	/*
+	* Swap x1, x2 if required 
+	*/
+	if (x1 > x2) {
+		tmp = x1;
+		x1 = x2;
+		x2 = tmp;
+	}
+
+	/*
+	* Swap y1, y2 if required 
+	*/
+	if (y1 > y2) {
+		tmp = y1;
+		y1 = y2;
+		y2 = tmp;
+	}
+
+	/*
+	* Calculate width&height 
+	*/
+	w = x2 - x1;
+	h = y2 - y1;
+
+	/*
+	* Maybe adjust radius
+	*/
+	if ((rad * 2) > w)  
+	{
+		rad = w / 2;
+	}
+	if ((rad * 2) > h)
+	{
+		rad = h / 2;
+	}
+
+	/*
+	* Draw corners
+	*/
+	result = 0;
+	xx1 = x1 + rad;
+	xx2 = x2 - rad;
+	yy1 = y1 + rad;
+	yy2 = y2 - rad;
+	result |= filledPieColor(dst, xx1, yy1, rad, 180, 270, color);
+	result |= filledPieColor(dst, xx2, yy1, rad, 270, 360, color);
+	result |= filledPieColor(dst, xx1, yy2, rad,  90, 180, color);
+	result |= filledPieColor(dst, xx2, yy2, rad,   0,  90, color);
+
+	/*
+	* Draw body
+	*/
+	xx1++;
+	xx2--;
+	yy1++;
+	yy2--;
+	if (xx1 <= xx2) {
+		result |= boxColor(dst, xx1, y1, xx2, y2, color);
+	}
+	if (yy1 <= yy2) {
+		result |= boxColor(dst, x1, yy1, xx1-1, yy2, color);
+		result |= boxColor(dst, xx2+1, yy1, x2, yy2, color);
+	}
+
+	return result;
 }
 
+/*!
+\brief Draw rounded-corner box (filled rectangle) with blending.
+
+\param dst The surface to draw on.
+\param x1 X coordinate of the first point (i.e. top right) of the box.
+\param y1 Y coordinate of the first point (i.e. top right) of the box.
+\param x2 X coordinate of the second point (i.e. bottom left) of the box.
+\param y2 Y coordinate of the second point (i.e. bottom left) of the box.
+\param rad The radius of the corner arcs of the box.
+\param r The red value of the box to draw. 
+\param g The green value of the box to draw. 
+\param b The blue value of the box to draw. 
+\param a The alpha value of the box to draw. 
+
+\returns Returns 0 on success, -1 on failure.
+*/
 int roundedBoxRGBA(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2,
-		Sint16 y2, Sint16 rad, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
+				   Sint16 y2, Sint16 rad, Uint8 r, Uint8 g, Uint8 b, Uint8 a)
 {
-	/* Not implemented yet */
-	return -1;
+	/*
+	* Draw 
+	*/
+	return (roundedBoxColor
+		(dst, x1, y1, x2, y2, rad, ((Uint32) r << 24) | ((Uint32) g << 16) | ((Uint32) b << 8) | (Uint32) a));
 }
 
 /* --------- Clipping routines for line */
@@ -1982,14 +2123,14 @@ int boxColor(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint
 			color = SDL_MapRGBA(dst->format, colorptr[3], colorptr[2], colorptr[1], colorptr[0]);
 		}
 
-	/*
-	* Lock the surface 
-	*/
-	if (SDL_MUSTLOCK(dst)) {
-		if (SDL_LockSurface(dst) < 0) {
-			return (-1);
+		/*
+		* Lock the surface 
+		*/
+		if (SDL_MUSTLOCK(dst)) {
+			if (SDL_LockSurface(dst) < 0) {
+				return (-1);
+			}
 		}
-	}
 
 		/*
 		* More variable setup 
@@ -2963,8 +3104,8 @@ int arcColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Sint16 start, Si
 	drawoct = 0; 
 
 	/*
-	 * Fixup angles
-	 */
+	* Fixup angles
+	*/
 	start %= 360;
 	end %= 360;
 	// 0 <= start & end < 360; note that sometimes start > end - if so, arc goes back through 0.
@@ -3814,7 +3955,7 @@ lrint (double flt)
 	_asm
 	{
 		fld flt
-		fistp intgr
+			fistp intgr
 	};
 	return intgr;
 }
@@ -4377,21 +4518,14 @@ int _pieColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Sint16 start, S
 		end_angle += (2.0 * M_PI);
 	}
 
+	/* We will always have at least 2 points */
+	numpoints = 2;
+
 	/* Count points (rather than calculating it) */
-	numpoints = 1;
 	angle = start_angle;
-	while (angle <= end_angle) {
+	while (angle < end_angle) {
 		angle += deltaAngle;
 		numpoints++;
-	}
-
-	/* Check size of array */
-	if (numpoints == 1) {
-		return (pixelColor(dst, x, y, color));
-	} else if (numpoints == 2) {
-		posX = x + (int) (dr * cos(start_angle));
-		posY = y + (int) (dr * sin(start_angle));
-		return (lineColor(dst, x, y, posX, posY, color));
 	}
 
 	/* Allocate combined vertex array */
@@ -4399,27 +4533,45 @@ int _pieColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Sint16 start, S
 	if (vx == NULL) {
 		return (-1);
 	}
+
+	/* Update point to start of vy */
 	vy += numpoints;
 
 	/* Center */
 	vx[0] = x;
 	vy[0] = y;
 
-	/* Calculate and store vertices */
-	i = 1;
+	/* First vertex */
 	angle = start_angle;
-	while (angle <= end_angle) {
-		vx[i] = x + (int) (dr * cos(angle));
-		vy[i] = y + (int) (dr * sin(angle));
-		angle += deltaAngle;
-		i++;
-	}
+	vx[1] = x + (int) (dr * cos(angle));
+	vy[1] = y + (int) (dr * sin(angle));
 
-	/* Draw */
-	if (filled) {
-		result = filledPolygonColor(dst, vx, vy, numpoints, color);
-	} else {
-		result = polygonColor(dst, vx, vy, numpoints, color);
+	if (numpoints<3)
+	{
+		result = lineColor(dst, vx[0], vy[0], vx[1], vy[1], numpoints, color);
+	}
+	else
+	{
+		/* Calculate other vertices */
+		i = 2;
+		angle = start_angle;
+		while (angle < end_angle) {
+			angle += deltaAngle;
+			if (angle>end_angle)
+			{
+				angle = end_angle;
+			}
+			vx[i] = x + (int) (dr * cos(angle));
+			vy[i] = y + (int) (dr * sin(angle));
+			i++;
+		}
+
+		/* Draw */
+		if (filled) {
+			result = filledPolygonColor(dst, vx, vy, numpoints, color);
+		} else {
+			result = polygonColor(dst, vx, vy, numpoints, color);
+		}
 	}
 
 	/* Free combined vertex array */
@@ -5221,13 +5373,13 @@ int _HLineTextured(SDL_Surface * dst, Sint16 x1, Sint16 x2, Sint16 y, SDL_Surfac
 	}
 
 	/*
-	 * Calculate width to draw
-	 */
+	* Calculate width to draw
+	*/
 	w = x2 - x1 + 1;
 
 	/*
-	 * Determine where in the texture we start drawing
-	 */
+	* Determine where in the texture we start drawing
+	*/
 	texture_x_walker =   (x1 - texture_dx)  % texture->w;
 	if (texture_x_walker < 0){
 		texture_x_walker = texture->w + texture_x_walker ;
@@ -5295,7 +5447,7 @@ The last two parameters are optional, but required for multithreaded operation. 
 \param n the amount of vectors in the vx and vy array
 \param texture the sdl surface to use to fill the polygon
 \param texture_dx the offset of the texture relative to the screeen. if you move the polygon 10 pixels 
-       to the left and want the texture to apear the same you need to increase the texture_dx value
+to the left and want the texture to apear the same you need to increase the texture_dx value
 \param texture_dy see texture_dx
 \param polyInts preallocated temp array storage for vertex sorting (used for multi-threaded operation)
 \param polyAllocated flag indicating oif the temp array was allocated (used for multi-threaded operation)
@@ -5464,7 +5616,7 @@ This standard version is calling multithreaded versions with NULL cache paramete
 \param n the amount of vectors in the vx and vy array
 \param texture the sdl surface to use to fill the polygon
 \param texture_dx the offset of the texture relative to the screeen. if you move the polygon 10 pixels 
-       to the left and want the texture to apear the same you need to increase the texture_dx value
+to the left and want the texture to apear the same you need to increase the texture_dx value
 \param texture_dy see texture_dx
 
 \returns Returns 0 on success, -1 on failure.
@@ -5778,7 +5930,7 @@ int characterColor(SDL_Surface * dst, Sint16 x, Sint16 y, char c, Uint32 color)
 		if (charRotation>0)
 		{
 			rotatedCharacter = rotateSurface90Degrees(gfxPrimitivesFont[ci], charRotation);
-            SDL_FreeSurface(gfxPrimitivesFont[ci]);
+			SDL_FreeSurface(gfxPrimitivesFont[ci]);
 			gfxPrimitivesFont[ci] = rotatedCharacter;
 		}
 	}
@@ -5838,18 +5990,18 @@ int stringColor(SDL_Surface * dst, Sint16 x, Sint16 y, const char *s, Uint32 col
 		result |= characterColor(dst, curx, cury, *curchar, color);
 		switch (charRotation)
 		{
-			case 0:
-				curx += charWidthLocal;
-				break;
-			case 2:
-				curx -= charWidthLocal;
-				break;
-			case 1:
-				cury += charHeightLocal;
-				break;
-			case 3:
-				cury -= charHeightLocal;
-				break;
+		case 0:
+			curx += charWidthLocal;
+			break;
+		case 2:
+			curx -= charWidthLocal;
+			break;
+		case 1:
+			cury += charHeightLocal;
+			break;
+		case 3:
+			cury -= charHeightLocal;
+			break;
 		}
 		curchar++;
 	}

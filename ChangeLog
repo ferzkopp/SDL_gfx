@@ -5,6 +5,9 @@ Ver 2.0.22 - in progress
 * Fixed line width calculation for normal and textured polygons
   (patch contributed by Daniel (SupSuper) 
 * Fixed version setup in configure.in
+* Added rounded rectangle and rounded box functions
+* Updated test program for roundedbox + left/right-click support
+* Fixed pie calculation (line-case detection, end-angle clipping)
 
 Ver 2.0.21 - Thu May 27 21:14:37 PDT 2010
 * Add VC9 project files, source code formatting, fix compiler 
