@@ -16,6 +16,7 @@ Copyright (C) A. Schiffler, July 2001-2009, GPL
 
 #ifdef WIN32
 #include <windows.h>
+#include "SDL_gfxPrimitives.h"
 #include "SDL_rotozoom.h"
 #else
 #include "SDL/SDL_rotozoom.h"
@@ -71,10 +72,11 @@ void RotatePicture (SDL_Surface *screen, SDL_Surface *picture, int rotate, int f
 	int framecount, framemax, frameinc;
 	double angle, zoomf, zoomfx, zoomfy;
 
-	fprintf(stderr, "%s\n", messageText);
+	printf("%s\n", messageText);
 
 	/* Rotate and display the picture */
-	framemax=4*360; frameinc=1;
+	framemax=4*360; 
+	frameinc=1;
 	for (framecount=-360; framecount<framemax; framecount += frameinc) {
 		if ((framecount % 360)==0) frameinc++;
 		HandleEvent();
@@ -127,7 +129,7 @@ void RotatePicture (SDL_Surface *screen, SDL_Surface *picture, int rotate, int f
 				SDL_FreeSurface(rotozoom_picture);
 		 }
 		}
-		
+
 		stringRGBA(screen, 8, 8, messageText, 255, 255, 255, 255);
 
 		/* Display by flipping screens */
@@ -191,7 +193,7 @@ void ZoomPicture (SDL_Surface *screen, SDL_Surface *picture, int smooth)
 	int framecount, framemax, frameinc;
 	double zoomxf,zoomyf;
 
-	fprintf(stderr, "%s\n", messageText);
+	printf("%s\n", messageText);
 
 	/* Zoom and display the picture */
 	framemax=4*360; frameinc=1;
@@ -218,7 +220,7 @@ void ZoomPicture (SDL_Surface *screen, SDL_Surface *picture, int smooth)
 		}
 
 		stringRGBA(screen, 8, 8, messageText, 255, 255, 255, 255);
-		
+
 		/* Display by flipping screens */
 		SDL_Flip(screen);
 
@@ -239,7 +241,7 @@ void RotatePicture90Degrees (SDL_Surface *screen, SDL_Surface *picture)
 	int framecount, framemax, frameinc;
 	int numClockwiseTurns;
 
-	fprintf(stderr, "%s\n", messageText);
+	printf("%s\n", messageText);
 
 	/* Rotate and display the picture */
 	framemax = 21;
@@ -254,7 +256,7 @@ void RotatePicture90Degrees (SDL_Surface *screen, SDL_Surface *picture)
 			dest.y = (screen->h - rotozoom_picture->h)/2;
 			dest.w = rotozoom_picture->w;
 			dest.h = rotozoom_picture->h;
-			if ( SDL_BlitSurface(rotozoom_picture, NULL, screen, &dest) < 0 ) {
+			if (SDL_BlitSurface(rotozoom_picture, NULL, screen, &dest) < 0 ) {
 				fprintf(stderr, "Blit failed: %s\n", SDL_GetError());
 				break;
 			}
@@ -291,8 +293,7 @@ void CustomTest(SDL_Surface *screen, SDL_Surface *picture, double a, double x, d
 	SDL_Surface *rotozoom_picture;
 	SDL_Rect dest;
 
-	fprintf(stderr, "%s\n", messageText);
-
+	printf("%s\n", messageText);
 	printf ("  Frame: C   Rotate: angle=%.2f  Zoom: fx=%.2f fy=%.2f \n",a,x,y);
 
 	HandleEvent();
@@ -311,6 +312,7 @@ void CustomTest(SDL_Surface *screen, SDL_Surface *picture, double a, double x, d
 
 	/* Display by flipping screens */
 	SDL_Flip(screen);
+
 	/* Maybe delay */
 	if (delay>0) {
 		SDL_Delay(delay);
@@ -319,6 +321,106 @@ void CustomTest(SDL_Surface *screen, SDL_Surface *picture, double a, double x, d
 	SDL_Delay(1000);		
 }
 
+
+void AccuracyTest(SDL_Surface *screen)
+{
+	SDL_Surface* testx1;
+	SDL_Surface* testx2;
+	SDL_Rect r;
+	SDL_Rect target;
+	SDL_Surface* ref;
+	int size, halfsize, doublesize;
+
+	printf("%s\n", messageText);
+	for (size = 10; size < 200; size += 2)
+	{		
+		HandleEvent();
+		ClearScreen(screen);
+
+		stringRGBA(screen, 8, 8, messageText, 255, 255, 255, 255);
+
+		halfsize = size / 2;
+		doublesize = size * 2;
+		printf ("  zoom from %i to %i\n", size, doublesize);
+
+		// Set up test surfaces
+		testx1 = SDL_CreateRGBSurface(SDL_SWSURFACE, size, size, 24, 0, 0, 0, 0);
+
+		r.x = 0;
+		r.y = 0;
+		r.w = halfsize;
+		r.h = halfsize;
+		SDL_FillRect(testx1, &r, 0x339933);
+
+		r.x = halfsize;
+		r.y = halfsize;
+		SDL_FillRect(testx1, &r, 0x993399);
+
+		r.x = 0;
+		r.y = halfsize;
+		SDL_FillRect(testx1, &r, 0x999933);
+
+		r.x = halfsize;
+		r.y = 0;
+		SDL_FillRect(testx1, &r, 0x333399);
+
+		testx2 = zoomSurface(testx1, 2.0, 2.0, 0);
+
+		ref = SDL_CreateRGBSurface(SDL_SWSURFACE, size, size, 24, 0, 0, 0, 0);
+		r.w = size;
+		r.h = size;
+		r.x = 0;
+		r.y = 0;
+		SDL_FillRect(ref, &r, 0xFFFFFF);
+
+		/* Validation display */
+
+		target.x = 0;
+		target.y = 20;
+		target.w = 0;
+		target.h = 0;
+		SDL_BlitSurface(testx1, 0, screen, &target);
+
+		target.x = size;
+		target.y = 20;
+		SDL_BlitSurface(ref, 0, screen, &target);
+
+		target.x = 0;
+		target.y = 20 + size;
+		SDL_BlitSurface(ref, 0, screen, &target);
+
+		target.x = doublesize + 20;
+		target.y = 20;
+		SDL_BlitSurface(testx2, 0, screen, &target);
+
+		target.x = doublesize + doublesize + 20;
+		target.y = 20;
+		SDL_BlitSurface(ref, 0, screen, &target);
+
+		target.x = doublesize + 20;
+		target.y = 20 + doublesize;
+		SDL_BlitSurface(ref, 0, screen, &target);
+
+		SDL_FreeSurface(testx1);
+		SDL_FreeSurface(testx2);
+		SDL_FreeSurface(ref);
+
+		/* Display by flipping screens */
+		SDL_Flip(screen);
+
+		/* Always delay */
+		SDL_Delay(250);		
+
+		/* Maybe add extra delay */
+		if (delay>0) {
+			SDL_Delay(delay);
+		}
+	}
+
+	SDL_Delay(1000);		
+}
+
+
 void Draw (SDL_Surface *screen, int start)
 {
 	SDL_Surface *picture, *picture_again;
@@ -326,16 +428,14 @@ void Draw (SDL_Surface *screen, int start)
 
 	/* --------- 8 bit test -------- */
 
-	start=0;
-
 	if (start<=6) {
 
 		/* Message */
-		fprintf(stderr,"Loading 8bit image\n");
+		printf("Loading 8bit image\n");
 
 		/* Load the image into a surface */
 		bmpfile = "sample8.bmp";
-		fprintf(stderr, "Loading picture: %s\n", bmpfile);
+		printf("Loading picture: %s\n", bmpfile);
 		picture = SDL_LoadBMP(bmpfile);
 		if ( picture == NULL ) {
 			fprintf(stderr, "Couldn't load %s: %s\n", bmpfile, SDL_GetError());
@@ -348,7 +448,7 @@ void Draw (SDL_Surface *screen, int start)
 		sprintf(messageText, "2.  rotozoom: Just zooming (angle=0)");
 		RotatePicture(screen,picture,ROTATE_OFF,FLIP_OFF,SMOOTHING_OFF);
 
-		sprintf(messageText, "3.  zoom: Just zooming\n");
+		sprintf(messageText, "3.  zoom: Just zooming");
 		ZoomPicture(screen,picture,SMOOTHING_OFF);
 
 		sprintf(messageText, "4.  rotozoom: Rotating and zooming, interpolation on but unused");
@@ -362,20 +462,18 @@ void Draw (SDL_Surface *screen, int start)
 
 		/* Free the picture */
 		SDL_FreeSurface(picture);
-
 	}
 
 	/* -------- 24 bit test --------- */
 
-
 	if (start<=12) {
 
 		/* Message */
-		fprintf(stderr,"Loading 24bit image\n");
+		printf("Loading 24bit image\n");
 
 		/* Load the image into a surface */
 		bmpfile = "sample24.bmp";
-		fprintf(stderr, "Loading picture: %s\n", bmpfile);
+		printf("Loading picture: %s\n", bmpfile);
 		picture = SDL_LoadBMP(bmpfile);
 		if ( picture == NULL ) {
 			fprintf(stderr, "Couldn't load %s: %s\n", bmpfile, SDL_GetError());
@@ -391,11 +489,10 @@ void Draw (SDL_Surface *screen, int start)
 		sprintf(messageText, "9.  zoom: Just zooming, no interpolation");
 		ZoomPicture(screen,picture,SMOOTHING_OFF);
 
-
 		sprintf(messageText, "10. rotozoom: Rotating and zooming, with interpolation");
 		RotatePicture(screen,picture,ROTATE_ON,FLIP_OFF,SMOOTHING_ON);
 
-		sprintf(messageText, "11. rotozoom: Just zooming (angle=0), with interpolation\n");
+		sprintf(messageText, "11. rotozoom: Just zooming (angle=0), with interpolation");
 		RotatePicture(screen,picture,ROTATE_OFF,FLIP_OFF,SMOOTHING_ON);
 
 		sprintf(messageText, "12. zoom: Just zooming, with interpolation");
@@ -403,7 +500,6 @@ void Draw (SDL_Surface *screen, int start)
 
 		/* Free the picture */
 		SDL_FreeSurface(picture);
-
 	}
 
 	/* -------- 32 bit test --------- */
@@ -411,11 +507,11 @@ void Draw (SDL_Surface *screen, int start)
 	if (start<=16) {
 
 		/* Message */
-		fprintf(stderr,"Loading 24bit image\n");
+		printf("Loading 24bit image\n");
 
 		/* Load the image into a surface */
 		bmpfile = "sample24.bmp";
-		fprintf(stderr, "Loading picture: %s\n", bmpfile);
+		printf("Loading picture: %s\n", bmpfile);
 		picture = SDL_LoadBMP(bmpfile);
 		if ( picture == NULL ) {
 			fprintf(stderr, "Couldn't load %s: %s\n", bmpfile, SDL_GetError());
@@ -456,7 +552,6 @@ void Draw (SDL_Surface *screen, int start)
 
 		/* Free the picture */
 		SDL_FreeSurface(picture);
-
 	}
 
 	/* -------- 32 bit flip test --------- */
@@ -464,11 +559,11 @@ void Draw (SDL_Surface *screen, int start)
 	if (start<=22) {
 
 		/* Message */
-		fprintf(stderr,"Loading 24bit image\n");
+		printf("Loading 24bit image\n");
 
 		/* Load the image into a surface */
 		bmpfile = "sample24.bmp";
-		fprintf(stderr, "Loading picture: %s\n", bmpfile);
+		printf("Loading picture: %s\n", bmpfile);
 		picture = SDL_LoadBMP(bmpfile);
 		if ( picture == NULL ) {
 			fprintf(stderr, "Couldn't load %s: %s\n", bmpfile, SDL_GetError());
@@ -476,7 +571,7 @@ void Draw (SDL_Surface *screen, int start)
 		}
 
 		/* Excercise flipping functions on 32bit RGBA */
-		fprintf(stderr,"Converting 24bit image into 32bit RGBA surface ...\n");
+		printf("Converting 24bit image into 32bit RGBA surface ...\n");
 		picture_again = SDL_CreateRGBSurface(SDL_SWSURFACE, picture->w, picture->h, 32, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000);
 		SDL_BlitSurface(picture,NULL,picture_again,NULL);
 
@@ -512,11 +607,11 @@ void Draw (SDL_Surface *screen, int start)
 	if (start<=24) {
 
 		/* Message */
-		fprintf(stderr,"Loading 24bit image\n");
+		printf("Loading 24bit image\n");
 
 		/* Load the image into a surface */
 		bmpfile = "sample24.bmp";
-		fprintf(stderr, "Loading picture: %s\n", bmpfile);
+		printf("Loading picture: %s\n", bmpfile);
 		picture = SDL_LoadBMP(bmpfile);
 		if ( picture == NULL ) {
 			fprintf(stderr, "Couldn't load %s: %s\n", bmpfile, SDL_GetError());
@@ -537,11 +632,11 @@ void Draw (SDL_Surface *screen, int start)
 		SDL_FreeSurface(picture);
 
 		/* Message */
-		fprintf(stderr,"Loading 8bit image\n");
+		printf("Loading 8bit image\n");
 
 		/* Load the image into a surface */
 		bmpfile = "sample8.bmp";
-		fprintf(stderr, "Loading picture: %s\n", bmpfile);
+		printf("Loading picture: %s\n", bmpfile);
 		picture = SDL_LoadBMP(bmpfile);
 		if ( picture == NULL ) {
 			fprintf(stderr, "Couldn't load %s: %s\n", bmpfile, SDL_GetError());
@@ -553,17 +648,16 @@ void Draw (SDL_Surface *screen, int start)
 
 		/* Free the picture */
 		SDL_FreeSurface(picture);
-
 	}
 
 	if (start<=25) {
 
 		/* Message */
-		fprintf(stderr,"Loading 24bit image\n");
+		printf("Loading 24bit image\n");
 
 		/* Load the image into a surface */
 		bmpfile = "sample24.bmp";
-		fprintf(stderr, "Loading picture: %s\n", bmpfile);
+		printf("Loading picture: %s\n", bmpfile);
 		picture = SDL_LoadBMP(bmpfile);
 		if ( picture == NULL ) {
 			fprintf(stderr, "Couldn't load %s: %s\n", bmpfile, SDL_GetError());
@@ -571,7 +665,7 @@ void Draw (SDL_Surface *screen, int start)
 		}
 
 		/* New source surface is 32bit with defined RGBA ordering */
-		fprintf(stderr,"Converting 24bit image into 32bit RGBA surface ...\n");
+		printf("Converting 24bit image into 32bit RGBA surface ...\n");
 		picture_again = SDL_CreateRGBSurface(SDL_SWSURFACE, picture->w, picture->h, 32, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000);
 		SDL_BlitSurface(picture,NULL,picture_again,NULL);
 
@@ -584,6 +678,12 @@ void Draw (SDL_Surface *screen, int start)
 		SDL_FreeSurface(picture_again);
 	}
 
+	if (start<=26) {
+		/* Run accuracy test */
+		sprintf(messageText, "26.  accuracy: zoom by factor of 2");
+		AccuracyTest(screen);
+	}
+
 	return;
 }
 
@@ -594,7 +694,7 @@ int main ( int argc, char *argv[] )
 	int desired_bpp;
 	Uint32 video_flags;
 	int start;
-	
+
 	/* Title */
 	fprintf(stderr,"SDL_rotozoom test\n");
 	messageText = (char *)malloc(128);
@@ -691,6 +791,7 @@ int main ( int argc, char *argv[] )
 												printf ("Usage:\n");
 												printf (" -start #	  Set starting test number\n");
 												printf ("             1=8bit, 7=24bit, 13=32bit, 19=32bit flip, 23=custom, 25=rotate90\n");
+												printf ("             26=zoom accuracy\n");
 												printf (" -delay #        Set delay between frames in ms (default: 0=off)\n");
 												printf ("                 (if >0, enables verbose frame logging\n");
 												printf (" -width #	  Screen width (Default: %i)\n",w);
@@ -741,7 +842,7 @@ int main ( int argc, char *argv[] )
 	SDL_WM_SetCaption("SDL_rotozoom test", "rotozoom");
 
 	/* Do all the drawing work */
-	Draw (screen, start);	
+	Draw(screen, start);	
 	free(messageText);
 
 	return(0);
