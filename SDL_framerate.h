@@ -46,9 +46,9 @@ extern "C" {
 		Uint32 rate;
 	} FPSmanager;
 
-	/* --------- Function prototypes */
+	/* ---- Function Prototypes */
 
-#ifdef WIN32
+#if defined(WIN32) || defined(WIN64)
 #  ifdef DLL_EXPORT
 #    define SDL_FRAMERATE_SCOPE __declspec(dllexport)
 #  else

@@ -35,9 +35,9 @@ extern "C" {
 	*/
 #define SMOOTHING_ON		1
 
-	/* ---- Prototypes */
+	/* ---- Function Prototypes */
 
-#ifdef WIN32
+#if defined(WIN32) || defined(WIN64)
 #  ifdef DLL_EXPORT
 #    define SDL_ROTOZOOM_SCOPE __declspec(dllexport)
 #  else

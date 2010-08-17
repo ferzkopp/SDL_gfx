@@ -15,9 +15,9 @@ LGPL (c) A. Schiffler
 extern "C" {
 #endif
 
-	/* ------ Function Prototypes ------ */
+	/* ---- Function Prototypes */
 
-#ifdef WIN32
+#if defined(WIN32) || defined(WIN64)
 #  ifdef DLL_EXPORT
 #    define SDL_IMAGEFILTER_SCOPE __declspec(dllexport)
 #  else

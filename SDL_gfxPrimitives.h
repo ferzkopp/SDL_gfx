@@ -27,9 +27,10 @@ extern "C" {
 #define SDL_GFXPRIMITIVES_MINOR	0
 #define SDL_GFXPRIMITIVES_MICRO	22
 
-	/* ----- W32 DLL interface */
 
-#ifdef WIN32
+	/* ---- Function Prototypes */
+
+#if defined(WIN32) || defined(WIN64)
 #  ifdef DLL_EXPORT
 #    define SDL_GFXPRIMITIVES_SCOPE __declspec(dllexport)
 #  else
@@ -41,8 +42,6 @@ extern "C" {
 #ifndef SDL_GFXPRIMITIVES_SCOPE
 #  define SDL_GFXPRIMITIVES_SCOPE extern
 #endif
-
-	/* ----- Prototypes */
 
 	/* Note: all ___Color routines expect the color to be in format 0xRRGGBBAA */
 

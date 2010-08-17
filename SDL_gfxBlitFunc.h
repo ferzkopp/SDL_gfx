@@ -20,9 +20,9 @@ extern    "C" {
 #include <SDL.h>
 #include <SDL_video.h>
 
-	/* -------- Prototypes */
+	/* ---- Function Prototypes */
 
-#ifdef WIN32
+#if defined(WIN32) || defined(WIN64)
 #  ifdef DLL_EXPORT
 #    define SDL_GFXBLITFUNC_SCOPE __declspec(dllexport)
 #  else
