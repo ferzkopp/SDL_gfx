@@ -4548,7 +4548,7 @@ int _pieColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Sint16 start, S
 
 	if (numpoints<3)
 	{
-		result = lineColor(dst, vx[0], vy[0], vx[1], vy[1], numpoints, color);
+		result = lineColor(dst, vx[0], vy[0], vx[1], vy[1], color);
 	}
 	else
 	{
