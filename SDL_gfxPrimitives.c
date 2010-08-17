@@ -4450,7 +4450,6 @@ int _pieColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Sint16 start, S
 	double angle, start_angle, end_angle;
 	double deltaAngle;
 	double dr;
-	int posX, posY;
 	int numpoints, i;
 	Sint16 *vx, *vy;
 
