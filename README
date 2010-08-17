@@ -418,6 +418,9 @@ See the source code .c files for some sample code and implementation hints.
 - Fixes for Rotate90 0-degree case by Chris Allport, chris dot allport
   at gmail dot com - thanks Chris.
 
+- Fixed for Win32 build support defines by tigerfishdaisy (SF) - thanks
+  Tiger Tiger.
+
 \section changelog_sec Change Log
 
 \verbinclude ChangeLog
