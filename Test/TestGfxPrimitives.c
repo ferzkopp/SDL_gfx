@@ -36,6 +36,9 @@ static Sint16 tx1[NUM_RANDOM][3], tx2[NUM_RANDOM][3], ty1[NUM_RANDOM][3], ty2[NU
 /* Squares (made of 2 triangles) */
 static Sint16 sx1[NUM_RANDOM][6], sx2[NUM_RANDOM][6], sy1[NUM_RANDOM][6], sy2[NUM_RANDOM][6];
 
+/* Line widths */
+static Uint8 lw[NUM_RANDOM];
+
 /* Radii and offsets */
 static Sint16 rr1[NUM_RANDOM], rr2[NUM_RANDOM];
 
@@ -99,6 +102,9 @@ void InitRandomPoints()
 		sy1[i][5]=ry1[i]+10;
 		sy2[i][5]=ry2[i]+10;
 
+		/* Line widths */
+		lw[i]=2 + (rand() % 7);
+		
 		/* Random Radii */
 		rr1[i]=rand() % 32;
 		rr2[i]=rand() % 32;
@@ -920,7 +926,6 @@ void BenchmarkLine(SDL_Surface *screen)
 
 }
 
-
 void TestAALine(SDL_Surface *screen)
 {
 	int i;
@@ -1001,6 +1006,88 @@ void BenchmarkAALine(SDL_Surface *screen)
 	stringRGBA (screen, 3*WIDTH/4-4*strlen(titletext),30-4,titletext,255,255,255,255);
 
 }
+
+void TestThickLine(SDL_Surface *screen)
+{
+	int i;
+	char r,g,b;
+	
+	/* Create random points */
+	srand((int)time(NULL));
+	InitRandomPoints();
+	
+	/* Draw A=255 */
+	SetClip(screen,0,60,WIDTH/2,60+(HEIGHT-80)/2);
+	for (i=0; i<NUM_RANDOM; i += 5) {
+		thickLineRGBA(screen, rx1[i], ry1[i], rx1[i+1], ry1[i+1], lw[i], rr[i], rg[i], rb[i], 255);
+	}
+	
+	/* Draw A=various */
+	SetClip(screen,WIDTH/2,60,WIDTH,60+(HEIGHT-80)/2);
+	for (i=0; i<NUM_RANDOM; i += 5) {
+		thickLineRGBA(screen, rx2[i], ry1[i], rx2[i+1], ry1[i+1], lw[i], rr[i], rg[i], rb[i], ra[i]);
+	}
+	
+	/* Draw A=various */
+	SetClip(screen,WIDTH/2,80+(HEIGHT-80)/2,WIDTH,HEIGHT);
+	for (i=0; i<NUM_RANDOM; i += 5) {
+		thickLineRGBA(screen, rx2[i], ry2[i], rx2[i+1], ry2[i+1], lw[i], rr[i], rg[i], rb[i], ra[i]);
+	}
+	
+	/* Draw Colortest */
+	SetClip(screen,0,80+(HEIGHT-80)/2,WIDTH/2,HEIGHT);
+	for (i=0; i<NUM_RANDOM; i += 5) {
+		if (rx1[i] < (WIDTH/6))  {
+			r=255; g=0; b=0; 
+		} else if (rx1[i] < (WIDTH/3) ) {
+			r=0; g=255; b=0; 
+		} else {
+			r=0; g=0; b=255; 
+		}
+		thickLineRGBA(screen, rx1[i], ry2[i], rx1[i]+rr1[i], ry2[i]+rr2[i], lw[i], r, g, b, 255);
+	}
+}
+
+void BenchmarkThickLine(SDL_Surface *screen)
+{
+	int i,j;
+	int repeat;
+	Uint32 time1, time2;
+	char titletext[256];
+	
+	/* Draw A=255 */
+	repeat=10;
+	SetClip(screen,0,60,WIDTH/2,60+(HEIGHT-80)/2);
+	time1=SDL_GetTicks();
+	for (j=0; j<repeat; j++) {
+		for (i=0; i<NUM_RANDOM; i += 5) {
+			thickLineRGBA(screen, rx1[i], ry1[i], rx1[i+1], ry1[i+1], lw[i], rr[i], rg[i], rb[i], 255);
+		}
+	}
+	time2=SDL_GetTicks();
+	/* Results */
+	SetClip(screen,0,0,WIDTH-1,HEIGHT-1);
+	sprintf (titletext, "%.0f per sec",1000.0*(float)((NUM_RANDOM/5)*repeat)/(float)(time2-time1));
+	stringRGBA (screen, WIDTH/4-4*strlen(titletext),30-4,titletext,255,255,255,255);
+	
+	/* Draw A=various */
+	repeat=10;
+	SetClip(screen,WIDTH/2,60,WIDTH,60+(HEIGHT-80)/2);
+	time1=SDL_GetTicks();
+	for (j=0; j<repeat; j++) {
+		for (i=0; i<NUM_RANDOM; i += 5) {
+			thickLineRGBA(screen, rx2[i], ry1[i], rx2[i+1], ry1[i+1], lw[i], rr[i], rg[i], rb[i], ra[i]);
+		}
+	}
+	time2=SDL_GetTicks();
+	
+	/* Results */
+	SetClip(screen,0,0,WIDTH-1,HEIGHT-1);
+	sprintf (titletext, "%.0f per sec",1000.0*(float)((NUM_RANDOM/5)*repeat)/(float)(time2-time1));
+	stringRGBA (screen, 3*WIDTH/4-4*strlen(titletext),30-4,titletext,255,255,255,255);
+	
+}
+
 
 void TestCircle(SDL_Surface *screen)
 {
@@ -2729,7 +2816,7 @@ int main(int argc, char *argv[])
 		/* Draw on screen if primitive changes */
 		if (curprim != oldprim) {
 
-			ClearScreen(screen, "Titletext");
+			ClearScreen(screen, "TestGfxPrimitives");
 
 			/* Draw according to curprim setting */
 			switch (curprim) {
@@ -2995,10 +3082,19 @@ int main(int argc, char *argv[])
 				 oldprim=curprim; 
 				 break;
 
+				/* ---- Thick Line */ 
+			case 30:
+				 ClearScreen(screen, "Thick Line");
+				 TestThickLine(screen);
+				 BenchmarkThickLine(screen);
+				 /* Next primitive */ 			  
+				 oldprim=curprim; 
+				 break;
+					
 				 /* --- Wrap start*/
 			 case 0:
 				 oldprim=0;
-				 curprim=29;
+				 curprim=30;
 				 break;
 
 				 /* --- Wrap end */ 
