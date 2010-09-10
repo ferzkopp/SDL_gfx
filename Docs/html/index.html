@@ -303,6 +303,9 @@ Contributors</a></h2>
 <ul>
 <li>Fixes for Rotate90 0-degree case by Chris Allport, chris dot allport at gmail dot com - thanks Chris.</li>
 </ul>
+<ul>
+<li>Fixed for Win32 build support defines by tigerfishdaisy (SF) - thanks Tiger Tiger.</li>
+</ul>
 <h2><a class="anchor" id="changelog_sec">
 Change Log</a></h2>
 <div class="fragment"><pre class="fragment">CHANGES/VERSION
@@ -312,9 +315,12 @@ Ver 2.0.22 - in progress
 * Fixed line width calculation for normal and textured polygons
   (patch contributed by Daniel (SupSuper) 
 * Fixed version setup in configure.in
-* Added rounded rectangle and rounded box functions
+* Added rounded rectangle and rounded box primitives
 * Updated test program for roundedbox + left/right-click support
 * Fixed pie calculation (line-case detection, end-angle clipping)
+* Updated DLL_EXPORT handling and added WIN64 test 
+  (patch contributed by tigerfishdaisy)
+* Added thick line primitive based on Murphy's algorithm
 
 Ver 2.0.21 - Thu May 27 21:14:37 PDT 2010
 * Add VC9 project files, source code formatting, fix compiler 

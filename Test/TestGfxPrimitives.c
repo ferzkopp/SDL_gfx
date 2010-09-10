@@ -104,7 +104,7 @@ void InitRandomPoints()
 
 		/* Line widths */
 		lw[i]=2 + (rand() % 7);
-		
+
 		/* Random Radii */
 		rr1[i]=rand() % 32;
 		rr2[i]=rand() % 32;
@@ -1011,29 +1011,29 @@ void TestThickLine(SDL_Surface *screen)
 {
 	int i;
 	char r,g,b;
-	
+
 	/* Create random points */
 	srand((int)time(NULL));
 	InitRandomPoints();
-	
+
 	/* Draw A=255 */
 	SetClip(screen,0,60,WIDTH/2,60+(HEIGHT-80)/2);
 	for (i=0; i<NUM_RANDOM; i += 5) {
 		thickLineRGBA(screen, rx1[i], ry1[i], rx1[i+1], ry1[i+1], lw[i], rr[i], rg[i], rb[i], 255);
 	}
-	
+
 	/* Draw A=various */
 	SetClip(screen,WIDTH/2,60,WIDTH,60+(HEIGHT-80)/2);
 	for (i=0; i<NUM_RANDOM; i += 5) {
 		thickLineRGBA(screen, rx2[i], ry1[i], rx2[i+1], ry1[i+1], lw[i], rr[i], rg[i], rb[i], ra[i]);
 	}
-	
+
 	/* Draw A=various */
 	SetClip(screen,WIDTH/2,80+(HEIGHT-80)/2,WIDTH,HEIGHT);
 	for (i=0; i<NUM_RANDOM; i += 5) {
 		thickLineRGBA(screen, rx2[i], ry2[i], rx2[i+1], ry2[i+1], lw[i], rr[i], rg[i], rb[i], ra[i]);
 	}
-	
+
 	/* Draw Colortest */
 	SetClip(screen,0,80+(HEIGHT-80)/2,WIDTH/2,HEIGHT);
 	for (i=0; i<NUM_RANDOM; i += 5) {
@@ -1054,7 +1054,7 @@ void BenchmarkThickLine(SDL_Surface *screen)
 	int repeat;
 	Uint32 time1, time2;
 	char titletext[256];
-	
+
 	/* Draw A=255 */
 	repeat=10;
 	SetClip(screen,0,60,WIDTH/2,60+(HEIGHT-80)/2);
@@ -1069,7 +1069,7 @@ void BenchmarkThickLine(SDL_Surface *screen)
 	SetClip(screen,0,0,WIDTH-1,HEIGHT-1);
 	sprintf (titletext, "%.0f per sec",1000.0*(float)((NUM_RANDOM/5)*repeat)/(float)(time2-time1));
 	stringRGBA (screen, WIDTH/4-4*strlen(titletext),30-4,titletext,255,255,255,255);
-	
+
 	/* Draw A=various */
 	repeat=10;
 	SetClip(screen,WIDTH/2,60,WIDTH,60+(HEIGHT-80)/2);
@@ -1080,12 +1080,12 @@ void BenchmarkThickLine(SDL_Surface *screen)
 		}
 	}
 	time2=SDL_GetTicks();
-	
+
 	/* Results */
 	SetClip(screen,0,0,WIDTH-1,HEIGHT-1);
 	sprintf (titletext, "%.0f per sec",1000.0*(float)((NUM_RANDOM/5)*repeat)/(float)(time2-time1));
 	stringRGBA (screen, 3*WIDTH/4-4*strlen(titletext),30-4,titletext,255,255,255,255);
-	
+
 }
 
 
@@ -3082,15 +3082,15 @@ int main(int argc, char *argv[])
 				 oldprim=curprim; 
 				 break;
 
-				/* ---- Thick Line */ 
-			case 30:
+				 /* ---- Thick Line */ 
+			 case 30:
 				 ClearScreen(screen, "Thick Line");
 				 TestThickLine(screen);
 				 BenchmarkThickLine(screen);
 				 /* Next primitive */ 			  
 				 oldprim=curprim; 
 				 break;
-					
+
 				 /* --- Wrap start*/
 			 case 0:
 				 oldprim=0;

@@ -39,10 +39,10 @@
 <a name="l00015"></a>00015 <span class="preprocessor"></span><span class="keyword">extern</span> <span class="stringliteral">&quot;C&quot;</span> {
 <a name="l00016"></a>00016 <span class="preprocessor">#endif</span>
 <a name="l00017"></a>00017 <span class="preprocessor"></span>
-<a name="l00018"></a>00018         <span class="comment">/* ------ Function Prototypes ------ */</span>
+<a name="l00018"></a>00018         <span class="comment">/* ---- Function Prototypes */</span>
 <a name="l00019"></a>00019 
-<a name="l00020"></a>00020 <span class="preprocessor">#ifdef WIN32</span>
-<a name="l00021"></a>00021 <span class="preprocessor"></span><span class="preprocessor">#  ifdef DLL_EXPORT</span>
+<a name="l00020"></a>00020 <span class="preprocessor">#if defined(WIN32) || defined(WIN64)</span>
+<a name="l00021"></a>00021 <span class="preprocessor"></span><span class="preprocessor">#  if defined(DLL_EXPORT) &amp;&amp; !defined(LIBSDL_GFX_DLL_IMPORT)</span>
 <a name="l00022"></a>00022 <span class="preprocessor"></span><span class="preprocessor">#    define SDL_IMAGEFILTER_SCOPE __declspec(dllexport)</span>
 <a name="l00023"></a>00023 <span class="preprocessor"></span><span class="preprocessor">#  else</span>
 <a name="l00024"></a>00024 <span class="preprocessor"></span><span class="preprocessor">#    ifdef LIBSDL_GFX_DLL_IMPORT</span>

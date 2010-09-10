@@ -34,6 +34,11 @@
 
 <p><a href="_s_d_l__gfx_primitives_8c_source.html">Go to the source code of this file.</a></p>
 <table border="0" cellpadding="0" cellspacing="0">
+<tr><td colspan="2"><h2>Data Structures</h2></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">struct &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_s_d_l__gfx_bresenham_iterator.html">SDL_gfxBresenhamIterator</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">The structure passed to the internal Bresenham iterator.  <a href="struct_s_d_l__gfx_bresenham_iterator.html#_details">More...</a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">struct &nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_s_d_l__gfx_murphy_iterator.html">SDL_gfxMurphyIterator</a></td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">The structure passed to the internal Murphy iterator.  <a href="struct_s_d_l__gfx_murphy_iterator.html#_details">More...</a><br/></td></tr>
 <tr><td colspan="2"><h2>Defines</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="_s_d_l__gfx_primitives_8c.html#aa992e3a7310145e9f9c36edee5795996">DEFAULT_ALPHA_PIXEL_ROUTINE</a></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="_s_d_l__gfx_primitives_8c.html#adeb851ac45f74ddec914212dd3297433">clip_xmin</a>(surface)&nbsp;&nbsp;&nbsp;surface-&gt;clip_rect.x</td></tr>
@@ -50,6 +55,7 @@
 <tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="_s_d_l__gfx_primitives_8c.html#ae2f08dc603ae93c402abd918ba4e23e1">ABS</a>(a)&nbsp;&nbsp;&nbsp;(((a)&lt;0) ? -(a) : (a))</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="_s_d_l__gfx_primitives_8c.html#a519bc2d4d753c51da1b956d6c200bff1">AAlevels</a>&nbsp;&nbsp;&nbsp;256</td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="_s_d_l__gfx_primitives_8c.html#a2e16571bedf7a97c6fc02d86b48994eb">AAbits</a>&nbsp;&nbsp;&nbsp;8</td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="_s_d_l__gfx_primitives_8c.html#a764ddb925da0921f024fadb4c12d7382">HYPOT</a>(x, y)&nbsp;&nbsp;&nbsp;sqrt((double)(x)*(double)(x)+(double)(y)*(double)(y))</td></tr>
 <tr><td colspan="2"><h2>Functions</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="_s_d_l__gfx_primitives_8c.html#a011e3e26d7216998357fb1a089f8f742">fastPixelColorNolock</a> (SDL_Surface *dst, Sint16 x, Sint16 y, Uint32 color)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Internal pixel drawing - fast, no blending, no locking, clipping.  <a href="#a011e3e26d7216998357fb1a089f8f742"></a><br/></td></tr>
@@ -211,6 +217,20 @@
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Draw a bezier curve with alpha blending.  <a href="#adfe8f9c42d29a090aae15eeb19b80d51"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="_s_d_l__gfx_primitives_8c.html#a4b7fbf6cc366abdf345a25308d53e125">bezierRGBA</a> (SDL_Surface *dst, const Sint16 *vx, const Sint16 *vy, int n, int s, Uint8 r, Uint8 g, Uint8 b, Uint8 a)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Draw a bezier curve with alpha blending.  <a href="#a4b7fbf6cc366abdf345a25308d53e125"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="_s_d_l__gfx_primitives_8c.html#af77127ff68a26c573dc5eb52723fb278">_bresenhamInitialize</a> (<a class="el" href="struct_s_d_l__gfx_bresenham_iterator.html">SDL_gfxBresenhamIterator</a> *b, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Internal function to initialize the Bresenham line iterator.  <a href="#af77127ff68a26c573dc5eb52723fb278"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="_s_d_l__gfx_primitives_8c.html#a4e0deda326a4dddde7adb2b20f927125">_bresenhamIterate</a> (<a class="el" href="struct_s_d_l__gfx_bresenham_iterator.html">SDL_gfxBresenhamIterator</a> *b)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Internal function to move Bresenham line iterator to the next position.  <a href="#a4e0deda326a4dddde7adb2b20f927125"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="_s_d_l__gfx_primitives_8c.html#ae11cad619c4fc85a7ff5d3c9d9686ccb">_murphyParaline</a> (<a class="el" href="struct_s_d_l__gfx_murphy_iterator.html">SDL_gfxMurphyIterator</a> *m, Sint16 x, Sint16 y, int d1)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Internal function to to draw parallel lines with Murphy algorithm.  <a href="#ae11cad619c4fc85a7ff5d3c9d9686ccb"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="_s_d_l__gfx_primitives_8c.html#a9611a25f40d9cd4a70b3424dfa568b8b">_murphyIteration</a> (<a class="el" href="struct_s_d_l__gfx_murphy_iterator.html">SDL_gfxMurphyIterator</a> *m, Uint8 miter, Uint16 ml1bx, Uint16 ml1by, Uint16 ml2bx, Uint16 ml2by, Uint16 ml1x, Uint16 ml1y, Uint16 ml2x, Uint16 ml2y)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Internal function to to draw one iteration of the Murphy algorithm.  <a href="#a9611a25f40d9cd4a70b3424dfa568b8b"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">void&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="_s_d_l__gfx_primitives_8c.html#abaa64d3d707ae122c88f2a509cded121">_murphyWideline</a> (<a class="el" href="struct_s_d_l__gfx_murphy_iterator.html">SDL_gfxMurphyIterator</a> *m, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint8 width, Uint8 miter)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Internal function to to draw wide lines with Murphy algorithm.  <a href="#abaa64d3d707ae122c88f2a509cded121"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="_s_d_l__gfx_primitives_8c.html#a1494109358b4e4b7ec300d83e3f90300">thickLineColor</a> (SDL_Surface *dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint8 width, Uint32 color)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Draw a thick line with alpha blending.  <a href="#a1494109358b4e4b7ec300d83e3f90300"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">int&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="_s_d_l__gfx_primitives_8c.html#a8b24d64b51e23592c93abc2aa50c818e">thickLineRGBA</a> (SDL_Surface *dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint8 width, Uint8 r, Uint8 g, Uint8 b, Uint8 a)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Draw a thick line with alpha blending.  <a href="#a8b24d64b51e23592c93abc2aa50c818e"></a><br/></td></tr>
 </table>
 <hr/><h2>Define Documentation</h2>
 <a class="anchor" id="a2e16571bedf7a97c6fc02d86b48994eb"></a><!-- doxytag: member="SDL_gfxPrimitives.c::AAbits" ref="a2e16571bedf7a97c6fc02d86b48994eb" args="" -->
@@ -224,7 +244,7 @@
 </div>
 <div class="memdoc">
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l02471">2471</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l02499">2499</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -239,7 +259,7 @@
 </div>
 <div class="memdoc">
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l02470">2470</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l02498">2498</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -259,7 +279,7 @@
 </div>
 <div class="memdoc">
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l02237">2237</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l02265">2265</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -284,7 +304,7 @@
 </div>
 <div class="memdoc">
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01895">1895</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01923">1923</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -299,7 +319,7 @@
 </div>
 <div class="memdoc">
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01891">1891</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01919">1919</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -319,7 +339,7 @@
 </div>
 <div class="memdoc">
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01893">1893</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01921">1921</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -334,7 +354,7 @@
 </div>
 <div class="memdoc">
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01889">1889</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01917">1917</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -359,7 +379,7 @@
 </div>
 <div class="memdoc">
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01894">1894</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01922">1922</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -374,7 +394,7 @@
 </div>
 <div class="memdoc">
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01890">1890</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01918">1918</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -389,7 +409,7 @@
 </div>
 <div class="memdoc">
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01892">1892</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01920">1920</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -409,7 +429,7 @@
 </div>
 <div class="memdoc">
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00026">26</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00050">50</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -429,7 +449,7 @@
 </div>
 <div class="memdoc">
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00025">25</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00049">49</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -449,7 +469,7 @@
 </div>
 <div class="memdoc">
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00028">28</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00052">52</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -469,7 +489,7 @@
 </div>
 <div class="memdoc">
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00027">27</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00051">51</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -485,6 +505,31 @@
 <div class="memdoc">
 
 <p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00020">20</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a764ddb925da0921f024fadb4c12d7382"></a><!-- doxytag: member="SDL_gfxPrimitives.c::HYPOT" ref="a764ddb925da0921f024fadb4c12d7382" args="(x, y)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">#define HYPOT</td>
+          <td>(</td>
+          <td class="paramtype">x, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">y&nbsp;</td>
+          <td class="paramname"></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td>&nbsp;&nbsp;&nbsp;sqrt((double)(x)*(double)(x)+(double)(y)*(double)(y))</td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l06516">6516</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -560,7 +605,98 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l02493">2493</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l02521">2521</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="af77127ff68a26c573dc5eb52723fb278"></a><!-- doxytag: member="SDL_gfxPrimitives.c::_bresenhamInitialize" ref="af77127ff68a26c573dc5eb52723fb278" args="(SDL_gfxBresenhamIterator *b, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int _bresenhamInitialize </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="struct_s_d_l__gfx_bresenham_iterator.html">SDL_gfxBresenhamIterator</a> *&nbsp;</td>
+          <td class="paramname"> <em>b</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Sint16&nbsp;</td>
+          <td class="paramname"> <em>x1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Sint16&nbsp;</td>
+          <td class="paramname"> <em>y1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Sint16&nbsp;</td>
+          <td class="paramname"> <em>x2</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Sint16&nbsp;</td>
+          <td class="paramname"> <em>y2</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Internal function to initialize the Bresenham line iterator. </p>
+<p>Example of use: <a class="el" href="struct_s_d_l__gfx_bresenham_iterator.html" title="The structure passed to the internal Bresenham iterator.">SDL_gfxBresenhamIterator</a> b; _bresenhamInitialize (&amp;b, x1, y1, x2, y2); do { plot(b.x, b.y); } while (_bresenhamIterate(&amp;b)==0);</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>b</em>&nbsp;</td><td>Pointer to struct for bresenham line drawing state. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>x1</em>&nbsp;</td><td>X coordinate of the first point of the line. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>y1</em>&nbsp;</td><td>Y coordinate of the first point of the line. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>x2</em>&nbsp;</td><td>X coordinate of the second point of the line. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>y2</em>&nbsp;</td><td>Y coordinate of the second point of the line.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
+
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l06233">6233</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a4e0deda326a4dddde7adb2b20f927125"></a><!-- doxytag: member="SDL_gfxPrimitives.c::_bresenhamIterate" ref="a4e0deda326a4dddde7adb2b20f927125" args="(SDL_gfxBresenhamIterator *b)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int _bresenhamIterate </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="struct_s_d_l__gfx_bresenham_iterator.html">SDL_gfxBresenhamIterator</a> *&nbsp;</td>
+          <td class="paramname"> <em>b</em></td>
+          <td>&nbsp;)&nbsp;</td>
+          <td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Internal function to move Bresenham line iterator to the next position. </p>
+<p>Maybe updates the x and y coordinates of the iterator struct.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>b</em>&nbsp;</td><td>Pointer to struct for bresenham line drawing state.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, 1 if last point was reached, 2 if moving past end-of-line, -1 on failure. </dd></dl>
+
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l06295">6295</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -606,7 +742,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Interpolated value at position t, value[0] when t&lt;0, value[n-1] when t&gt;n. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l06045">6045</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l06072">6072</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -681,7 +817,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00535">535</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00559">559</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -720,7 +856,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 if a==b, a negative number if a&lt;b or a positive number if a&gt;b. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l05056">5056</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l05083">5083</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -780,7 +916,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00813">813</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00837">837</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -854,7 +990,227 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l05320">5320</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l05347">5347</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a9611a25f40d9cd4a70b3424dfa568b8b"></a><!-- doxytag: member="SDL_gfxPrimitives.c::_murphyIteration" ref="a9611a25f40d9cd4a70b3424dfa568b8b" args="(SDL_gfxMurphyIterator *m, Uint8 miter, Uint16 ml1bx, Uint16 ml1by, Uint16 ml2bx, Uint16 ml2by, Uint16 ml1x, Uint16 ml1y, Uint16 ml2x, Uint16 ml2y)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void _murphyIteration </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="struct_s_d_l__gfx_murphy_iterator.html">SDL_gfxMurphyIterator</a> *&nbsp;</td>
+          <td class="paramname"> <em>m</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Uint8&nbsp;</td>
+          <td class="paramname"> <em>miter</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Uint16&nbsp;</td>
+          <td class="paramname"> <em>ml1bx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Uint16&nbsp;</td>
+          <td class="paramname"> <em>ml1by</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Uint16&nbsp;</td>
+          <td class="paramname"> <em>ml2bx</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Uint16&nbsp;</td>
+          <td class="paramname"> <em>ml2by</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Uint16&nbsp;</td>
+          <td class="paramname"> <em>ml1x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Uint16&nbsp;</td>
+          <td class="paramname"> <em>ml1y</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Uint16&nbsp;</td>
+          <td class="paramname"> <em>ml2x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Uint16&nbsp;</td>
+          <td class="paramname"> <em>ml2y</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Internal function to to draw one iteration of the Murphy algorithm. </p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>m</em>&nbsp;</td><td>Pointer to struct for murphy iterator. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>miter</em>&nbsp;</td><td>Iteration count. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>ml1bx</em>&nbsp;</td><td>X coordinate of a point. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>ml1by</em>&nbsp;</td><td>Y coordinate of a point. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>ml2bx</em>&nbsp;</td><td>X coordinate of a point. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>ml2by</em>&nbsp;</td><td>Y coordinate of a point. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>ml1x</em>&nbsp;</td><td>X coordinate of a point. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>ml1y</em>&nbsp;</td><td>Y coordinate of a point. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>ml2x</em>&nbsp;</td><td>X coordinate of a point. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>ml2y</em>&nbsp;</td><td>Y coordinate of a point. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l06400">6400</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="ae11cad619c4fc85a7ff5d3c9d9686ccb"></a><!-- doxytag: member="SDL_gfxPrimitives.c::_murphyParaline" ref="ae11cad619c4fc85a7ff5d3c9d9686ccb" args="(SDL_gfxMurphyIterator *m, Sint16 x, Sint16 y, int d1)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void _murphyParaline </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="struct_s_d_l__gfx_murphy_iterator.html">SDL_gfxMurphyIterator</a> *&nbsp;</td>
+          <td class="paramname"> <em>m</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Sint16&nbsp;</td>
+          <td class="paramname"> <em>x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Sint16&nbsp;</td>
+          <td class="paramname"> <em>y</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&nbsp;</td>
+          <td class="paramname"> <em>d1</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Internal function to to draw parallel lines with Murphy algorithm. </p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>m</em>&nbsp;</td><td>Pointer to struct for murphy iterator. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>x</em>&nbsp;</td><td>X coordinate of point. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>y</em>&nbsp;</td><td>Y coordinate of point. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>d1</em>&nbsp;</td><td>Direction square/diagonal. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l06338">6338</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="abaa64d3d707ae122c88f2a509cded121"></a><!-- doxytag: member="SDL_gfxPrimitives.c::_murphyWideline" ref="abaa64d3d707ae122c88f2a509cded121" args="(SDL_gfxMurphyIterator *m, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint8 width, Uint8 miter)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void _murphyWideline </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="struct_s_d_l__gfx_murphy_iterator.html">SDL_gfxMurphyIterator</a> *&nbsp;</td>
+          <td class="paramname"> <em>m</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Sint16&nbsp;</td>
+          <td class="paramname"> <em>x1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Sint16&nbsp;</td>
+          <td class="paramname"> <em>y1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Sint16&nbsp;</td>
+          <td class="paramname"> <em>x2</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Sint16&nbsp;</td>
+          <td class="paramname"> <em>y2</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Uint8&nbsp;</td>
+          <td class="paramname"> <em>width</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Uint8&nbsp;</td>
+          <td class="paramname"> <em>miter</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Internal function to to draw wide lines with Murphy algorithm. </p>
+<p>Draws lines parallel to ideal line.</p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>m</em>&nbsp;</td><td>Pointer to struct for murphy iterator. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>x1</em>&nbsp;</td><td>X coordinate of first point. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>y1</em>&nbsp;</td><td>Y coordinate of first point. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>x2</em>&nbsp;</td><td>X coordinate of second point. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>y2</em>&nbsp;</td><td>Y coordinate of second point. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>width</em>&nbsp;</td><td>Width of line. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>miter</em>&nbsp;</td><td>Iteration count. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l06532">6532</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -936,7 +1292,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04445">4445</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04473">4473</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -997,7 +1353,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00239">239</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00263">263</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -1057,7 +1413,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00829">829</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00853">853</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -1118,7 +1474,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l03418">3418</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l03446">3446</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -1199,7 +1555,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l03437">3437</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l03465">3465</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -1267,7 +1623,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l03980">3980</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04008">4008</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -1355,7 +1711,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04220">4220</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04248">4248</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -1422,7 +1778,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l02732">2732</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l02760">2760</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -1510,7 +1866,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l02752">2752</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l02780">2780</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -1570,7 +1926,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04970">4970</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04997">4997</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -1651,7 +2007,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l05038">5038</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l05065">5065</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -1733,7 +2089,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04752">4752</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04779">4779</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -1835,7 +2191,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04784">4784</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04811">4811</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -1910,7 +2266,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l03023">3023</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l03051">3051</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -2005,7 +2361,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l03394">3394</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l03422">3422</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -2072,7 +2428,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l06104">6104</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l06131">6131</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -2160,7 +2516,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l06179">6179</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l06206">6206</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -2227,7 +2583,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l02011">2011</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l02039">2039</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -2315,7 +2671,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l02223">2223</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l02251">2251</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -2376,7 +2732,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l05791">5791</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l05818">5818</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -2457,7 +2813,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l05960">5960</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l05987">5987</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -2518,7 +2874,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l02776">2776</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l02804">2804</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -2599,7 +2955,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l02996">2996</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l03024">3024</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -2667,7 +3023,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l03615">3615</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l03643">3643</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -2755,7 +3111,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l03929">3929</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l03957">3957</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -2808,7 +3164,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00143">143</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00167">167</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -2861,7 +3217,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00040">40</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00064">64</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -2915,7 +3271,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00097">97</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00121">121</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -2989,7 +3345,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00181">181</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00205">205</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -3063,7 +3419,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00209">209</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00233">233</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -3124,7 +3480,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l03462">3462</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l03490">3490</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -3205,7 +3561,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l03589">3589</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l03617">3617</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -3273,7 +3629,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04250">4250</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04278">4278</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -3361,7 +3717,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04418">4418</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04446">4446</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -3435,7 +3791,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04640">4640</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04667">4667</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -3530,7 +3886,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04661">4661</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04688">4688</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -3591,7 +3947,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l05277">5277</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l05304">5304</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -3666,7 +4022,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l05090">5090</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l05117">5117</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -3747,7 +4103,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l05299">5299</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l05326">5326</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -3843,7 +4199,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l05255">5255</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l05282">5282</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -3910,7 +4266,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00764">764</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00788">788</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -3992,7 +4348,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04818">4818</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04845">4845</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -4095,7 +4451,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04852">4852</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04879">4879</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -4141,7 +4497,7 @@
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l05698">5698</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l05725">5725</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -4170,7 +4526,7 @@
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l05744">5744</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l05771">5771</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -4230,7 +4586,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01110">1110</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01136">1136</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -4291,7 +4647,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00949">949</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00973">973</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -4372,7 +4728,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01277">1277</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01305">1305</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -4454,7 +4810,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01091">1091</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01117">1117</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -4521,7 +4877,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l02251">2251</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l02279">2279</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -4609,7 +4965,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l02460">2460</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l02488">2488</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -4683,7 +5039,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04596">4596</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04623">4623</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -4778,7 +5134,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04619">4619</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04646">4646</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -4831,7 +5187,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00449">449</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00473">473</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -4884,7 +5240,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00497">497</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00521">521</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -4944,7 +5300,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00845">845</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00869">869</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -5004,7 +5360,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00873">873</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00897">897</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -5078,7 +5434,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00903">903</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l00927">927</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -5138,7 +5494,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04881">4881</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04908">4908</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -5219,7 +5575,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04949">4949</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04976">4976</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -5286,7 +5642,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01484">1484</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01512">1512</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -5374,7 +5730,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01567">1567</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01595">1595</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -5448,7 +5804,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01741">1741</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01769">1769</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -5543,7 +5899,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01874">1874</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01902">1902</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -5617,7 +5973,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01589">1589</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01617">1617</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -5712,7 +6068,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01719">1719</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01747">1747</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -5773,7 +6129,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l05982">5982</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l06009">6009</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -5854,7 +6210,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l06026">6026</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l06053">6053</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -5929,7 +6285,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l05624">5624</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l05651">5651</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -6019,7 +6375,176 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l05457">5457</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l05484">5484</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a1494109358b4e4b7ec300d83e3f90300"></a><!-- doxytag: member="SDL_gfxPrimitives.c::thickLineColor" ref="a1494109358b4e4b7ec300d83e3f90300" args="(SDL_Surface *dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint8 width, Uint32 color)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int thickLineColor </td>
+          <td>(</td>
+          <td class="paramtype">SDL_Surface *&nbsp;</td>
+          <td class="paramname"> <em>dst</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Sint16&nbsp;</td>
+          <td class="paramname"> <em>x1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Sint16&nbsp;</td>
+          <td class="paramname"> <em>y1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Sint16&nbsp;</td>
+          <td class="paramname"> <em>x2</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Sint16&nbsp;</td>
+          <td class="paramname"> <em>y2</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Uint8&nbsp;</td>
+          <td class="paramname"> <em>width</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Uint32&nbsp;</td>
+          <td class="paramname"> <em>color</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Draw a thick line with alpha blending. </p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>dst</em>&nbsp;</td><td>The surface to draw on. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>x1</em>&nbsp;</td><td>X coordinate of the first point of the line. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>y1</em>&nbsp;</td><td>Y coordinate of the first point of the line. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>x2</em>&nbsp;</td><td>X coordinate of the second point of the line. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>y2</em>&nbsp;</td><td>Y coordinate of the second point of the line. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>width</em>&nbsp;</td><td>Width of the line in pixels. Must be &gt;0. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>color</em>&nbsp;</td><td>The color value of the line to draw (0xRRGGBBAA).</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
+
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l06718">6718</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+
+</div>
+</div>
+<a class="anchor" id="a8b24d64b51e23592c93abc2aa50c818e"></a><!-- doxytag: member="SDL_gfxPrimitives.c::thickLineRGBA" ref="a8b24d64b51e23592c93abc2aa50c818e" args="(SDL_Surface *dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint8 width, Uint8 r, Uint8 g, Uint8 b, Uint8 a)" -->
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int thickLineRGBA </td>
+          <td>(</td>
+          <td class="paramtype">SDL_Surface *&nbsp;</td>
+          <td class="paramname"> <em>dst</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Sint16&nbsp;</td>
+          <td class="paramname"> <em>x1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Sint16&nbsp;</td>
+          <td class="paramname"> <em>y1</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Sint16&nbsp;</td>
+          <td class="paramname"> <em>x2</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Sint16&nbsp;</td>
+          <td class="paramname"> <em>y2</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Uint8&nbsp;</td>
+          <td class="paramname"> <em>width</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Uint8&nbsp;</td>
+          <td class="paramname"> <em>r</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Uint8&nbsp;</td>
+          <td class="paramname"> <em>g</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Uint8&nbsp;</td>
+          <td class="paramname"> <em>b</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">Uint8&nbsp;</td>
+          <td class="paramname"> <em>a</em></td><td>&nbsp;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td><td></td>
+        </tr>
+      </table>
+</div>
+<div class="memdoc">
+
+<p>Draw a thick line with alpha blending. </p>
+<dl><dt><b>Parameters:</b></dt><dd>
+  <table border="0" cellspacing="2" cellpadding="0">
+    <tr><td valign="top"></td><td valign="top"><em>dst</em>&nbsp;</td><td>The surface to draw on. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>x1</em>&nbsp;</td><td>X coordinate of the first point of the line. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>y1</em>&nbsp;</td><td>Y coordinate of the first point of the line. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>x2</em>&nbsp;</td><td>X coordinate of the second point of the line. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>y2</em>&nbsp;</td><td>Y coordinate of the second point of the line. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>width</em>&nbsp;</td><td>Width of the line in pixels. Must be &gt;0. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>r</em>&nbsp;</td><td>The red value of the character to draw. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>g</em>&nbsp;</td><td>The green value of the character to draw. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>b</em>&nbsp;</td><td>The blue value of the character to draw. </td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>a</em>&nbsp;</td><td>The alpha value of the character to draw.</td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
+
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l06750">6750</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -6101,7 +6626,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04686">4686</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04713">4713</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -6203,7 +6728,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04718">4718</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l04745">4745</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -6263,7 +6788,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01296">1296</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01324">1324</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>
@@ -6344,7 +6869,7 @@
 </dl>
 <dl class="return"><dt><b>Returns:</b></dt><dd>Returns 0 on success, -1 on failure. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01464">1464</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_primitives_8c_source.html#l01492">1492</a> of file <a class="el" href="_s_d_l__gfx_primitives_8c_source.html">SDL_gfxPrimitives.c</a>.</p>
 
 </div>
 </div>

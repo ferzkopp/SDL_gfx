@@ -58,10 +58,10 @@
 <a name="l00046"></a><a class="code" href="struct_f_p_smanager.html#af7eec7342fd8eb48d5f49ba7f5b91853">00046</a>                 Uint32 rate;
 <a name="l00047"></a>00047         } <a class="code" href="struct_f_p_smanager.html" title="Structure holding the state and timing information of the framerate controller.">FPSmanager</a>;
 <a name="l00048"></a>00048 
-<a name="l00049"></a>00049         <span class="comment">/* --------- Function prototypes */</span>
+<a name="l00049"></a>00049         <span class="comment">/* ---- Function Prototypes */</span>
 <a name="l00050"></a>00050 
-<a name="l00051"></a>00051 <span class="preprocessor">#ifdef WIN32</span>
-<a name="l00052"></a>00052 <span class="preprocessor"></span><span class="preprocessor">#  ifdef DLL_EXPORT</span>
+<a name="l00051"></a>00051 <span class="preprocessor">#if defined(WIN32) || defined(WIN64)</span>
+<a name="l00052"></a>00052 <span class="preprocessor"></span><span class="preprocessor">#  if defined(DLL_EXPORT) &amp;&amp; !defined(LIBSDL_GFX_DLL_IMPORT)</span>
 <a name="l00053"></a>00053 <span class="preprocessor"></span><span class="preprocessor">#    define SDL_FRAMERATE_SCOPE __declspec(dllexport)</span>
 <a name="l00054"></a>00054 <span class="preprocessor"></span><span class="preprocessor">#  else</span>
 <a name="l00055"></a>00055 <span class="preprocessor"></span><span class="preprocessor">#    ifdef LIBSDL_GFX_DLL_IMPORT</span>
