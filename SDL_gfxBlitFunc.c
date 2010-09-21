@@ -307,8 +307,8 @@ void _SDL_gfxBlitBlitterRGBA(SDL_gfxBlitInfo * info)
 			unsigned dB;
 			unsigned dA;
 			unsigned sAA;
-			GFX_DISSEMBLE_RGBA(src, srcbpp, srcfmt, pixel, sR, sG, sB, sA);
-			GFX_DISSEMBLE_RGBA(dst, dstbpp, dstfmt, pixel, dR, dG, dB, dA);
+			GFX_DISASSEMBLE_RGBA(src, srcbpp, srcfmt, pixel, sR, sG, sB, sA);
+			GFX_DISASSEMBLE_RGBA(dst, dstbpp, dstfmt, pixel, dR, dG, dB, dA);
 			sAA=GFX_ALPHA_ADJUST_ARRAY[sA & 255];
 			GFX_ALPHA_BLEND(sR, sG, sB, sAA, dR, dG, dB);
 			dA |= sAA;
