@@ -77,9 +77,9 @@ extern    "C" {
 	}
 
 /*!
-\brief Disassemble buffer pointer into a pixel and separate RGBA values.
+\brief Dissemble buffer pointer into a pixel and separate RGBA values.
 */
-#define GFX_DISEMBLE_RGBA(buf, bpp, fmt, pixel, r, g, b, a)			   \
+#define GFX_DISSEMBLE_RGBA(buf, bpp, fmt, pixel, r, g, b, a)			   \
 	do {									   \
 	pixel = *((Uint32 *)(buf));			   		   \
 	GFX_RGBA_FROM_PIXEL(pixel, fmt, r, g, b, a);			   \

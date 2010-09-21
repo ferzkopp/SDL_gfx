@@ -747,7 +747,7 @@ void transformSurfaceY(SDL_Surface * src, SDL_Surface * dst, int cx, int cy, int
 	/*
 	* Clear surface to colorkey 
 	*/ 	
-	memset(pc, (unsigned char) (_colorkey(src) & 0xff), dst->pitch * dst->h);
+	memset(pc, (int)(_colorkey(src) & 0xff), dst->pitch * dst->h);
 	/*
 	* Iterate through destination surface 
 	*/
@@ -937,8 +937,8 @@ void _rotozoomSurfaceSizeTrig(int width, int height, double angle, double zoomx,
 	*canglezoom = cos(radangle);
 	*sanglezoom *= zoomx;
 	*canglezoom *= zoomx;
-	x = width / 2;
-	y = height / 2;
+	x = (double)(width / 2);
+	y = (double)(height / 2);
 	cx = *canglezoom * x;
 	cy = *canglezoom * y;
 	sx = *sanglezoom * x;
@@ -1509,19 +1509,23 @@ The input surface is not modified. The output surface is newly allocated.
 
 \return The new, shrunken surface.
 */
+/*@null@*/ 
 SDL_Surface *shrinkSurface(SDL_Surface *src, int factorx, int factory)
 {
+	int result;
 	SDL_Surface *rz_src;
-	SDL_Surface *rz_dst;
+	SDL_Surface *rz_dst = NULL;
 	int dstwidth, dstheight;
 	int is32bit;
 	int i, src_converted;
+	int haveError = 0;
 
 	/*
 	* Sanity check 
 	*/
-	if (src == NULL)
+	if (src == NULL) {
 		return (NULL);
+	}
 
 	/*
 	* Determine if source surface is 32bit or 8bit 
@@ -1537,17 +1541,31 @@ SDL_Surface *shrinkSurface(SDL_Surface *src, int factorx, int factory)
 		/*
 		* New source surface is 32bit with a defined RGBA ordering 
 		*/
-		rz_src =
-			SDL_CreateRGBSurface(SDL_SWSURFACE, src->w, src->h, 32, 
+		rz_src = SDL_CreateRGBSurface(SDL_SWSURFACE, src->w, src->h, 32, 
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
 			0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000
 #else
 			0xff000000,  0x00ff0000, 0x0000ff00, 0x000000ff
 #endif
 			);
+		if (rz_src==NULL) {
+			haveError = 1;
+			goto exitShrinkSurface;
+		}
+		
 		SDL_BlitSurface(src, NULL, rz_src, NULL);
 		src_converted = 1;
 		is32bit = 1;
+	}
+
+	/*
+	* Lock the surface 
+	*/
+	if (SDL_MUSTLOCK(rz_src)) {
+		if (SDL_LockSurface(rz_src) < 0) {
+			haveError = 1;
+			goto exitShrinkSurface;
+		}
 	}
 
 	/* Get size for target */
@@ -1560,8 +1578,7 @@ SDL_Surface *shrinkSurface(SDL_Surface *src, int factorx, int factory)
 	* Alloc space to completely contain the shrunken surface
 	* (with added guard rows)
 	*/
-	rz_dst = NULL;
-	if (is32bit) {
+	if (is32bit==1) {
 		/*
 		* Target surface is 32bit with source RGBA/ABGR ordering 
 		*/
@@ -1577,31 +1594,35 @@ SDL_Surface *shrinkSurface(SDL_Surface *src, int factorx, int factory)
 	}
 	
 	/* Check target */
-	if (rz_dst == NULL)
-		return NULL;
+	if (rz_dst == NULL) {
+		haveError = 1;
+		goto exitShrinkSurface;
+	}
 
 	/* Adjust for guard rows */
 	rz_dst->h = dstheight;
 
 	/*
-	* Lock source surface 
-	*/
-	if (SDL_MUSTLOCK(rz_src)) {
-		SDL_LockSurface(rz_src);
-	}
-
-	/*
 	* Check which kind of surface we have 
 	*/
-	if (is32bit) {
+	if (is32bit==1) {
 		/*
 		* Call the 32bit transformation routine to do the shrinking (using alpha) 
 		*/
-		_shrinkSurfaceRGBA(rz_src, rz_dst, factorx, factory);
+		result = _shrinkSurfaceRGBA(rz_src, rz_dst, factorx, factory);		
+		if ((result!=0) || (rz_dst==NULL)) {
+			haveError = 1;
+			goto exitShrinkSurface;
+		}
+		
 		/*
 		* Turn on source-alpha support 
 		*/
-		SDL_SetAlpha(rz_dst, SDL_SRCALPHA, 255);
+		result = SDL_SetAlpha(rz_dst, SDL_SRCALPHA, 255);
+		if (result!=0) {
+			haveError = 1;
+			goto exitShrinkSurface;
+		}
 	} else {
 		/*
 		* Copy palette and colorkey info 
@@ -1613,24 +1634,47 @@ SDL_Surface *shrinkSurface(SDL_Surface *src, int factorx, int factory)
 		/*
 		* Call the 8bit transformation routine to do the shrinking 
 		*/
-		_shrinkSurfaceY(rz_src, rz_dst, factorx, factory);
-		SDL_SetColorKey(rz_dst, SDL_SRCCOLORKEY | SDL_RLEACCEL, _colorkey(rz_src));
+		result = _shrinkSurfaceY(rz_src, rz_dst, factorx, factory);
+		if (result!=0) {
+			haveError = 1;
+			goto exitShrinkSurface;
+		}
+		
+		/*
+		* Set colorkey on target
+		*/
+		result = SDL_SetColorKey(rz_dst, SDL_SRCCOLORKEY | SDL_RLEACCEL, _colorkey(rz_src));
+		if (result!=0) {
+			haveError = 1;
+			goto exitShrinkSurface;
+		}		
 	}
 
-	/*
-	* Unlock source surface 
-	*/
-	if (SDL_MUSTLOCK(rz_src)) {
-		SDL_UnlockSurface(rz_src);
-	}
+exitShrinkSurface:
+	if (rz_src!=NULL) {
+		/*
+		* Unlock source surface 
+		*/
+		if (SDL_MUSTLOCK(rz_src)) {
+			SDL_UnlockSurface(rz_src);
+		}
 
-	/*
-	* Cleanup temp surface 
-	*/
-	if (src_converted) {
-		SDL_FreeSurface(rz_src);
+		/*
+		* Cleanup temp surface 
+		*/
+		if (src_converted==1) {
+			SDL_FreeSurface(rz_src);
+		}
 	}
-
+	
+	/* Check error state; maybe need to cleanup destination */
+	if (haveError==1) {
+		if (rz_dst!=NULL) {
+			SDL_FreeSurface(rz_dst);
+		}
+		rz_dst=NULL;
+	} 
+	
 	/*
 	* Return destination surface 
 	*/

@@ -64,7 +64,7 @@ extern "C" {
 	/* Functions return 0 or value for sucess and -1 for error */
 
 	SDL_FRAMERATE_SCOPE void SDL_initFramerate(FPSmanager * manager);
-	SDL_FRAMERATE_SCOPE int SDL_setFramerate(FPSmanager * manager, int rate);
+	SDL_FRAMERATE_SCOPE int SDL_setFramerate(FPSmanager * manager, Uint32 rate);
 	SDL_FRAMERATE_SCOPE int SDL_getFramerate(FPSmanager * manager);
 	SDL_FRAMERATE_SCOPE int SDL_getFramecount(FPSmanager * manager);
 	SDL_FRAMERATE_SCOPE void SDL_framerateDelay(FPSmanager * manager);

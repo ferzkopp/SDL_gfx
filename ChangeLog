@@ -1,6 +1,10 @@
 CHANGES/VERSION
 ===============
 
+Ver 2.0.23 - in progress
+* Updated sources to resolve some splint (static code analysis)
+  issues
+
 Ver 2.0.22 - Sat Sep 11 23:26:42 EDT 2010
 * Fixed line width calculation for normal and textured polygons
   (patch contributed by Daniel (SupSuper) 

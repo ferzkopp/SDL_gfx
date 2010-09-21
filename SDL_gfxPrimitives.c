@@ -320,10 +320,11 @@ int _putPixelAlpha(SDL_Surface *dst, Sint16 x, Sint16 y, Uint32 color, Uint8 alp
 				R = ((dc & Rmask) + (((color & Rmask) - (dc & Rmask)) * alpha >> 8)) & Rmask;
 				G = ((dc & Gmask) + (((color & Gmask) - (dc & Gmask)) * alpha >> 8)) & Gmask;
 				B = ((dc & Bmask) + (((color & Bmask) - (dc & Bmask)) * alpha >> 8)) & Bmask;
-				if (Amask) {
+				*pixel = R | G | B;
+				if (Amask!=0) {
 					A = ((dc & Amask) + (((color & Amask) - (dc & Amask)) * alpha >> 8)) & Amask;
+					*pixel |= A;
 				}
-				*pixel = R | G | B | A;
 			}
 		}
 		break;
@@ -395,14 +396,14 @@ int _putPixelAlpha(SDL_Surface *dst, Sint16 x, Sint16 y, Uint32 color, Uint8 alp
 				Bshift = format->Bshift;
 				Ashift = format->Ashift;
 
-				A = 0;
 				R = ((dc & Rmask) + (((((color & Rmask) - (dc & Rmask)) >> Rshift) * alpha >> 8) << Rshift)) & Rmask;
 				G = ((dc & Gmask) + (((((color & Gmask) - (dc & Gmask)) >> Gshift) * alpha >> 8) << Gshift)) & Gmask;
 				B = ((dc & Bmask) + (((((color & Bmask) - (dc & Bmask)) >> Bshift) * alpha >> 8) << Bshift)) & Bmask;
-				if (Amask) {
+				*pixel = R | G | B;
+				if (Amask!=0) {
 					A = ((dc & Amask) + (((((color & Amask) - (dc & Amask)) >> Ashift) * alpha >> 8) << Ashift)) & Amask;
+					*pixel |= A;
 				}
-				*pixel = R | G | B | A;
 			}
 		}
 		break;
@@ -610,8 +611,6 @@ int _filledRectAlpha(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 
 			dB = (color & Bmask);
 			dA = (color & Amask);
 
-			A = 0;
-
 			for (y = y1; y <= y2; y++) {
 				row = (Uint16 *) dst->pixels + y * dst->pitch / 2;
 				for (x = x1; x <= x2; x++) {
@@ -620,13 +619,12 @@ int _filledRectAlpha(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 
 					R = ((*pixel & Rmask) + ((dR - (*pixel & Rmask)) * alpha >> 8)) & Rmask;
 					G = ((*pixel & Gmask) + ((dG - (*pixel & Gmask)) * alpha >> 8)) & Gmask;
 					B = ((*pixel & Bmask) + ((dB - (*pixel & Bmask)) * alpha >> 8)) & Bmask;
-					if (Amask)
+					*pixel = R | G | B;
+					if (Amask!=0)
 					{
 						A = ((*pixel & Amask) + ((dA - (*pixel & Amask)) * alpha >> 8)) & Amask;
-						*pixel = R | G | B | A;
-					} else {
-						*pixel = R | G | B;
-					}
+						*pixel |= A;
+					} 
 				}
 			}
 		}
@@ -706,13 +704,12 @@ int _filledRectAlpha(SDL_Surface * dst, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 
 					R = ((*pixel & Rmask) + ((((dR - (*pixel & Rmask)) >> Rshift) * alpha >> 8) << Rshift)) & Rmask;
 					G = ((*pixel & Gmask) + ((((dG - (*pixel & Gmask)) >> Gshift) * alpha >> 8) << Gshift)) & Gmask;
 					B = ((*pixel & Bmask) + ((((dB - (*pixel & Bmask)) >> Bshift) * alpha >> 8) << Bshift)) & Bmask;
-					if (Amask)
+					*pixel = R | G | B;
+					if (Amask!=0)
 					{
 						A = ((*pixel & Amask) + ((((dA - (*pixel & Amask)) >> Ashift) * alpha >> 8) << Ashift)) & Amask;
-						*pixel = R | G | B | A;
-					} else {
-						*pixel = R | G | B;
-					}
+						*pixel |= A;
+					}					
 				}
 			}
 		}
@@ -1997,7 +1994,7 @@ static int _clipLine(SDL_Surface * dst, Sint16 * x1, Sint16 * y1, Sint16 * x2, S
 				code1 = swaptmp;
 			}
 			if (*x2 != *x1) {
-				m = (*y2 - *y1) / (float) (*x2 - *x1);
+				m = (float)(*y2 - *y1) / (float)(*x2 - *x1);
 			} else {
 				m = 1.0f;
 			}
@@ -2808,8 +2805,6 @@ int circleColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Uint32 color)
 	Sint16 x1, y1, x2, y2;
 	Sint16 cx = 0;
 	Sint16 cy = rad;
-	Sint16 ocx = (Sint16) 0xffff;
-	Sint16 ocy = (Sint16) 0xffff;
 	Sint16 df = 1 - rad;
 	Sint16 d_e = 3;
 	Sint16 d_se = -2 * rad + 5;
@@ -3055,8 +3050,6 @@ int arcColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Sint16 start, Si
 	Sint16 x1, y1, x2, y2;
 	Sint16 cx = 0;
 	Sint16 cy = rad;
-	Sint16 ocx = (Sint16) 0xffff;
-	Sint16 ocy = (Sint16) 0xffff;
 	Sint16 df = 1 - rad;
 	Sint16 d_e = 3;
 	Sint16 d_se = -2 * rad + 5;
@@ -3064,8 +3057,8 @@ int arcColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Sint16 start, Si
 	Sint16 ypcy, ymcy, ypcx, ymcx;
 	Uint8 *colorptr;
 	Uint8 drawoct;
-	int startoct, endoct, oct, stopval_start, stopval_end;
-	double temp;
+	int startoct, endoct, oct, stopval_start = 0, stopval_end = 0;
+	double dstart, dend, temp = 0.;
 
 	/*
 	* Check visibility of clipping rectangle
@@ -3154,23 +3147,24 @@ int arcColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Sint16 start, Si
 
 		if (oct == startoct) {
 			// need to compute stopval_start for this octant.  Look at picture above if this is unclear
+			dstart = (double)start;
 			switch (oct) 
 			{
 			case 0:
 			case 3:
-				temp = sin(start * M_PI / 180);
+				temp = sin(dstart * M_PI / 180.);
 				break;
 			case 1:
 			case 6:
-				temp = cos(start * M_PI / 180);
+				temp = cos(dstart * M_PI / 180.);
 				break;
 			case 2:
 			case 5:
-				temp = -cos(start * M_PI / 180);
+				temp = -cos(dstart * M_PI / 180.);
 				break;
 			case 4:
 			case 7:
-				temp = -sin(start * M_PI / 180);
+				temp = -sin(dstart * M_PI / 180.);
 				break;
 			}
 			temp *= rad;
@@ -3185,23 +3179,24 @@ int arcColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rad, Sint16 start, Si
 		}
 		if (oct == endoct) {
 			// need to compute stopval_end for this octant
+			dend = (double)end;
 			switch (oct)
 			{
 			case 0:
 			case 3:
-				temp = sin(end * M_PI / 180);
+				temp = sin(dend * M_PI / 180);
 				break;
 			case 1:
 			case 6:
-				temp = cos(end * M_PI / 180);
+				temp = cos(dend * M_PI / 180);
 				break;
 			case 2:
 			case 5:
-				temp = -cos(end * M_PI / 180);
+				temp = -cos(dend * M_PI / 180);
 				break;
 			case 4:
 			case 7:
-				temp = -sin(end * M_PI / 180);
+				temp = -sin(dend * M_PI / 180);
 				break;
 			}
 			temp *= rad;
@@ -4080,7 +4075,7 @@ int aaellipseColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rx, Sint16 ry, 
 	xc2 = 2 * x;
 	yc2 = 2 * y;
 
-	sab = sqrt(a2 + b2);
+	sab = sqrt((double)(a2 + b2));
 	od = (Sint16)lrint(sab*0.01) + 1; /* introduce some overdraw */
 	dxt = (Sint16)lrint((double)a2 / sab) + od;
 
@@ -4132,7 +4127,7 @@ int aaellipseColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rx, Sint16 ry, 
 		t -= dt;
 
 		/* Calculate alpha */
-		if (s != 0.0) {
+		if (s != 0) {
 			cp = (float) abs(d) / (float) abs(s);
 			if (cp > 1.0) {
 				cp = 1.0;
@@ -4191,7 +4186,7 @@ int aaellipseColor(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rx, Sint16 ry, 
 		s += ds;
 
 		/* Calculate alpha */
-		if (t != 0.0) {
+		if (t != 0) {
 			cp = (float) abs(d) / (float) abs(t);
 			if (cp > 1.0) {
 				cp = 1.0;
@@ -6160,11 +6155,11 @@ int bezierColor(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy, int n, 
 		return(-1);
 	}    
 	for (i=0; i<n; i++) {
-		x[i]=vx[i];
-		y[i]=vy[i];
+		x[i]=(double)vx[i];
+		y[i]=(double)vy[i];
 	}      
-	x[n]=vx[0];
-	y[n]=vy[0];
+	x[n]=(double)vx[0];
+	y[n]=(double)vy[0];
 
 	/*
 	* Draw 
@@ -6275,7 +6270,7 @@ int _bresenhamInitialize(SDL_gfxBresenhamIterator *b, Sint16 x1, Sint16 y1, Sint
 		b->swapdir = 0;
 	}
 
-	b->count = b->dx;
+	b->count = (b->dx<0) ? 0 : (unsigned int)b->dx;
 	b->dy <<= 1;
 	b->error = b->dy - b->dx;
 	b->dx <<= 1;	
@@ -6300,7 +6295,7 @@ int _bresenhamIterate(SDL_gfxBresenhamIterator *b)
 	}
 
 	/* last point check */
-	if (b->count <= 0) {
+	if (b->count==0) {
 		return (2);
 	}
 
@@ -6532,7 +6527,7 @@ Draws lines parallel to ideal line.
 */
 void _murphyWideline(SDL_gfxMurphyIterator *m, Sint16 x1, Sint16 y1, Sint16 x2, Sint16 y2, Uint8 width, Uint8 miter)
 {	
-	float offset = width / 2.f;
+	float offset = (float)width / 2.f;
 
 	Sint16 temp;
 	Sint16 ptx, pty, ptxx, ptxy, ml1x, ml1y, ml2x, ml2y, ml1bx, ml1by, ml2bx, ml2by;

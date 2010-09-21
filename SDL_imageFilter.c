@@ -41,7 +41,7 @@ static int SDL_imageFilterUseMMX = 1;
 */
 unsigned int _cpuFlags()
 {
-	int flags = 0;
+	unsigned int flags = 0;
 
 #ifdef USE_MMX
 #if !defined(GCC__)
@@ -84,7 +84,7 @@ int SDL_imageFilterMMXdetect(void)
 	mmx_bit &= 0x00800000;
 	mmx_bit = (mmx_bit && 0x00800000);
 
-	return (mmx_bit);
+	return (int)(mmx_bit);
 }
 
 /*!
@@ -1554,13 +1554,13 @@ int SDL_imageFilterDiv(unsigned char *Src1, unsigned char *Src2, unsigned char *
 		} else {
 			return (-1);
 		}
-	} else {
-		/* Setup to process whole image */
-		istart = 0;
-		cursrc1 = Src1;
-		cursrc2 = Src2;
-		curdst = Dest;
-	}
+	} 
+	
+	/* Setup to process whole image */
+	istart = 0;
+	cursrc1 = Src1;
+	cursrc2 = Src2;
+	curdst = Dest;
 
 	/* C routine to process image */
 	for (i = istart; i < length; i++) {
@@ -2668,7 +2668,7 @@ int SDL_imageFilterShiftRightUint(unsigned char *Src1, unsigned char *Dest, unsi
 	unsigned int i, istart;
 	unsigned char *cursrc1, *curdest;
 	unsigned int *icursrc1, *icurdest;
-	int result;
+	unsigned int result;
 
 	/* Validate input parameters */
 	if ((Src1 == NULL) || (Dest == NULL))
@@ -2713,7 +2713,7 @@ int SDL_imageFilterShiftRightUint(unsigned char *Src1, unsigned char *Dest, unsi
 	for (i = istart; i < length; i += 4) {
 		if ((i+4)<length) {
 			result = ((unsigned int)*icursrc1 >> N);
-			*icurdest = (unsigned int)result;
+			*icurdest = result;
 		}
 		/* Advance pointers */
 		icursrc1++;
@@ -3340,7 +3340,7 @@ int SDL_imageFilterShiftLeftUint(unsigned char *Src1, unsigned char *Dest, unsig
 	unsigned int i, istart;
 	unsigned char *cursrc1, *curdest;
 	unsigned int *icursrc1, *icurdest;
-	int result;
+	unsigned int result;
 
 	/* Validate input parameters */
 	if ((Src1 == NULL) || (Dest == NULL))
@@ -3385,7 +3385,7 @@ int SDL_imageFilterShiftLeftUint(unsigned char *Src1, unsigned char *Dest, unsig
 	for (i = istart; i < length; i += 4) {
 		if ((i+4)<length) {
 			result = ((unsigned int)*icursrc1 << N);
-			*icurdest = (unsigned int)result;
+			*icurdest = result;
 		}
 		/* Advance pointers */
 		icursrc1++;
@@ -3729,7 +3729,7 @@ int SDL_imageFilterBinarizeUsingThreshold(unsigned char *Src1, unsigned char *De
 
 	/* C routine to process image */
 	for (i = istart; i < length; i++) {
-		*curdest = ((unsigned char) *cursrc1 >= T) ? 255 : 0;
+		*curdest = (unsigned char)(((unsigned char)*cursrc1 >= T) ? 255 : 0);
 		/* Advance pointers */
 		cursrc1++;
 		curdest++;
