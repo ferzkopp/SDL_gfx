@@ -123,7 +123,13 @@ The library compiles and is tested for a Linux target (gcc compiler) and
 a Win32 target (VisualC6/7/8/9, mingw32, xmingw32 cross-compiler). MacOS X 
 target is reported to work (10.3+ native and Project Builder). 
 QNX is reported to build well (see .diff in "Other Builds").
+
 Zune HD (WinCE 6 ARM) is reported to build (see OpenZDK in "Other Builds").
+Note that between rendering on the Zune's ARM CPU and constantly uploading
+textures to the GPU, SDL_gfx is going to be slow. Also, the libc math 
+functions all use software FP emulation even when VFP floating point
+support is turned on in the compiler, so there's extra overhead due to that
+as well.
 
 When using the cross-compiler (available on the author's homepage, slightly
 out of date), the build process generates .DLLs. You can use the command 
@@ -421,6 +427,9 @@ See the source code .c files for some sample code and implementation hints.
 
 - Fixed for Win32 build support defines by tigerfishdaisy (SF) - thanks
   Tiger Tiger.
+
+- Patch for OpenSDK contributed by itsnotabigtruck at ovi dot com - thanks
+  IsNotABigTruck.
 
 \section changelog_sec Change Log
 
