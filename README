@@ -120,9 +120,10 @@ An assembler must be installed (i.e. "nasm").
 \subsection platforms Supported Platforms
 
 The library compiles and is tested for a Linux target (gcc compiler) and 
-a Win32 target (VisualC6/7/8, mingw32, xmingw32 cross-compiler). MacOS X 
+a Win32 target (VisualC6/7/8/9, mingw32, xmingw32 cross-compiler). MacOS X 
 target is reported to work (10.3+ native and Project Builder). 
 QNX is reported to build well (see .diff in "Other Builds").
+Zune HD (WinCE 6 ARM) is reported to build (see OpenZDK in "Other Builds").
 
 When using the cross-compiler (available on the author's homepage, slightly
 out of date), the build process generates .DLLs. You can use the command 

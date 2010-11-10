@@ -17,7 +17,7 @@ extern "C" {
 
 	/* ---- Function Prototypes */
 
-#if defined(WIN32) || defined(WIN64)
+#ifdef _MSC_VER
 #  if defined(DLL_EXPORT) && !defined(LIBSDL_GFX_DLL_IMPORT)
 #    define SDL_IMAGEFILTER_SCOPE __declspec(dllexport)
 #  else

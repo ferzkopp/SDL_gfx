@@ -3959,7 +3959,7 @@ int ellipseRGBA(SDL_Surface * dst, Sint16 x, Sint16 y, Sint16 rx, Sint16 ry, Uin
 
 /* ----- AA Ellipse */
 
-/* Win32 does not have lrint, so provide a local inline version */
+/* Windows targets do not have lrint, so provide a local inline version */
 #if defined(_MSC_VER)
 /* Detect 64bit and use intrinsic version */
 #ifdef _M_X64
@@ -3977,12 +3977,25 @@ lrint (double flt)
 	_asm
 	{
 		fld flt
-			fistp intgr
+		fistp intgr
 	};
 	return intgr;
 }
+#elif defined(_M_ARM)
+#include <armintr.h>
+#pragma warning(push)
+#pragma warning(disable: 4716)
+__declspec(naked) long int
+lrint (double flt)
+{
+      __emit(0xEC410B10); // fmdrr  d0, r0, r1
+      __emit(0xEEBD0B40); // ftosid s0, d0
+      __emit(0xEE100A10); // fmrs   r0, s0
+      __emit(0xE12FFF1E); // bx     lr
+}
+#pragma warning(pop)
 #else
-#error lrint needed for MSVC on non X86/AMD64 targets.
+#error lrint needed for MSVC on non X86/AMD64/ARM targets.
 #endif
 #endif
 

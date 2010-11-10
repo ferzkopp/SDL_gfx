@@ -4,6 +4,8 @@ CHANGES/VERSION
 Ver 2.0.23 - in progress
 * Updated sources to resolve some splint (static code analysis)
   issues
+* Updates for OpenSDK (WinCE6/ARM) build target (patch contributed
+  itsnotabigtruck at ovi dot com)
 
 Ver 2.0.22 - Sat Sep 11 23:26:42 EDT 2010
 * Fixed line width calculation for normal and textured polygons
