@@ -204,17 +204,18 @@
 <div class="memdoc">
 
 <p>Multiply the alpha channel in a 32bit surface. </p>
-<p>Helper function that multiplies the alpha channel in a 32 bit surface with a constant value. The final alpha is always scaled to the range 0-255 (i.e. the factor is a/256). Only 32 bit surfaces can be used with this function.</p>
+<p>Helper function that multiplies the alpha channel in a 32 bit surface with a constant value. The final alpha is always scaled to the range 0-255 (i.e. the factor is a/256).</p>
+<p>Only 32 bit surfaces can be used with this function.</p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>src</em>&nbsp;</td><td>Pointer to the target surface to change. </td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>a</em>&nbsp;</td><td>The alpha value to multiply with.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>a</em>&nbsp;</td><td>The alpha value to multiply with. When a is 255, this function is a NoOp.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="return"><dt><b>Returns:</b></dt><dd>Returns 1 if alpha was changed, 0 otherwise. </dd></dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>Returns 1 if alpha was changed, 0 otherwise. Returns -1 if input surface is invalid. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_blit_func_8c_source.html#l00547">547</a> of file <a class="el" href="_s_d_l__gfx_blit_func_8c_source.html">SDL_gfxBlitFunc.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_blit_func_8c_source.html#l00566">566</a> of file <a class="el" href="_s_d_l__gfx_blit_func_8c_source.html">SDL_gfxBlitFunc.c</a>.</p>
 
 </div>
 </div>
@@ -252,7 +253,7 @@
   </table>
   </dd>
 </dl>
-<dl class="return"><dt><b>Returns:</b></dt><dd>Returns 1 if alpha was changed, 0 otherwise. </dd></dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>Returns 1 if alpha was changed, -1 otherwise. </dd></dl>
 
 <p>Definition at line <a class="el" href="_s_d_l__gfx_blit_func_8c_source.html#l00503">503</a> of file <a class="el" href="_s_d_l__gfx_blit_func_8c_source.html">SDL_gfxBlitFunc.c</a>.</p>
 

@@ -54,7 +54,7 @@
 <a name="l00036"></a>00036 <span class="preprocessor"></span>
 <a name="l00042"></a><a class="code" href="_s_d_l__image_filter_8c.html#ade15666303ddc71c543f44cf1536d00e">00042</a> <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> <a class="code" href="_s_d_l__image_filter_8c.html#ade15666303ddc71c543f44cf1536d00e" title="Internal function returning the CPU flags.">_cpuFlags</a>()
 <a name="l00043"></a>00043 {
-<a name="l00044"></a>00044         <span class="keywordtype">int</span> flags = 0;
+<a name="l00044"></a>00044         <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> flags = 0;
 <a name="l00045"></a>00045 
 <a name="l00046"></a>00046 <span class="preprocessor">#ifdef USE_MMX</span>
 <a name="l00047"></a>00047 <span class="preprocessor"></span><span class="preprocessor">#if !defined(GCC__)</span>
@@ -92,7 +92,7 @@
 <a name="l00084"></a>00084         mmx_bit &amp;= 0x00800000;
 <a name="l00085"></a>00085         mmx_bit = (mmx_bit &amp;&amp; 0x00800000);
 <a name="l00086"></a>00086 
-<a name="l00087"></a>00087         <span class="keywordflow">return</span> (mmx_bit);
+<a name="l00087"></a>00087         <span class="keywordflow">return</span> (<span class="keywordtype">int</span>)(mmx_bit);
 <a name="l00088"></a>00088 }
 <a name="l00089"></a>00089 
 <a name="l00093"></a><a class="code" href="_s_d_l__image_filter_8h.html#a403adc470cb1dd34520f18d55804d4ea">00093</a> <span class="keywordtype">void</span> <a class="code" href="_s_d_l__image_filter_8c.html#a5dff661660755161bb4aaf6199cd1384" title="Disable MMX check for filter functions and and force to use non-MMX C based code...">SDL_imageFilterMMXoff</a>()
@@ -1335,13 +1335,13 @@
 <a name="l01554"></a>01554                 } <span class="keywordflow">else</span> {
 <a name="l01555"></a>01555                         <span class="keywordflow">return</span> (-1);
 <a name="l01556"></a>01556                 }
-<a name="l01557"></a>01557         } <span class="keywordflow">else</span> {
-<a name="l01558"></a>01558                 <span class="comment">/* Setup to process whole image */</span>
-<a name="l01559"></a>01559                 istart = 0;
-<a name="l01560"></a>01560                 cursrc1 = Src1;
-<a name="l01561"></a>01561                 cursrc2 = Src2;
-<a name="l01562"></a>01562                 curdst = Dest;
-<a name="l01563"></a>01563         }
+<a name="l01557"></a>01557         } 
+<a name="l01558"></a>01558         
+<a name="l01559"></a>01559         <span class="comment">/* Setup to process whole image */</span>
+<a name="l01560"></a>01560         istart = 0;
+<a name="l01561"></a>01561         cursrc1 = Src1;
+<a name="l01562"></a>01562         cursrc2 = Src2;
+<a name="l01563"></a>01563         curdst = Dest;
 <a name="l01564"></a>01564 
 <a name="l01565"></a>01565         <span class="comment">/* C routine to process image */</span>
 <a name="l01566"></a>01566         <span class="keywordflow">for</span> (i = istart; i &lt; length; i++) {
@@ -2286,7 +2286,7 @@
 <a name="l02668"></a>02668         <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> i, istart;
 <a name="l02669"></a>02669         <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> *cursrc1, *curdest;
 <a name="l02670"></a>02670         <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *icursrc1, *icurdest;
-<a name="l02671"></a>02671         <span class="keywordtype">int</span> result;
+<a name="l02671"></a>02671         <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> result;
 <a name="l02672"></a>02672 
 <a name="l02673"></a>02673         <span class="comment">/* Validate input parameters */</span>
 <a name="l02674"></a>02674         <span class="keywordflow">if</span> ((Src1 == NULL) || (Dest == NULL))
@@ -2331,7 +2331,7 @@
 <a name="l02713"></a>02713         <span class="keywordflow">for</span> (i = istart; i &lt; length; i += 4) {
 <a name="l02714"></a>02714                 <span class="keywordflow">if</span> ((i+4)&lt;length) {
 <a name="l02715"></a>02715                         result = ((<span class="keywordtype">unsigned</span> int)*icursrc1 &gt;&gt; N);
-<a name="l02716"></a>02716                         *icurdest = (<span class="keywordtype">unsigned</span> int)result;
+<a name="l02716"></a>02716                         *icurdest = result;
 <a name="l02717"></a>02717                 }
 <a name="l02718"></a>02718                 <span class="comment">/* Advance pointers */</span>
 <a name="l02719"></a>02719                 icursrc1++;
@@ -2875,7 +2875,7 @@
 <a name="l03340"></a>03340         <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> i, istart;
 <a name="l03341"></a>03341         <span class="keywordtype">unsigned</span> <span class="keywordtype">char</span> *cursrc1, *curdest;
 <a name="l03342"></a>03342         <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> *icursrc1, *icurdest;
-<a name="l03343"></a>03343         <span class="keywordtype">int</span> result;
+<a name="l03343"></a>03343         <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> result;
 <a name="l03344"></a>03344 
 <a name="l03345"></a>03345         <span class="comment">/* Validate input parameters */</span>
 <a name="l03346"></a>03346         <span class="keywordflow">if</span> ((Src1 == NULL) || (Dest == NULL))
@@ -2920,7 +2920,7 @@
 <a name="l03385"></a>03385         <span class="keywordflow">for</span> (i = istart; i &lt; length; i += 4) {
 <a name="l03386"></a>03386                 <span class="keywordflow">if</span> ((i+4)&lt;length) {
 <a name="l03387"></a>03387                         result = ((<span class="keywordtype">unsigned</span> int)*icursrc1 &lt;&lt; N);
-<a name="l03388"></a>03388                         *icurdest = (<span class="keywordtype">unsigned</span> int)result;
+<a name="l03388"></a>03388                         *icurdest = result;
 <a name="l03389"></a>03389                 }
 <a name="l03390"></a>03390                 <span class="comment">/* Advance pointers */</span>
 <a name="l03391"></a>03391                 icursrc1++;
@@ -3224,7 +3224,7 @@
 <a name="l03729"></a>03729 
 <a name="l03730"></a>03730         <span class="comment">/* C routine to process image */</span>
 <a name="l03731"></a>03731         <span class="keywordflow">for</span> (i = istart; i &lt; length; i++) {
-<a name="l03732"></a>03732                 *curdest = ((<span class="keywordtype">unsigned</span> char) *cursrc1 &gt;= T) ? 255 : 0;
+<a name="l03732"></a>03732                 *curdest = (<span class="keywordtype">unsigned</span> char)(((<span class="keywordtype">unsigned</span> <span class="keywordtype">char</span>)*cursrc1 &gt;= T) ? 255 : 0);
 <a name="l03733"></a>03733                 <span class="comment">/* Advance pointers */</span>
 <a name="l03734"></a>03734                 cursrc1++;
 <a name="l03735"></a>03735                 curdest++;

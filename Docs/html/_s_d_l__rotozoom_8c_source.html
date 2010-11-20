@@ -649,7 +649,7 @@
 <a name="l00747"></a>00747         <span class="comment">/*</span>
 <a name="l00748"></a>00748 <span class="comment">        * Clear surface to colorkey </span>
 <a name="l00749"></a>00749 <span class="comment">        */</span>      
-<a name="l00750"></a>00750         memset(pc, (<span class="keywordtype">unsigned</span> <span class="keywordtype">char</span>) (<a class="code" href="_s_d_l__rotozoom_8c.html#afe2a2e4dc6cc462c5fc98a2110b8e1ce" title="Returns colorkey info for a surface.">_colorkey</a>(src) &amp; 0xff), dst-&gt;pitch * dst-&gt;h);
+<a name="l00750"></a>00750         memset(pc, (<span class="keywordtype">int</span>)(<a class="code" href="_s_d_l__rotozoom_8c.html#afe2a2e4dc6cc462c5fc98a2110b8e1ce" title="Returns colorkey info for a surface.">_colorkey</a>(src) &amp; 0xff), dst-&gt;pitch * dst-&gt;h);
 <a name="l00751"></a>00751         <span class="comment">/*</span>
 <a name="l00752"></a>00752 <span class="comment">        * Iterate through destination surface </span>
 <a name="l00753"></a>00753 <span class="comment">        */</span>
@@ -812,8 +812,8 @@
 <a name="l00937"></a>00937         *canglezoom = cos(radangle);
 <a name="l00938"></a>00938         *sanglezoom *= zoomx;
 <a name="l00939"></a>00939         *canglezoom *= zoomx;
-<a name="l00940"></a>00940         x = width / 2;
-<a name="l00941"></a>00941         y = height / 2;
+<a name="l00940"></a>00940         x = (double)(width / 2);
+<a name="l00941"></a>00941         y = (double)(height / 2);
 <a name="l00942"></a>00942         cx = *canglezoom * x;
 <a name="l00943"></a>00943         cy = *canglezoom * y;
 <a name="l00944"></a>00944         sx = *sanglezoom * x;
@@ -1288,133 +1288,177 @@
 <a name="l01493"></a>01493         <span class="keywordflow">return</span> (rz_dst);
 <a name="l01494"></a>01494 }
 <a name="l01495"></a>01495 
-<a name="l01512"></a><a class="code" href="_s_d_l__rotozoom_8h.html#a7a7ac2cc0d79d282b5a4c76143b7e7a9">01512</a> SDL_Surface *<a class="code" href="_s_d_l__rotozoom_8c.html#aad3bf0cd89cc39ff874ffa778fa1495d" title="Shrink a surface by an integer ratio using averaging.">shrinkSurface</a>(SDL_Surface *src, <span class="keywordtype">int</span> factorx, <span class="keywordtype">int</span> factory)
-<a name="l01513"></a>01513 {
-<a name="l01514"></a>01514         SDL_Surface *rz_src;
-<a name="l01515"></a>01515         SDL_Surface *rz_dst;
-<a name="l01516"></a>01516         <span class="keywordtype">int</span> dstwidth, dstheight;
-<a name="l01517"></a>01517         <span class="keywordtype">int</span> is32bit;
-<a name="l01518"></a>01518         <span class="keywordtype">int</span> i, src_converted;
-<a name="l01519"></a>01519 
-<a name="l01520"></a>01520         <span class="comment">/*</span>
-<a name="l01521"></a>01521 <span class="comment">        * Sanity check </span>
-<a name="l01522"></a>01522 <span class="comment">        */</span>
-<a name="l01523"></a>01523         <span class="keywordflow">if</span> (src == NULL)
-<a name="l01524"></a>01524                 <span class="keywordflow">return</span> (NULL);
-<a name="l01525"></a>01525 
-<a name="l01526"></a>01526         <span class="comment">/*</span>
-<a name="l01527"></a>01527 <span class="comment">        * Determine if source surface is 32bit or 8bit </span>
-<a name="l01528"></a>01528 <span class="comment">        */</span>
-<a name="l01529"></a>01529         is32bit = (src-&gt;format-&gt;BitsPerPixel == 32);
-<a name="l01530"></a>01530         <span class="keywordflow">if</span> ((is32bit) || (src-&gt;format-&gt;BitsPerPixel == 8)) {
-<a name="l01531"></a>01531                 <span class="comment">/*</span>
-<a name="l01532"></a>01532 <span class="comment">                * Use source surface &#39;as is&#39; </span>
-<a name="l01533"></a>01533 <span class="comment">                */</span>
-<a name="l01534"></a>01534                 rz_src = src;
-<a name="l01535"></a>01535                 src_converted = 0;
-<a name="l01536"></a>01536         } <span class="keywordflow">else</span> {
-<a name="l01537"></a>01537                 <span class="comment">/*</span>
-<a name="l01538"></a>01538 <span class="comment">                * New source surface is 32bit with a defined RGBA ordering </span>
-<a name="l01539"></a>01539 <span class="comment">                */</span>
-<a name="l01540"></a>01540                 rz_src =
-<a name="l01541"></a>01541                         SDL_CreateRGBSurface(SDL_SWSURFACE, src-&gt;w, src-&gt;h, 32, 
-<a name="l01542"></a>01542 #<span class="keywordflow">if</span> SDL_BYTEORDER == SDL_LIL_ENDIAN
-<a name="l01543"></a>01543                         0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000
-<a name="l01544"></a>01544 #<span class="keywordflow">else</span>
-<a name="l01545"></a>01545                         0xff000000,  0x00ff0000, 0x0000ff00, 0x000000ff
-<a name="l01546"></a>01546 #endif
-<a name="l01547"></a>01547                         );
-<a name="l01548"></a>01548                 SDL_BlitSurface(src, NULL, rz_src, NULL);
-<a name="l01549"></a>01549                 src_converted = 1;
-<a name="l01550"></a>01550                 is32bit = 1;
-<a name="l01551"></a>01551         }
-<a name="l01552"></a>01552 
-<a name="l01553"></a>01553         <span class="comment">/* Get size for target */</span>
-<a name="l01554"></a>01554         dstwidth=rz_src-&gt;w/factorx;
-<a name="l01555"></a>01555         <span class="keywordflow">while</span> (dstwidth*factorx&gt;rz_src-&gt;w) { dstwidth--; }
-<a name="l01556"></a>01556         dstheight=rz_src-&gt;h/factory;
-<a name="l01557"></a>01557         <span class="keywordflow">while</span> (dstheight*factory&gt;rz_src-&gt;h) { dstheight--; }
-<a name="l01558"></a>01558 
-<a name="l01559"></a>01559         <span class="comment">/*</span>
-<a name="l01560"></a>01560 <span class="comment">        * Alloc space to completely contain the shrunken surface</span>
-<a name="l01561"></a>01561 <span class="comment">        * (with added guard rows)</span>
-<a name="l01562"></a>01562 <span class="comment">        */</span>
-<a name="l01563"></a>01563         rz_dst = NULL;
-<a name="l01564"></a>01564         <span class="keywordflow">if</span> (is32bit) {
-<a name="l01565"></a>01565                 <span class="comment">/*</span>
-<a name="l01566"></a>01566 <span class="comment">                * Target surface is 32bit with source RGBA/ABGR ordering </span>
-<a name="l01567"></a>01567 <span class="comment">                */</span>
-<a name="l01568"></a>01568                 rz_dst =
-<a name="l01569"></a>01569                         SDL_CreateRGBSurface(SDL_SWSURFACE, dstwidth, dstheight + <a class="code" href="_s_d_l__rotozoom_8c.html#a05a2601b7ea2906858ccc31b45fdc6eb" title="Number of guard rows added to destination surfaces.">GUARD_ROWS</a>, 32,
-<a name="l01570"></a>01570                         rz_src-&gt;format-&gt;Rmask, rz_src-&gt;format-&gt;Gmask,
-<a name="l01571"></a>01571                         rz_src-&gt;format-&gt;Bmask, rz_src-&gt;format-&gt;Amask);
-<a name="l01572"></a>01572         } <span class="keywordflow">else</span> {
-<a name="l01573"></a>01573                 <span class="comment">/*</span>
-<a name="l01574"></a>01574 <span class="comment">                * Target surface is 8bit </span>
-<a name="l01575"></a>01575 <span class="comment">                */</span>
-<a name="l01576"></a>01576                 rz_dst = SDL_CreateRGBSurface(SDL_SWSURFACE, dstwidth, dstheight + <a class="code" href="_s_d_l__rotozoom_8c.html#a05a2601b7ea2906858ccc31b45fdc6eb" title="Number of guard rows added to destination surfaces.">GUARD_ROWS</a>, 8, 0, 0, 0, 0);
-<a name="l01577"></a>01577         }
-<a name="l01578"></a>01578         
-<a name="l01579"></a>01579         <span class="comment">/* Check target */</span>
-<a name="l01580"></a>01580         <span class="keywordflow">if</span> (rz_dst == NULL)
-<a name="l01581"></a>01581                 <span class="keywordflow">return</span> NULL;
-<a name="l01582"></a>01582 
-<a name="l01583"></a>01583         <span class="comment">/* Adjust for guard rows */</span>
-<a name="l01584"></a>01584         rz_dst-&gt;h = dstheight;
-<a name="l01585"></a>01585 
-<a name="l01586"></a>01586         <span class="comment">/*</span>
-<a name="l01587"></a>01587 <span class="comment">        * Lock source surface </span>
-<a name="l01588"></a>01588 <span class="comment">        */</span>
-<a name="l01589"></a>01589         <span class="keywordflow">if</span> (SDL_MUSTLOCK(rz_src)) {
-<a name="l01590"></a>01590                 SDL_LockSurface(rz_src);
-<a name="l01591"></a>01591         }
-<a name="l01592"></a>01592 
-<a name="l01593"></a>01593         <span class="comment">/*</span>
-<a name="l01594"></a>01594 <span class="comment">        * Check which kind of surface we have </span>
-<a name="l01595"></a>01595 <span class="comment">        */</span>
-<a name="l01596"></a>01596         <span class="keywordflow">if</span> (is32bit) {
-<a name="l01597"></a>01597                 <span class="comment">/*</span>
-<a name="l01598"></a>01598 <span class="comment">                * Call the 32bit transformation routine to do the shrinking (using alpha) </span>
-<a name="l01599"></a>01599 <span class="comment">                */</span>
-<a name="l01600"></a>01600                 <a class="code" href="_s_d_l__rotozoom_8c.html#ac1bde824f44ae9a76930e9782b783512" title="Internal 32 bit integer-factor averaging Shrinker.">_shrinkSurfaceRGBA</a>(rz_src, rz_dst, factorx, factory);
-<a name="l01601"></a>01601                 <span class="comment">/*</span>
-<a name="l01602"></a>01602 <span class="comment">                * Turn on source-alpha support </span>
-<a name="l01603"></a>01603 <span class="comment">                */</span>
-<a name="l01604"></a>01604                 SDL_SetAlpha(rz_dst, SDL_SRCALPHA, 255);
-<a name="l01605"></a>01605         } <span class="keywordflow">else</span> {
-<a name="l01606"></a>01606                 <span class="comment">/*</span>
-<a name="l01607"></a>01607 <span class="comment">                * Copy palette and colorkey info </span>
-<a name="l01608"></a>01608 <span class="comment">                */</span>
-<a name="l01609"></a>01609                 <span class="keywordflow">for</span> (i = 0; i &lt; rz_src-&gt;format-&gt;palette-&gt;ncolors; i++) {
-<a name="l01610"></a>01610                         rz_dst-&gt;format-&gt;palette-&gt;colors[i] = rz_src-&gt;format-&gt;palette-&gt;colors[i];
-<a name="l01611"></a>01611                 }
-<a name="l01612"></a>01612                 rz_dst-&gt;format-&gt;palette-&gt;ncolors = rz_src-&gt;format-&gt;palette-&gt;ncolors;
-<a name="l01613"></a>01613                 <span class="comment">/*</span>
-<a name="l01614"></a>01614 <span class="comment">                * Call the 8bit transformation routine to do the shrinking </span>
-<a name="l01615"></a>01615 <span class="comment">                */</span>
-<a name="l01616"></a>01616                 <a class="code" href="_s_d_l__rotozoom_8c.html#aadb38a61ab6727e5fd621b63418399be" title="Internal 8 bit integer-factor averaging shrinker.">_shrinkSurfaceY</a>(rz_src, rz_dst, factorx, factory);
-<a name="l01617"></a>01617                 SDL_SetColorKey(rz_dst, SDL_SRCCOLORKEY | SDL_RLEACCEL, <a class="code" href="_s_d_l__rotozoom_8c.html#afe2a2e4dc6cc462c5fc98a2110b8e1ce" title="Returns colorkey info for a surface.">_colorkey</a>(rz_src));
-<a name="l01618"></a>01618         }
-<a name="l01619"></a>01619 
-<a name="l01620"></a>01620         <span class="comment">/*</span>
-<a name="l01621"></a>01621 <span class="comment">        * Unlock source surface </span>
-<a name="l01622"></a>01622 <span class="comment">        */</span>
-<a name="l01623"></a>01623         <span class="keywordflow">if</span> (SDL_MUSTLOCK(rz_src)) {
-<a name="l01624"></a>01624                 SDL_UnlockSurface(rz_src);
-<a name="l01625"></a>01625         }
-<a name="l01626"></a>01626 
-<a name="l01627"></a>01627         <span class="comment">/*</span>
-<a name="l01628"></a>01628 <span class="comment">        * Cleanup temp surface </span>
-<a name="l01629"></a>01629 <span class="comment">        */</span>
-<a name="l01630"></a>01630         <span class="keywordflow">if</span> (src_converted) {
-<a name="l01631"></a>01631                 SDL_FreeSurface(rz_src);
-<a name="l01632"></a>01632         }
-<a name="l01633"></a>01633 
-<a name="l01634"></a>01634         <span class="comment">/*</span>
-<a name="l01635"></a>01635 <span class="comment">        * Return destination surface </span>
-<a name="l01636"></a>01636 <span class="comment">        */</span>
-<a name="l01637"></a>01637         <span class="keywordflow">return</span> (rz_dst);
-<a name="l01638"></a>01638 }
+<a name="l01512"></a>01512 <span class="comment">/*@null@*/</span> 
+<a name="l01513"></a><a class="code" href="_s_d_l__rotozoom_8h.html#a7a7ac2cc0d79d282b5a4c76143b7e7a9">01513</a> SDL_Surface *<a class="code" href="_s_d_l__rotozoom_8c.html#aad3bf0cd89cc39ff874ffa778fa1495d" title="Shrink a surface by an integer ratio using averaging.">shrinkSurface</a>(SDL_Surface *src, <span class="keywordtype">int</span> factorx, <span class="keywordtype">int</span> factory)
+<a name="l01514"></a>01514 {
+<a name="l01515"></a>01515         <span class="keywordtype">int</span> result;
+<a name="l01516"></a>01516         SDL_Surface *rz_src;
+<a name="l01517"></a>01517         SDL_Surface *rz_dst = NULL;
+<a name="l01518"></a>01518         <span class="keywordtype">int</span> dstwidth, dstheight;
+<a name="l01519"></a>01519         <span class="keywordtype">int</span> is32bit;
+<a name="l01520"></a>01520         <span class="keywordtype">int</span> i, src_converted;
+<a name="l01521"></a>01521         <span class="keywordtype">int</span> haveError = 0;
+<a name="l01522"></a>01522 
+<a name="l01523"></a>01523         <span class="comment">/*</span>
+<a name="l01524"></a>01524 <span class="comment">        * Sanity check </span>
+<a name="l01525"></a>01525 <span class="comment">        */</span>
+<a name="l01526"></a>01526         <span class="keywordflow">if</span> (src == NULL) {
+<a name="l01527"></a>01527                 <span class="keywordflow">return</span> (NULL);
+<a name="l01528"></a>01528         }
+<a name="l01529"></a>01529 
+<a name="l01530"></a>01530         <span class="comment">/*</span>
+<a name="l01531"></a>01531 <span class="comment">        * Determine if source surface is 32bit or 8bit </span>
+<a name="l01532"></a>01532 <span class="comment">        */</span>
+<a name="l01533"></a>01533         is32bit = (src-&gt;format-&gt;BitsPerPixel == 32);
+<a name="l01534"></a>01534         <span class="keywordflow">if</span> ((is32bit) || (src-&gt;format-&gt;BitsPerPixel == 8)) {
+<a name="l01535"></a>01535                 <span class="comment">/*</span>
+<a name="l01536"></a>01536 <span class="comment">                * Use source surface &#39;as is&#39; </span>
+<a name="l01537"></a>01537 <span class="comment">                */</span>
+<a name="l01538"></a>01538                 rz_src = src;
+<a name="l01539"></a>01539                 src_converted = 0;
+<a name="l01540"></a>01540         } <span class="keywordflow">else</span> {
+<a name="l01541"></a>01541                 <span class="comment">/*</span>
+<a name="l01542"></a>01542 <span class="comment">                * New source surface is 32bit with a defined RGBA ordering </span>
+<a name="l01543"></a>01543 <span class="comment">                */</span>
+<a name="l01544"></a>01544                 rz_src = SDL_CreateRGBSurface(SDL_SWSURFACE, src-&gt;w, src-&gt;h, 32, 
+<a name="l01545"></a>01545 #<span class="keywordflow">if</span> SDL_BYTEORDER == SDL_LIL_ENDIAN
+<a name="l01546"></a>01546                         0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000
+<a name="l01547"></a>01547 #<span class="keywordflow">else</span>
+<a name="l01548"></a>01548                         0xff000000,  0x00ff0000, 0x0000ff00, 0x000000ff
+<a name="l01549"></a>01549 #endif
+<a name="l01550"></a>01550                         );
+<a name="l01551"></a>01551                 <span class="keywordflow">if</span> (rz_src==NULL) {
+<a name="l01552"></a>01552                         haveError = 1;
+<a name="l01553"></a>01553                         <span class="keywordflow">goto</span> exitShrinkSurface;
+<a name="l01554"></a>01554                 }
+<a name="l01555"></a>01555                 
+<a name="l01556"></a>01556                 SDL_BlitSurface(src, NULL, rz_src, NULL);
+<a name="l01557"></a>01557                 src_converted = 1;
+<a name="l01558"></a>01558                 is32bit = 1;
+<a name="l01559"></a>01559         }
+<a name="l01560"></a>01560 
+<a name="l01561"></a>01561         <span class="comment">/*</span>
+<a name="l01562"></a>01562 <span class="comment">        * Lock the surface </span>
+<a name="l01563"></a>01563 <span class="comment">        */</span>
+<a name="l01564"></a>01564         <span class="keywordflow">if</span> (SDL_MUSTLOCK(rz_src)) {
+<a name="l01565"></a>01565                 <span class="keywordflow">if</span> (SDL_LockSurface(rz_src) &lt; 0) {
+<a name="l01566"></a>01566                         haveError = 1;
+<a name="l01567"></a>01567                         <span class="keywordflow">goto</span> exitShrinkSurface;
+<a name="l01568"></a>01568                 }
+<a name="l01569"></a>01569         }
+<a name="l01570"></a>01570 
+<a name="l01571"></a>01571         <span class="comment">/* Get size for target */</span>
+<a name="l01572"></a>01572         dstwidth=rz_src-&gt;w/factorx;
+<a name="l01573"></a>01573         <span class="keywordflow">while</span> (dstwidth*factorx&gt;rz_src-&gt;w) { dstwidth--; }
+<a name="l01574"></a>01574         dstheight=rz_src-&gt;h/factory;
+<a name="l01575"></a>01575         <span class="keywordflow">while</span> (dstheight*factory&gt;rz_src-&gt;h) { dstheight--; }
+<a name="l01576"></a>01576 
+<a name="l01577"></a>01577         <span class="comment">/*</span>
+<a name="l01578"></a>01578 <span class="comment">        * Alloc space to completely contain the shrunken surface</span>
+<a name="l01579"></a>01579 <span class="comment">        * (with added guard rows)</span>
+<a name="l01580"></a>01580 <span class="comment">        */</span>
+<a name="l01581"></a>01581         <span class="keywordflow">if</span> (is32bit==1) {
+<a name="l01582"></a>01582                 <span class="comment">/*</span>
+<a name="l01583"></a>01583 <span class="comment">                * Target surface is 32bit with source RGBA/ABGR ordering </span>
+<a name="l01584"></a>01584 <span class="comment">                */</span>
+<a name="l01585"></a>01585                 rz_dst =
+<a name="l01586"></a>01586                         SDL_CreateRGBSurface(SDL_SWSURFACE, dstwidth, dstheight + <a class="code" href="_s_d_l__rotozoom_8c.html#a05a2601b7ea2906858ccc31b45fdc6eb" title="Number of guard rows added to destination surfaces.">GUARD_ROWS</a>, 32,
+<a name="l01587"></a>01587                         rz_src-&gt;format-&gt;Rmask, rz_src-&gt;format-&gt;Gmask,
+<a name="l01588"></a>01588                         rz_src-&gt;format-&gt;Bmask, rz_src-&gt;format-&gt;Amask);
+<a name="l01589"></a>01589         } <span class="keywordflow">else</span> {
+<a name="l01590"></a>01590                 <span class="comment">/*</span>
+<a name="l01591"></a>01591 <span class="comment">                * Target surface is 8bit </span>
+<a name="l01592"></a>01592 <span class="comment">                */</span>
+<a name="l01593"></a>01593                 rz_dst = SDL_CreateRGBSurface(SDL_SWSURFACE, dstwidth, dstheight + <a class="code" href="_s_d_l__rotozoom_8c.html#a05a2601b7ea2906858ccc31b45fdc6eb" title="Number of guard rows added to destination surfaces.">GUARD_ROWS</a>, 8, 0, 0, 0, 0);
+<a name="l01594"></a>01594         }
+<a name="l01595"></a>01595         
+<a name="l01596"></a>01596         <span class="comment">/* Check target */</span>
+<a name="l01597"></a>01597         <span class="keywordflow">if</span> (rz_dst == NULL) {
+<a name="l01598"></a>01598                 haveError = 1;
+<a name="l01599"></a>01599                 <span class="keywordflow">goto</span> exitShrinkSurface;
+<a name="l01600"></a>01600         }
+<a name="l01601"></a>01601 
+<a name="l01602"></a>01602         <span class="comment">/* Adjust for guard rows */</span>
+<a name="l01603"></a>01603         rz_dst-&gt;h = dstheight;
+<a name="l01604"></a>01604 
+<a name="l01605"></a>01605         <span class="comment">/*</span>
+<a name="l01606"></a>01606 <span class="comment">        * Check which kind of surface we have </span>
+<a name="l01607"></a>01607 <span class="comment">        */</span>
+<a name="l01608"></a>01608         <span class="keywordflow">if</span> (is32bit==1) {
+<a name="l01609"></a>01609                 <span class="comment">/*</span>
+<a name="l01610"></a>01610 <span class="comment">                * Call the 32bit transformation routine to do the shrinking (using alpha) </span>
+<a name="l01611"></a>01611 <span class="comment">                */</span>
+<a name="l01612"></a>01612                 result = <a class="code" href="_s_d_l__rotozoom_8c.html#ac1bde824f44ae9a76930e9782b783512" title="Internal 32 bit integer-factor averaging Shrinker.">_shrinkSurfaceRGBA</a>(rz_src, rz_dst, factorx, factory);          
+<a name="l01613"></a>01613                 <span class="keywordflow">if</span> ((result!=0) || (rz_dst==NULL)) {
+<a name="l01614"></a>01614                         haveError = 1;
+<a name="l01615"></a>01615                         <span class="keywordflow">goto</span> exitShrinkSurface;
+<a name="l01616"></a>01616                 }
+<a name="l01617"></a>01617                 
+<a name="l01618"></a>01618                 <span class="comment">/*</span>
+<a name="l01619"></a>01619 <span class="comment">                * Turn on source-alpha support </span>
+<a name="l01620"></a>01620 <span class="comment">                */</span>
+<a name="l01621"></a>01621                 result = SDL_SetAlpha(rz_dst, SDL_SRCALPHA, 255);
+<a name="l01622"></a>01622                 <span class="keywordflow">if</span> (result!=0) {
+<a name="l01623"></a>01623                         haveError = 1;
+<a name="l01624"></a>01624                         <span class="keywordflow">goto</span> exitShrinkSurface;
+<a name="l01625"></a>01625                 }
+<a name="l01626"></a>01626         } <span class="keywordflow">else</span> {
+<a name="l01627"></a>01627                 <span class="comment">/*</span>
+<a name="l01628"></a>01628 <span class="comment">                * Copy palette and colorkey info </span>
+<a name="l01629"></a>01629 <span class="comment">                */</span>
+<a name="l01630"></a>01630                 <span class="keywordflow">for</span> (i = 0; i &lt; rz_src-&gt;format-&gt;palette-&gt;ncolors; i++) {
+<a name="l01631"></a>01631                         rz_dst-&gt;format-&gt;palette-&gt;colors[i] = rz_src-&gt;format-&gt;palette-&gt;colors[i];
+<a name="l01632"></a>01632                 }
+<a name="l01633"></a>01633                 rz_dst-&gt;format-&gt;palette-&gt;ncolors = rz_src-&gt;format-&gt;palette-&gt;ncolors;
+<a name="l01634"></a>01634                 <span class="comment">/*</span>
+<a name="l01635"></a>01635 <span class="comment">                * Call the 8bit transformation routine to do the shrinking </span>
+<a name="l01636"></a>01636 <span class="comment">                */</span>
+<a name="l01637"></a>01637                 result = <a class="code" href="_s_d_l__rotozoom_8c.html#aadb38a61ab6727e5fd621b63418399be" title="Internal 8 bit integer-factor averaging shrinker.">_shrinkSurfaceY</a>(rz_src, rz_dst, factorx, factory);
+<a name="l01638"></a>01638                 <span class="keywordflow">if</span> (result!=0) {
+<a name="l01639"></a>01639                         haveError = 1;
+<a name="l01640"></a>01640                         <span class="keywordflow">goto</span> exitShrinkSurface;
+<a name="l01641"></a>01641                 }
+<a name="l01642"></a>01642                 
+<a name="l01643"></a>01643                 <span class="comment">/*</span>
+<a name="l01644"></a>01644 <span class="comment">                * Set colorkey on target</span>
+<a name="l01645"></a>01645 <span class="comment">                */</span>
+<a name="l01646"></a>01646                 result = SDL_SetColorKey(rz_dst, SDL_SRCCOLORKEY | SDL_RLEACCEL, <a class="code" href="_s_d_l__rotozoom_8c.html#afe2a2e4dc6cc462c5fc98a2110b8e1ce" title="Returns colorkey info for a surface.">_colorkey</a>(rz_src));
+<a name="l01647"></a>01647                 <span class="keywordflow">if</span> (result!=0) {
+<a name="l01648"></a>01648                         haveError = 1;
+<a name="l01649"></a>01649                         <span class="keywordflow">goto</span> exitShrinkSurface;
+<a name="l01650"></a>01650                 }               
+<a name="l01651"></a>01651         }
+<a name="l01652"></a>01652 
+<a name="l01653"></a>01653 exitShrinkSurface:
+<a name="l01654"></a>01654         <span class="keywordflow">if</span> (rz_src!=NULL) {
+<a name="l01655"></a>01655                 <span class="comment">/*</span>
+<a name="l01656"></a>01656 <span class="comment">                * Unlock source surface </span>
+<a name="l01657"></a>01657 <span class="comment">                */</span>
+<a name="l01658"></a>01658                 <span class="keywordflow">if</span> (SDL_MUSTLOCK(rz_src)) {
+<a name="l01659"></a>01659                         SDL_UnlockSurface(rz_src);
+<a name="l01660"></a>01660                 }
+<a name="l01661"></a>01661 
+<a name="l01662"></a>01662                 <span class="comment">/*</span>
+<a name="l01663"></a>01663 <span class="comment">                * Cleanup temp surface </span>
+<a name="l01664"></a>01664 <span class="comment">                */</span>
+<a name="l01665"></a>01665                 <span class="keywordflow">if</span> (src_converted==1) {
+<a name="l01666"></a>01666                         SDL_FreeSurface(rz_src);
+<a name="l01667"></a>01667                 }
+<a name="l01668"></a>01668         }
+<a name="l01669"></a>01669         
+<a name="l01670"></a>01670         <span class="comment">/* Check error state; maybe need to cleanup destination */</span>
+<a name="l01671"></a>01671         <span class="keywordflow">if</span> (haveError==1) {
+<a name="l01672"></a>01672                 <span class="keywordflow">if</span> (rz_dst!=NULL) {
+<a name="l01673"></a>01673                         SDL_FreeSurface(rz_dst);
+<a name="l01674"></a>01674                 }
+<a name="l01675"></a>01675                 rz_dst=NULL;
+<a name="l01676"></a>01676         } 
+<a name="l01677"></a>01677         
+<a name="l01678"></a>01678         <span class="comment">/*</span>
+<a name="l01679"></a>01679 <span class="comment">        * Return destination surface </span>
+<a name="l01680"></a>01680 <span class="comment">        */</span>
+<a name="l01681"></a>01681         <span class="keywordflow">return</span> (rz_dst);
+<a name="l01682"></a>01682 }
 </pre></div></div>
 <hr size="1"/><address style="text-align: right;"><small>Generated by&nbsp;
 <a href="http://www.doxygen.org/index.html">

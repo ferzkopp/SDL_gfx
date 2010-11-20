@@ -19,6 +19,7 @@ Copyright (C) A. Schiffler, July 2001-2009, GPL
 #include "SDL_gfxPrimitives.h"
 #include "SDL_rotozoom.h"
 #else
+#include "SDL/SDL_gfxPrimitives.h"
 #include "SDL/SDL_rotozoom.h"
 #endif
 

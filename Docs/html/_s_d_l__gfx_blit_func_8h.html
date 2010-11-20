@@ -37,8 +37,8 @@
 <tr><td colspan="2"><h2>Defines</h2></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="_s_d_l__gfx_blit_func_8h.html#ae6b2c815be86ad92310efb40d4b0b30e">GFX_RGBA_FROM_PIXEL</a>(pixel, fmt, r, g, b, a)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Unwrap RGBA values from a pixel using mask, shift and loss for surface.  <a href="#ae6b2c815be86ad92310efb40d4b0b30e"></a><br/></td></tr>
-<tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="_s_d_l__gfx_blit_func_8h.html#a874180f742c36ca537c247036f05c182">GFX_DISEMBLE_RGBA</a>(buf, bpp, fmt, pixel, r, g, b, a)</td></tr>
-<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Disassemble buffer pointer into a pixel and separate RGBA values.  <a href="#a874180f742c36ca537c247036f05c182"></a><br/></td></tr>
+<tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="_s_d_l__gfx_blit_func_8h.html#a7dda3984ca04929e2ea0a3679f7452a9">GFX_DISASSEMBLE_RGBA</a>(buf, bpp, fmt, pixel, r, g, b, a)</td></tr>
+<tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Disassemble buffer pointer into a pixel and separate RGBA values.  <a href="#a7dda3984ca04929e2ea0a3679f7452a9"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="_s_d_l__gfx_blit_func_8h.html#a64927ca5690904716f7ac93b1fcd4420">GFX_PIXEL_FROM_RGBA</a>(pixel, fmt, r, g, b, a)</td></tr>
 <tr><td class="mdescLeft">&nbsp;</td><td class="mdescRight">Wrap a pixel from RGBA values using mask, shift and loss for surface.  <a href="#a64927ca5690904716f7ac93b1fcd4420"></a><br/></td></tr>
 <tr><td class="memItemLeft" align="right" valign="top">#define&nbsp;</td><td class="memItemRight" valign="bottom"><a class="el" href="_s_d_l__gfx_blit_func_8h.html#a4e59f926fb98a86c01a4ffc5cc20e8d5">GFX_ASSEMBLE_RGBA</a>(buf, bpp, fmt, r, g, b, a)</td></tr>
@@ -171,12 +171,12 @@
 
 </div>
 </div>
-<a class="anchor" id="a874180f742c36ca537c247036f05c182"></a><!-- doxytag: member="SDL_gfxBlitFunc.h::GFX_DISEMBLE_RGBA" ref="a874180f742c36ca537c247036f05c182" args="(buf, bpp, fmt, pixel, r, g, b, a)" -->
+<a class="anchor" id="a7dda3984ca04929e2ea0a3679f7452a9"></a><!-- doxytag: member="SDL_gfxBlitFunc.h::GFX_DISASSEMBLE_RGBA" ref="a7dda3984ca04929e2ea0a3679f7452a9" args="(buf, bpp, fmt, pixel, r, g, b, a)" -->
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">#define GFX_DISEMBLE_RGBA</td>
+          <td class="memname">#define GFX_DISASSEMBLE_RGBA</td>
           <td>(</td>
           <td class="paramtype">buf, </td>
         </tr>
@@ -457,17 +457,18 @@
 <div class="memdoc">
 
 <p>Multiply the alpha channel in a 32bit surface. </p>
-<p>Helper function that multiplies the alpha channel in a 32 bit surface with a constant value. The final alpha is always scaled to the range 0-255 (i.e. the factor is a/256). Only 32 bit surfaces can be used with this function.</p>
+<p>Helper function that multiplies the alpha channel in a 32 bit surface with a constant value. The final alpha is always scaled to the range 0-255 (i.e. the factor is a/256).</p>
+<p>Only 32 bit surfaces can be used with this function.</p>
 <dl><dt><b>Parameters:</b></dt><dd>
   <table border="0" cellspacing="2" cellpadding="0">
     <tr><td valign="top"></td><td valign="top"><em>src</em>&nbsp;</td><td>Pointer to the target surface to change. </td></tr>
-    <tr><td valign="top"></td><td valign="top"><em>a</em>&nbsp;</td><td>The alpha value to multiply with.</td></tr>
+    <tr><td valign="top"></td><td valign="top"><em>a</em>&nbsp;</td><td>The alpha value to multiply with. When a is 255, this function is a NoOp.</td></tr>
   </table>
   </dd>
 </dl>
-<dl class="return"><dt><b>Returns:</b></dt><dd>Returns 1 if alpha was changed, 0 otherwise. </dd></dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>Returns 1 if alpha was changed, 0 otherwise. Returns -1 if input surface is invalid. </dd></dl>
 
-<p>Definition at line <a class="el" href="_s_d_l__gfx_blit_func_8c_source.html#l00547">547</a> of file <a class="el" href="_s_d_l__gfx_blit_func_8c_source.html">SDL_gfxBlitFunc.c</a>.</p>
+<p>Definition at line <a class="el" href="_s_d_l__gfx_blit_func_8c_source.html#l00566">566</a> of file <a class="el" href="_s_d_l__gfx_blit_func_8c_source.html">SDL_gfxBlitFunc.c</a>.</p>
 
 </div>
 </div>
@@ -505,7 +506,7 @@
   </table>
   </dd>
 </dl>
-<dl class="return"><dt><b>Returns:</b></dt><dd>Returns 1 if alpha was changed, 0 otherwise. </dd></dl>
+<dl class="return"><dt><b>Returns:</b></dt><dd>Returns 1 if alpha was changed, -1 otherwise. </dd></dl>
 
 <p>Definition at line <a class="el" href="_s_d_l__gfx_blit_func_8c_source.html#l00503">503</a> of file <a class="el" href="_s_d_l__gfx_blit_func_8c_source.html">SDL_gfxBlitFunc.c</a>.</p>
 

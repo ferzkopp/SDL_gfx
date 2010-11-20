@@ -18,7 +18,7 @@
   </div>
 </div>
 <div class="contents">
-<h1>SDL_gfx - SDL graphics drawing primitives, rotozoom and other supporting functions </h1><h3 class="version">2.0.22 </h3><h2><a class="anchor" id="contact_sec">
+<h1>SDL_gfx - SDL graphics drawing primitives, rotozoom and other supporting functions </h1><h3 class="version">2.0.23 </h3><h2><a class="anchor" id="contact_sec">
 Contact and License</a></h2>
 <p>Email aschiffler at ferzkopp.net to contact the author or better check author's homepage at <a href="http://www.ferzkopp.net">http://www.ferzkopp.net</a> for the most up-to-date contact information.</p>
 <p>This library is licenced under the LGPL, see the file LICENSE for details.</p>
@@ -76,7 +76,8 @@ Notes on ImageFilters</a></h3>
 <p>The compiler flag -DUSE_MMX toggles the conditional compile of MMX assembly. An assembler must be installed (i.e. "nasm").</p>
 <h3><a class="anchor" id="platforms">
 Supported Platforms</a></h3>
-<p>The library compiles and is tested for a Linux target (gcc compiler) and a Win32 target (VisualC6/7/8, mingw32, xmingw32 cross-compiler). MacOS X target is reported to work (10.3+ native and Project Builder). QNX is reported to build well (see .diff in "Other Builds").</p>
+<p>The library compiles and is tested for a Linux target (gcc compiler) and a Win32 target (VisualC6/7/8/9, mingw32, xmingw32 cross-compiler). MacOS X target is reported to work (10.3+ native and Project Builder). QNX is reported to build well (see .diff in "Other Builds").</p>
+<p>Zune HD (WinCE 6 ARM) is reported to build (see OpenZDK in "Other Builds"). Note that between rendering on the Zune's ARM CPU and constantly uploading textures to the GPU, SDL_gfx is going to be slow. Also, the libc math functions all use software FP emulation even when VFP floating point support is turned on in the compiler, so there's extra overhead due to that as well.</p>
 <p>When using the cross-compiler (available on the author's homepage, slightly out of date), the build process generates .DLLs. You can use the command line 'LIB.EXE' tool to generate VC6 compatible .LIB files for linking purposes.</p>
 <p>Other platforms might work but have not been tested by the author. Please check the file "INSTALL" as well as the folder "Other Builds".</p>
 <p>See section "Installation" below for more build instructions.</p>
@@ -306,12 +307,21 @@ Contributors</a></h2>
 <ul>
 <li>Fixed for Win32 build support defines by tigerfishdaisy (SF) - thanks Tiger Tiger.</li>
 </ul>
+<ul>
+<li>Patch for OpenSDK contributed by itsnotabigtruck at ovi dot com - thanks IsNotABigTruck.</li>
+</ul>
 <h2><a class="anchor" id="changelog_sec">
 Change Log</a></h2>
 <div class="fragment"><pre class="fragment">CHANGES/VERSION
 ===============
 
-Ver 2.0.22 - Sat Sep 11 23:27:20 EDT 2010
+Ver 2.0.23 - in progress
+* Updated sources to resolve some splint (static code analysis)
+  issues
+* Updates for OpenSDK (WinCE6/ARM) build target (patch contributed
+  itsnotabigtruck)
+
+Ver 2.0.22 - Sat Sep 11 23:26:42 EDT 2010
 * Fixed line width calculation for normal and textured polygons
   (patch contributed by Daniel (SupSuper) 
 * Fixed version setup in configure.in

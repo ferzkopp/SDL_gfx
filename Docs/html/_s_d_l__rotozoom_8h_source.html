@@ -55,7 +55,7 @@
 <a name="l00037"></a>00037 <span class="preprocessor"></span>
 <a name="l00038"></a>00038         <span class="comment">/* ---- Function Prototypes */</span>
 <a name="l00039"></a>00039 
-<a name="l00040"></a>00040 <span class="preprocessor">#if defined(WIN32) || defined(WIN64)</span>
+<a name="l00040"></a>00040 <span class="preprocessor">#ifdef _MSC_VER</span>
 <a name="l00041"></a>00041 <span class="preprocessor"></span><span class="preprocessor">#  if defined(DLL_EXPORT) &amp;&amp; !defined(LIBSDL_GFX_DLL_IMPORT)</span>
 <a name="l00042"></a>00042 <span class="preprocessor"></span><span class="preprocessor">#    define SDL_ROTOZOOM_SCOPE __declspec(dllexport)</span>
 <a name="l00043"></a>00043 <span class="preprocessor"></span><span class="preprocessor">#  else</span>

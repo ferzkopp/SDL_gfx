@@ -43,7 +43,7 @@
 <a name="l00027"></a>00027         manager-&gt;<a class="code" href="struct_f_p_smanager.html#aa7716779b7cc57dee24c15d7c5d62e55">lastticks</a> = SDL_GetTicks();
 <a name="l00028"></a>00028 }
 <a name="l00029"></a>00029 
-<a name="l00041"></a><a class="code" href="_s_d_l__framerate_8h.html#a2e3d03ef080b6e2337661992c4b6c208">00041</a> <span class="keywordtype">int</span> <a class="code" href="_s_d_l__framerate_8c.html#a50935c9381b80ec7cce4613f4ac282e8" title="Set the framerate in Hz.">SDL_setFramerate</a>(<a class="code" href="struct_f_p_smanager.html" title="Structure holding the state and timing information of the framerate controller.">FPSmanager</a> * manager, <span class="keywordtype">int</span> rate)
+<a name="l00041"></a><a class="code" href="_s_d_l__framerate_8h.html#a186ef8e6b1ee4ab36e05b162545fb0e4">00041</a> <span class="keywordtype">int</span> <a class="code" href="_s_d_l__framerate_8c.html#afad4b503cf9719daced45fa4d9653d72" title="Set the framerate in Hz.">SDL_setFramerate</a>(<a class="code" href="struct_f_p_smanager.html" title="Structure holding the state and timing information of the framerate controller.">FPSmanager</a> * manager, Uint32 rate)
 <a name="l00042"></a>00042 {
 <a name="l00043"></a>00043         <span class="keywordflow">if</span> ((rate &gt;= <a class="code" href="_s_d_l__framerate_8h.html#a9555dceeaaffdd2669c991e6a300085b" title="Lowest possible rate supported by framerate controller in Hz (1/s).">FPS_LOWER_LIMIT</a>) &amp;&amp; (rate &lt;= <a class="code" href="_s_d_l__framerate_8h.html#aeaeac0f0b439344496e29abf60904d58" title="Highest possible rate supported by framerate controller in Hz (1/s).">FPS_UPPER_LIMIT</a>)) {
 <a name="l00044"></a>00044                 manager-&gt;<a class="code" href="struct_f_p_smanager.html#a05019faae5de8486dbb69d24b24eed78">framecount</a> = 0;
@@ -60,7 +60,7 @@
 <a name="l00064"></a>00064         <span class="keywordflow">if</span> (manager == NULL) {
 <a name="l00065"></a>00065                 <span class="keywordflow">return</span> (-1);
 <a name="l00066"></a>00066         } <span class="keywordflow">else</span> {
-<a name="l00067"></a>00067                 <span class="keywordflow">return</span> (manager-&gt;<a class="code" href="struct_f_p_smanager.html#af7eec7342fd8eb48d5f49ba7f5b91853">rate</a>);
+<a name="l00067"></a>00067                 <span class="keywordflow">return</span> ((<span class="keywordtype">int</span>)manager-&gt;<a class="code" href="struct_f_p_smanager.html#af7eec7342fd8eb48d5f49ba7f5b91853">rate</a>);
 <a name="l00068"></a>00068         }
 <a name="l00069"></a>00069 }
 <a name="l00070"></a>00070 
@@ -69,7 +69,7 @@
 <a name="l00083"></a>00083         <span class="keywordflow">if</span> (manager == NULL) {
 <a name="l00084"></a>00084                 <span class="keywordflow">return</span> (-1);
 <a name="l00085"></a>00085         } <span class="keywordflow">else</span> {
-<a name="l00086"></a>00086                 <span class="keywordflow">return</span> ((Uint32)manager-&gt;<a class="code" href="struct_f_p_smanager.html#a05019faae5de8486dbb69d24b24eed78">framecount</a>);
+<a name="l00086"></a>00086                 <span class="keywordflow">return</span> ((<span class="keywordtype">int</span>)manager-&gt;<a class="code" href="struct_f_p_smanager.html#a05019faae5de8486dbb69d24b24eed78">framecount</a>);
 <a name="l00087"></a>00087         }
 <a name="l00088"></a>00088 }
 <a name="l00089"></a>00089 

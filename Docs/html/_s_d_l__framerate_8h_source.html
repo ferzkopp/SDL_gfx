@@ -60,7 +60,7 @@
 <a name="l00048"></a>00048 
 <a name="l00049"></a>00049         <span class="comment">/* ---- Function Prototypes */</span>
 <a name="l00050"></a>00050 
-<a name="l00051"></a>00051 <span class="preprocessor">#if defined(WIN32) || defined(WIN64)</span>
+<a name="l00051"></a>00051 <span class="preprocessor">#ifdef _MSC_VER</span>
 <a name="l00052"></a>00052 <span class="preprocessor"></span><span class="preprocessor">#  if defined(DLL_EXPORT) &amp;&amp; !defined(LIBSDL_GFX_DLL_IMPORT)</span>
 <a name="l00053"></a>00053 <span class="preprocessor"></span><span class="preprocessor">#    define SDL_FRAMERATE_SCOPE __declspec(dllexport)</span>
 <a name="l00054"></a>00054 <span class="preprocessor"></span><span class="preprocessor">#  else</span>
@@ -76,7 +76,7 @@
 <a name="l00064"></a>00064         <span class="comment">/* Functions return 0 or value for sucess and -1 for error */</span>
 <a name="l00065"></a>00065 
 <a name="l00066"></a>00066         SDL_FRAMERATE_SCOPE <span class="keywordtype">void</span> <a class="code" href="_s_d_l__framerate_8c.html#a444ebaaaa6b1ceeafa921562bdab1a44" title="Initialize the framerate manager.">SDL_initFramerate</a>(<a class="code" href="struct_f_p_smanager.html" title="Structure holding the state and timing information of the framerate controller.">FPSmanager</a> * manager);
-<a name="l00067"></a>00067         SDL_FRAMERATE_SCOPE <span class="keywordtype">int</span> <a class="code" href="_s_d_l__framerate_8c.html#a50935c9381b80ec7cce4613f4ac282e8" title="Set the framerate in Hz.">SDL_setFramerate</a>(<a class="code" href="struct_f_p_smanager.html" title="Structure holding the state and timing information of the framerate controller.">FPSmanager</a> * manager, <span class="keywordtype">int</span> rate);
+<a name="l00067"></a>00067         SDL_FRAMERATE_SCOPE <span class="keywordtype">int</span> <a class="code" href="_s_d_l__framerate_8c.html#afad4b503cf9719daced45fa4d9653d72" title="Set the framerate in Hz.">SDL_setFramerate</a>(<a class="code" href="struct_f_p_smanager.html" title="Structure holding the state and timing information of the framerate controller.">FPSmanager</a> * manager, Uint32 rate);
 <a name="l00068"></a>00068         SDL_FRAMERATE_SCOPE <span class="keywordtype">int</span> <a class="code" href="_s_d_l__framerate_8c.html#a575bb511d6f817ad846a788cbd08ae91" title="Return the current target framerate in Hz.">SDL_getFramerate</a>(<a class="code" href="struct_f_p_smanager.html" title="Structure holding the state and timing information of the framerate controller.">FPSmanager</a> * manager);
 <a name="l00069"></a>00069         SDL_FRAMERATE_SCOPE <span class="keywordtype">int</span> <a class="code" href="_s_d_l__framerate_8c.html#a96b13e26f8436222e866904a592a6eec" title="Return the current framecount.">SDL_getFramecount</a>(<a class="code" href="struct_f_p_smanager.html" title="Structure holding the state and timing information of the framerate controller.">FPSmanager</a> * manager);
 <a name="l00070"></a>00070         SDL_FRAMERATE_SCOPE <span class="keywordtype">void</span> <a class="code" href="_s_d_l__framerate_8c.html#a6170d53a691468b70d73d349a1668291" title="Delay execution to maintain a constant framerate and calculate fps.">SDL_framerateDelay</a>(<a class="code" href="struct_f_p_smanager.html" title="Structure holding the state and timing information of the framerate controller.">FPSmanager</a> * manager);

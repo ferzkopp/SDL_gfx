@@ -46,7 +46,7 @@
 <a name="l00022"></a>00022 
 <a name="l00023"></a>00023         <span class="comment">/* ---- Function Prototypes */</span>
 <a name="l00024"></a>00024 
-<a name="l00025"></a>00025 <span class="preprocessor">#if defined(WIN32) || defined(WIN64)</span>
+<a name="l00025"></a>00025 <span class="preprocessor">#ifdef _MSC_VER</span>
 <a name="l00026"></a>00026 <span class="preprocessor"></span><span class="preprocessor">#  if defined(DLL_EXPORT) &amp;&amp; !defined(LIBSDL_GFX_DLL_IMPORT)</span>
 <a name="l00027"></a>00027 <span class="preprocessor"></span><span class="preprocessor">#    define SDL_GFXBLITFUNC_SCOPE __declspec(dllexport)</span>
 <a name="l00028"></a>00028 <span class="preprocessor"></span><span class="preprocessor">#  else</span>
@@ -94,7 +94,7 @@
 <a name="l00076"></a>00076 <span class="preprocessor">        a = ((pixel&amp;fmt-&gt;Amask)&gt;&gt;fmt-&gt;Ashift)&lt;&lt;fmt-&gt;Aloss;              \</span>
 <a name="l00077"></a>00077 <span class="preprocessor">        }</span>
 <a name="l00078"></a>00078 <span class="preprocessor"></span>
-<a name="l00082"></a><a class="code" href="_s_d_l__gfx_blit_func_8h.html#a874180f742c36ca537c247036f05c182">00082</a> <span class="preprocessor">#define GFX_DISEMBLE_RGBA(buf, bpp, fmt, pixel, r, g, b, a)                        \</span>
+<a name="l00082"></a><a class="code" href="_s_d_l__gfx_blit_func_8h.html#a7dda3984ca04929e2ea0a3679f7452a9">00082</a> <span class="preprocessor">#define GFX_DISASSEMBLE_RGBA(buf, bpp, fmt, pixel, r, g, b, a)                     \</span>
 <a name="l00083"></a>00083 <span class="preprocessor">        do {                                                                       \</span>
 <a name="l00084"></a>00084 <span class="preprocessor">        pixel = *((Uint32 *)(buf));                                        \</span>
 <a name="l00085"></a>00085 <span class="preprocessor">        GFX_RGBA_FROM_PIXEL(pixel, fmt, r, g, b, a);                       \</span>

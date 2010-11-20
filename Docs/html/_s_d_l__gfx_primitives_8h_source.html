@@ -49,12 +49,12 @@
 <a name="l00025"></a>00025 
 <a name="l00026"></a><a class="code" href="_s_d_l__gfx_primitives_8h.html#a2a585f5832061010155d87737ef5bf88">00026</a> <span class="preprocessor">#define SDL_GFXPRIMITIVES_MAJOR 2</span>
 <a name="l00027"></a><a class="code" href="_s_d_l__gfx_primitives_8h.html#abd0939b1856bbb822b37b68755dc9ee5">00027</a> <span class="preprocessor"></span><span class="preprocessor">#define SDL_GFXPRIMITIVES_MINOR 0</span>
-<a name="l00028"></a><a class="code" href="_s_d_l__gfx_primitives_8h.html#a06ea681a295987b8b8ec3fcdb04713df">00028</a> <span class="preprocessor"></span><span class="preprocessor">#define SDL_GFXPRIMITIVES_MICRO 22</span>
+<a name="l00028"></a><a class="code" href="_s_d_l__gfx_primitives_8h.html#a06ea681a295987b8b8ec3fcdb04713df">00028</a> <span class="preprocessor"></span><span class="preprocessor">#define SDL_GFXPRIMITIVES_MICRO 23</span>
 <a name="l00029"></a>00029 <span class="preprocessor"></span>
 <a name="l00030"></a>00030 
 <a name="l00031"></a>00031         <span class="comment">/* ---- Function Prototypes */</span>
 <a name="l00032"></a>00032 
-<a name="l00033"></a>00033 <span class="preprocessor">#if defined(WIN32) || defined(WIN64)</span>
+<a name="l00033"></a>00033 <span class="preprocessor">#ifdef _MSC_VER</span>
 <a name="l00034"></a>00034 <span class="preprocessor"></span><span class="preprocessor">#  if defined(DLL_EXPORT) &amp;&amp; !defined(LIBSDL_GFX_DLL_IMPORT)</span>
 <a name="l00035"></a>00035 <span class="preprocessor"></span><span class="preprocessor">#    define SDL_GFXPRIMITIVES_SCOPE __declspec(dllexport)</span>
 <a name="l00036"></a>00036 <span class="preprocessor"></span><span class="preprocessor">#  else</span>
