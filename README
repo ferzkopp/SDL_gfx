@@ -119,27 +119,49 @@ An assembler must be installed (i.e. "nasm").
 
 \subsection platforms Supported Platforms
 
-The library compiles and is tested for a Linux target (gcc compiler) and 
-a Win32 target (VisualC6/7/8/9, mingw32, xmingw32 cross-compiler). MacOS X 
-target is reported to work (10.3+ native and Project Builder). 
-QNX is reported to build well (see .diff in "Other Builds").
+\subsubsection platformlinux Unix/Linux
 
-Zune HD (WinCE 6 ARM) is reported to build (see OpenZDK in "Other Builds").
-Note that between rendering on the Zune's ARM CPU and constantly uploading
-textures to the GPU, SDL_gfx is going to be slow. Also, the libc math 
-functions all use software FP emulation even when VFP floating point
-support is turned on in the compiler, so there's extra overhead due to that
-as well.
+The library compiles and is tested for a Linux target (gcc compiler) via the
+the usual configure;make;make install sequence.
+
+\subsubsection platformwindows Windows
+ 
+A Win32 target is available (VisualC6/7/8/9, mingw32, xmingw32 cross-compiler).
+The SDL_gfx.sln will open in VS2008 and VS2010 including express versions.
+See "Other Builds" for additional makefiles (may be out of date).
 
 When using the cross-compiler (available on the author's homepage, slightly
 out of date), the build process generates .DLLs. You can use the command 
 line 'LIB.EXE' tool to generate VC6 compatible .LIB files for linking 
 purposes. 
 
+\subsubsection platformosx Mac OSX 
+
+Xcode is supported via templates. See "Other Builds" folder Xcode3+.zip -
+this template only supports SDL_gfx and not the tests. For this template, the
+Deployment Target (the lowest version to run on) is set to 10.5 and expects
+the SDL.framework preinstalled in some default location
+(either /Library/Frameworks, or ~/Library/Frameworks). Older targets are also reported to work (10.3+ native and Project Builder). 
+
+\subsubsection platformqnx QNX
+
+QNX is reported to build well (see .diff in "Other Builds").
+
+\subsubsection platformzune Zune
+
+ZuneHD (WinCE 6 ARM) is reported to build (see OpenZDK in "Other Builds").
+Note that between rendering on the Zune's ARM CPU and constantly uploading
+textures to the GPU, SDL_gfx is going to be slow. Also, the libc math 
+functions all use software FP emulation even when VFP floating point
+support is turned on in the compiler, so there's extra overhead due to that
+as well.
+
+\subsubsection platformothers Others
+
 Other platforms might work but have not been tested by the author.
 Please check the file "INSTALL" as well as the folder "Other Builds".
 
-See section "Installation" below for more build instructions.
+See also section "Installation" below for more build instructions.
 
 \section install_sec Installation
 
@@ -430,6 +452,9 @@ See the source code .c files for some sample code and implementation hints.
 
 - Patch for OpenSDK contributed by itsnotabigtruck at ovi dot com - thanks
   IsNotABigTruck.
+
+- OSX Xcode 3+ template ZIP contributed by marabus at meta dot ua - thanks
+  Vasyl.
 
 \section changelog_sec Change Log
 
