@@ -306,7 +306,13 @@ updated version uses relative pathnames where appropriate, and pointers to
 the standard  installation location of SDL. However, it may require XCode in 
 order to be used.
 
+\section interfaces_sec Language Interfaces
 
+SDL_gfx has been integrated with the following language interfaces:
+- Pascal: http://www.freepascal-meets-sdl.net
+- Perl: http://sdl.perl.org
+- Python: http://www.pygame.org
+- C#: http://cs-sdl.sourceforge.net
 
 \section test_sec Test Programs
 
