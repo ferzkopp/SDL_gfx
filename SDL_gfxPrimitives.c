@@ -5134,6 +5134,7 @@ int filledPolygonColorMT(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy
 	int ind1, ind2;
 	int ints;
 	int *gfxPrimitivesPolyInts = NULL;
+	int *gfxPrimitivesPolyIntsNew = NULL;
 	int gfxPrimitivesPolyAllocated = 0;
 
 	/*
@@ -5181,8 +5182,17 @@ int filledPolygonColorMT(SDL_Surface * dst, const Sint16 * vx, const Sint16 * vy
 		gfxPrimitivesPolyAllocated = n;
 	} else {
 		if (gfxPrimitivesPolyAllocated < n) {
-			gfxPrimitivesPolyInts = (int *) realloc(gfxPrimitivesPolyInts, sizeof(int) * n);
-			gfxPrimitivesPolyAllocated = n;
+			gfxPrimitivesPolyIntsNew = (int *) realloc(gfxPrimitivesPolyInts, sizeof(int) * n);
+			if (!gfxPrimitivesPolyIntsNew) {
+				if (!gfxPrimitivesPolyInts) {
+					free(gfxPrimitivesPolyInts);
+					gfxPrimitivesPolyInts = NULL;
+				}
+				gfxPrimitivesPolyAllocated = 0;
+			} else {
+				gfxPrimitivesPolyInts = gfxPrimitivesPolyIntsNew;
+				gfxPrimitivesPolyAllocated = n;
+			}
 		}
 	}
 
