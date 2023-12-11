@@ -1,10 +1,8 @@
 /* 
 
-TestRotozoom 
+TestRotozoom.c: test program for rotozoom routines
 
-Test program for rotozoom routines
-
-Copyright (C) A. Schiffler, July 2001-2009, GPL
+(C) A. Schiffler, 2001-2011, zlib License
 
 */
 
@@ -23,6 +21,9 @@ Copyright (C) A. Schiffler, July 2001-2009, GPL
 #include "SDL/SDL_rotozoom.h"
 #endif
 
+/* Pause flag */
+int pause = 0;
+
 /* Custom rotation setup */
 double custom_angle=0.0;
 double custom_fx=1.0;
@@ -40,12 +41,27 @@ void HandleEvent()
 	SDL_Event event; 
 
 	/* Check for events */
-	while ( SDL_PollEvent(&event) ) {
+	while ( SDL_PollEvent(&event) || pause ) {
 		switch (event.type) {
 			 case SDL_KEYDOWN:
+			        /* Space pauses/unpauses */
+			 	if ((event.key.state==SDL_PRESSED) && 
+			 	    (event.key.keysym.sym==SDLK_SPACE)) {
+			 		pause = !pause;
+			 		if (pause) {
+			 			printf ("Paused ...\n");
+			 		}
+			 	} else {
+			 		exit(0);
+			 	}			 	
+			 	break;
 			 case SDL_QUIT:
 				 exit(0);
 				 break;
+		}
+		
+		if (pause) {
+			SDL_Delay(100);
 		}
 	}
 }
@@ -66,7 +82,10 @@ void ClearScreen(SDL_Surface *screen)
 	}
 }
 
-void RotatePicture (SDL_Surface *screen, SDL_Surface *picture, int rotate, int flip, int smooth) 
+#define POSITION_CENTER		1
+#define POSITION_BOTTOMRIGHT	2
+
+void RotatePicture (SDL_Surface *screen, SDL_Surface *picture, int rotate, int flip, int smooth, int position) 
 {
 	SDL_Surface *rotozoom_picture;
 	SDL_Rect dest;
@@ -103,8 +122,16 @@ void RotatePicture (SDL_Surface *screen, SDL_Surface *picture, int rotate, int f
 				printf ("  Frame: %i   Rotate: angle=%.2f  Zoom: x=%.2f y=%.2f\n",framecount,angle,zoomfx,zoomfy);
 			}
 			if ((rotozoom_picture=rotozoomSurfaceXY (picture, angle, zoomfx, zoomfy, smooth))!=NULL) {
-				dest.x = (screen->w - rotozoom_picture->w)/2;;
-				dest.y = (screen->h - rotozoom_picture->h)/2;
+				switch (position) {
+					case POSITION_CENTER:
+						dest.x = (screen->w - rotozoom_picture->w)/2;
+						dest.y = (screen->h - rotozoom_picture->h)/2;
+						break;
+					case POSITION_BOTTOMRIGHT:
+						dest.x = (screen->w/2) - rotozoom_picture->w;
+						dest.y = (screen->h/2) - rotozoom_picture->h;
+						break;
+				}
 				dest.w = rotozoom_picture->w;
 				dest.h = rotozoom_picture->h;
 				if ( SDL_BlitSurface(rotozoom_picture, NULL, screen, &dest) < 0 ) {
@@ -119,8 +146,16 @@ void RotatePicture (SDL_Surface *screen, SDL_Surface *picture, int rotate, int f
 				printf ("  Frame: %i   Rotate: angle=%.2f  Zoom: f=%.2f \n",framecount,angle,zoomf);
 			}
 			if ((rotozoom_picture=rotozoomSurface (picture, angle, zoomf, smooth))!=NULL) {
-				dest.x = (screen->w - rotozoom_picture->w)/2;;
-				dest.y = (screen->h - rotozoom_picture->h)/2;
+				switch (position) {
+					case POSITION_CENTER:
+						dest.x = (screen->w - rotozoom_picture->w)/2;
+						dest.y = (screen->h - rotozoom_picture->h)/2;
+						break;
+					case POSITION_BOTTOMRIGHT:
+						dest.x = (screen->w/2) - rotozoom_picture->w;
+						dest.y = (screen->h/2) - rotozoom_picture->h;
+						break;
+				}
 				dest.w = rotozoom_picture->w;
 				dest.h = rotozoom_picture->h;
 				if ( SDL_BlitSurface(rotozoom_picture, NULL, screen, &dest) < 0 ) {
@@ -323,7 +358,7 @@ void CustomTest(SDL_Surface *screen, SDL_Surface *picture, double a, double x, d
 }
 
 
-void AccuracyTest(SDL_Surface *screen)
+void AccuracyTest1(SDL_Surface *screen)
 {
 	SDL_Surface* testx1;
 	SDL_Surface* testx2;
@@ -410,7 +445,7 @@ void AccuracyTest(SDL_Surface *screen)
 		SDL_Flip(screen);
 
 		/* Always delay */
-		SDL_Delay(250);		
+		SDL_Delay(250);
 
 		/* Maybe add extra delay */
 		if (delay>0) {
@@ -418,21 +453,93 @@ void AccuracyTest(SDL_Surface *screen)
 		}
 	}
 
-	SDL_Delay(1000);		
+	SDL_Delay(1000);
+}
+
+void AccuracyTest2(SDL_Surface *screen, SDL_Surface *picture)
+{
+	SDL_Surface *zoomed1, *zoomed2, *zoomed3, *zoomed4;
+	int factor;
+	int neww, newh;
+	SDL_Rect target;
+
+	printf("%s\n", messageText);
+	for (factor = 2; factor < 64; factor += 1)
+	{		
+		HandleEvent();
+		ClearScreen(screen);
+
+		stringRGBA(screen, 8, 8, messageText, 255, 255, 255, 255);
+
+		neww = picture->w * factor;
+		newh = picture->h * factor;
+		printf ("  zoom %ix%i to %ix%i\n", picture->w, picture->h, neww, newh);
+
+		zoomed1 = zoomSurface(picture,  (float)factor,  (float)factor, 0);
+		zoomed2 = zoomSurface(picture,  (float)factor,  (float)factor, 1);
+		zoomed3 = zoomSurface(picture,  (float)factor, -(float)factor, 1);
+		zoomed4 = zoomSurface(picture, -(float)factor,  (float)factor, 1);
+
+		target.x = screen->w/2 - zoomed1->w;
+		target.y = screen->h/2 - zoomed1->h;
+		target.w = zoomed1->w;
+		target.h = zoomed1->h;
+		SDL_BlitSurface(zoomed1, 0, screen, &target);
+		target.x = screen->w/2;
+		target.y = screen->h/2;
+		SDL_BlitSurface(zoomed2, 0, screen, &target);
+		target.x = screen->w/2 - zoomed3->w;
+		target.y = screen->h/2;
+		SDL_BlitSurface(zoomed4, 0, screen, &target);
+		target.x = screen->w/2;
+		target.y = screen->h/2 - zoomed4->h;
+		SDL_BlitSurface(zoomed3, 0, screen, &target);
+
+		SDL_FreeSurface(zoomed1);
+		SDL_FreeSurface(zoomed2);
+		SDL_FreeSurface(zoomed3);
+		SDL_FreeSurface(zoomed4);
+
+		/* Display by flipping screens */
+		SDL_Flip(screen);
+
+		/* Always delay */
+		SDL_Delay(250);
+
+		/* Maybe add extra delay */
+		if (delay>0) {
+			SDL_Delay(delay);
+		}
+	}
+
+	SDL_Delay(1000);
 }
 
 
-void Draw (SDL_Surface *screen, int start)
+void Draw (SDL_Surface *screen, int start, int end)
 {
 	SDL_Surface *picture, *picture_again;
 	char *bmpfile;
 
-	/* --------- 8 bit test -------- */
+	/* Define masking bytes */
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+	Uint32 rmask = 0xff000000; 
+	Uint32 gmask = 0x00ff0000;
+	Uint32 bmask = 0x0000ff00; 
+	Uint32 amask = 0x000000ff;
+#else
+	Uint32 amask = 0xff000000; 
+	Uint32 bmask = 0x00ff0000;
+	Uint32 gmask = 0x0000ff00; 
+	Uint32 rmask = 0x000000ff;
+#endif
+
+	/* --------- 8 bit tests -------- */
 
 	if (start<=6) {
 
 		/* Message */
-		printf("Loading 8bit image\n");
+		printf("8 bit tests ...\n");
 
 		/* Load the image into a surface */
 		bmpfile = "sample8.bmp";
@@ -442,27 +549,54 @@ void Draw (SDL_Surface *screen, int start)
 			fprintf(stderr, "Couldn't load %s: %s\n", bmpfile, SDL_GetError());
 			return;
 		}
+		
+		/* Add white frame */
+		rectangleColor(picture, 0, 0, picture->w-1, picture->h-1, 0xffffffff);
 
-		sprintf(messageText, "1.  rotozoom: Rotating and zooming");
-		RotatePicture(screen,picture,ROTATE_ON,FLIP_OFF,SMOOTHING_OFF);
+                if (start <= 1) {
+			sprintf(messageText, "1.  rotozoom: Rotating and zooming");
+			RotatePicture(screen,picture,ROTATE_ON,FLIP_OFF,SMOOTHING_OFF,POSITION_CENTER);
+		}
+		if (end == 1) goto done8bit;
 
-		sprintf(messageText, "2.  rotozoom: Just zooming (angle=0)");
-		RotatePicture(screen,picture,ROTATE_OFF,FLIP_OFF,SMOOTHING_OFF);
+                if (start <= 2) {
+			sprintf(messageText, "2.  rotozoom: Just zooming (angle=0)");
+			RotatePicture(screen,picture,ROTATE_OFF,FLIP_OFF,SMOOTHING_OFF,POSITION_CENTER);
+			RotatePicture(screen,picture,ROTATE_OFF,FLIP_OFF,SMOOTHING_OFF,POSITION_BOTTOMRIGHT);
+		}
+		if (end == 2) goto done8bit;
 
-		sprintf(messageText, "3.  zoom: Just zooming");
-		ZoomPicture(screen,picture,SMOOTHING_OFF);
+                if (start <= 3) {
+			sprintf(messageText, "3.  zoom: Just zooming");
+			ZoomPicture(screen,picture,SMOOTHING_OFF);
+		}
+		if (end == 3) goto done8bit;
 
-		sprintf(messageText, "4.  rotozoom: Rotating and zooming, interpolation on but unused");
-		RotatePicture(screen,picture,ROTATE_ON,FLIP_OFF,SMOOTHING_ON);
+                if (start <= 4) {
+			sprintf(messageText, "4.  rotozoom: Rotating and zooming, interpolation on but unused");
+			RotatePicture(screen,picture,ROTATE_ON,FLIP_OFF,SMOOTHING_ON,POSITION_CENTER);
+		}
+		if (end == 4) goto done8bit;
 
-		sprintf(messageText, "5.  rotozoom: Just zooming (angle=0), interpolation on but unused");
-		RotatePicture(screen,picture,ROTATE_OFF,FLIP_OFF,SMOOTHING_ON);
+                if (start <= 5) {
+			sprintf(messageText, "5.  rotozoom: Just zooming (angle=0), interpolation on but unused");
+			RotatePicture(screen,picture,ROTATE_OFF,FLIP_OFF,SMOOTHING_ON,POSITION_CENTER);
+			RotatePicture(screen,picture,ROTATE_OFF,FLIP_OFF,SMOOTHING_ON,POSITION_BOTTOMRIGHT);
+		}
+		if (end == 5) goto done8bit;
 
-		sprintf(messageText, "6.  zoom: Just zooming, interpolation on but unused");
-		ZoomPicture(screen,picture,SMOOTHING_ON);
+                if (start <= 6) {
+			sprintf(messageText, "6.  zoom: Just zooming, interpolation on but unused");
+			ZoomPicture(screen,picture,SMOOTHING_ON);
+		}
+		if (end == 6) goto done8bit;
 
+		done8bit:
+		
 		/* Free the picture */
 		SDL_FreeSurface(picture);
+		
+		if (end <= 6) return;
 	}
 
 	/* -------- 24 bit test --------- */
@@ -470,7 +604,7 @@ void Draw (SDL_Surface *screen, int start)
 	if (start<=12) {
 
 		/* Message */
-		printf("Loading 24bit image\n");
+		printf("24 bit tests ...\n");
 
 		/* Load the image into a surface */
 		bmpfile = "sample24.bmp";
@@ -480,27 +614,68 @@ void Draw (SDL_Surface *screen, int start)
 			fprintf(stderr, "Couldn't load %s: %s\n", bmpfile, SDL_GetError());
 			return;
 		}
+		
+		/* Add white frame */
+		rectangleColor(picture, 0, 0, picture->w-1, picture->h-1, 0xffffffff);
 
-		sprintf(messageText, "7.  rotozoom: Rotating and zooming, no interpolation");
-		RotatePicture(screen,picture,ROTATE_ON,FLIP_OFF,SMOOTHING_OFF);
+                if (start <= 7) {
+			sprintf(messageText, "7.  rotozoom: Rotating and zooming, no interpolation");
+		  	RotatePicture(screen,picture,ROTATE_ON,FLIP_OFF,SMOOTHING_OFF,POSITION_CENTER);
+		}
+		if (end == 7) goto done24bit;
 
-		sprintf(messageText, "8.  rotozoom: Just zooming (angle=0), no interpolation");
-		RotatePicture(screen,picture,ROTATE_ON,FLIP_OFF,SMOOTHING_OFF);
+                if (start <= 8) {
+			sprintf(messageText, "8a.  rotozoom: Just zooming (angle=0), no interpolation, centered");
+			RotatePicture(screen,picture,ROTATE_OFF,FLIP_OFF,SMOOTHING_OFF,POSITION_CENTER);
+			sprintf(messageText, "8b.  rotozoom: Just zooming (angle=0), no interpolation, corner");
+			RotatePicture(screen,picture,ROTATE_OFF,FLIP_OFF,SMOOTHING_OFF,POSITION_BOTTOMRIGHT);
+			sprintf(messageText, "8c.  rotozoom: Just zooming (angle=0), X flip, no interpolation, centered");
+			RotatePicture(screen,picture,ROTATE_OFF,FLIP_X,SMOOTHING_OFF,POSITION_CENTER);
+			sprintf(messageText, "8d.  rotozoom: Just zooming (angle=0), Y flip, no interpolation, centered");
+			RotatePicture(screen,picture,ROTATE_OFF,FLIP_Y,SMOOTHING_OFF,POSITION_CENTER);
+			sprintf(messageText, "8e.  rotozoom: Just zooming (angle=0), XY flip, no interpolation, centered");
+			RotatePicture(screen,picture,ROTATE_OFF,FLIP_XY,SMOOTHING_OFF,POSITION_CENTER);
+		}
+		if (end == 8) goto done24bit;
 
-		sprintf(messageText, "9.  zoom: Just zooming, no interpolation");
-		ZoomPicture(screen,picture,SMOOTHING_OFF);
+                if (start <= 9) {
+  			sprintf(messageText, "9.  zoom: Just zooming, no interpolation");
+  			ZoomPicture(screen,picture,SMOOTHING_OFF);
+		}
+		if (end == 9) goto done24bit;
 
-		sprintf(messageText, "10. rotozoom: Rotating and zooming, with interpolation");
-		RotatePicture(screen,picture,ROTATE_ON,FLIP_OFF,SMOOTHING_ON);
+                if (start <= 10) {
+			sprintf(messageText, "10. rotozoom: Rotating and zooming, with interpolation");
+			RotatePicture(screen,picture,ROTATE_ON,FLIP_OFF,SMOOTHING_ON,POSITION_CENTER);
+		}
+		if (end == 10) goto done24bit;
 
-		sprintf(messageText, "11. rotozoom: Just zooming (angle=0), with interpolation");
-		RotatePicture(screen,picture,ROTATE_OFF,FLIP_OFF,SMOOTHING_ON);
+                if (start <= 11) {
+			sprintf(messageText, "11a. rotozoom: Just zooming (angle=0), with interpolation, centered");
+			RotatePicture(screen,picture,ROTATE_OFF,FLIP_OFF,SMOOTHING_ON,POSITION_CENTER);
+			sprintf(messageText, "11b. rotozoom: Just zooming (angle=0), with interpolation, corner");
+			RotatePicture(screen,picture,ROTATE_OFF,FLIP_OFF,SMOOTHING_ON,POSITION_BOTTOMRIGHT);
+			sprintf(messageText, "11c. rotozoom: Just zooming (angle=0), X flip, with interpolation, corner");
+			RotatePicture(screen,picture,ROTATE_OFF,FLIP_X,SMOOTHING_ON,POSITION_CENTER);
+			sprintf(messageText, "11d. rotozoom: Just zooming (angle=0), Y flip, with interpolation, corner");
+			RotatePicture(screen,picture,ROTATE_OFF,FLIP_Y,SMOOTHING_ON,POSITION_CENTER);
+			sprintf(messageText, "11e. rotozoom: Just zooming (angle=0), XY flip, with interpolation, corner");
+			RotatePicture(screen,picture,ROTATE_OFF,FLIP_XY,SMOOTHING_ON,POSITION_CENTER);
+		}
+		if (end == 11) goto done24bit;
 
-		sprintf(messageText, "12. zoom: Just zooming, with interpolation");
-		ZoomPicture(screen,picture,SMOOTHING_ON);
+                if (start <= 12) {
+			sprintf(messageText, "12. zoom: Just zooming, with interpolation");
+			ZoomPicture(screen,picture,SMOOTHING_ON);
+		}
+		if (end == 12) goto done24bit;
+		
+		done24bit:
 
 		/* Free the picture */
 		SDL_FreeSurface(picture);
+		
+		if (end <= 12) return;
 	}
 
 	/* -------- 32 bit test --------- */
@@ -508,7 +683,7 @@ void Draw (SDL_Surface *screen, int start)
 	if (start<=16) {
 
 		/* Message */
-		printf("Loading 24bit image\n");
+		printf("32 bit tests ...\n");
 
 		/* Load the image into a surface */
 		bmpfile = "sample24.bmp";
@@ -519,40 +694,60 @@ void Draw (SDL_Surface *screen, int start)
 			return;
 		}
 
+		/* Add white frame */
+		rectangleColor(picture, 0, 0, picture->w-1, picture->h-1, 0xffffffff);
+
 		/* New source surface is 32bit with defined RGBA ordering */
 		/* Much faster to do this once rather than the routine on the fly */
 		fprintf(stderr,"Converting 24bit image into 32bit RGBA surface ...\n");
-		picture_again = SDL_CreateRGBSurface(SDL_SWSURFACE, picture->w, picture->h, 32, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000);
+		picture_again = SDL_CreateRGBSurface(SDL_SWSURFACE, picture->w, picture->h, 32, rmask, gmask, bmask, amask);
+		if (picture_again == NULL) goto done32bit;		
 		SDL_BlitSurface(picture,NULL,picture_again,NULL);
 
-		/* Message */
-		sprintf(messageText, "13. Rotating and zooming, with interpolation");
-		RotatePicture(screen,picture_again,ROTATE_ON,FLIP_OFF,SMOOTHING_ON);
+                if (start <= 13) {
+			sprintf(messageText, "13. Rotating and zooming, with interpolation (RGBA source)");
+			RotatePicture(screen,picture_again,ROTATE_ON,FLIP_OFF,SMOOTHING_ON,POSITION_CENTER);
+		}
+		if (end == 13) goto done32bit;
 
-		/* Message */
-		sprintf(messageText, "14. Just zooming (angle=0), with interpolation");
-		RotatePicture(screen,picture_again,ROTATE_OFF,FLIP_OFF,SMOOTHING_ON);
+                if (start <= 14) {
+			sprintf(messageText, "14. Just zooming (angle=0), with interpolation (RGBA source)");
+			RotatePicture(screen,picture_again,ROTATE_OFF,FLIP_OFF,SMOOTHING_ON,POSITION_CENTER);
+			RotatePicture(screen,picture_again,ROTATE_OFF,FLIP_OFF,SMOOTHING_ON,POSITION_BOTTOMRIGHT);
+		}
+		if (end == 14) goto done32bit;
 
 		SDL_FreeSurface(picture_again);
+		picture_again=NULL;
 
 		/* New source surface is 32bit with defined ABGR ordering */
 		/* Much faster to do this once rather than the routine on the fly */
 		fprintf(stderr,"Converting 24bit image into 32bit ABGR surface ...\n");
-		picture_again = SDL_CreateRGBSurface(SDL_SWSURFACE, picture->w, picture->h, 32, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000);
+		picture_again = SDL_CreateRGBSurface(SDL_SWSURFACE, picture->w, picture->h, 32, amask, bmask, gmask, rmask);
+		if (picture_again == NULL) goto done32bit;		
 		SDL_BlitSurface(picture,NULL,picture_again,NULL);
 
-		/* Message */
-		sprintf(messageText, "15. Rotating and zooming, with interpolation");
-		RotatePicture(screen,picture_again,ROTATE_ON,FLIP_OFF,SMOOTHING_ON);
+                if (start <= 14) {
+			sprintf(messageText, "15. Rotating and zooming, with interpolation (ABGR source)");
+			RotatePicture(screen,picture_again,ROTATE_ON,FLIP_OFF,SMOOTHING_ON,POSITION_CENTER);
+		}
+		if (end == 14) goto done32bit;
 
-		/* Message */
-		sprintf(messageText, "16. Just zooming (angle=0), with interpolation");
-		RotatePicture(screen,picture_again,ROTATE_OFF,FLIP_OFF,SMOOTHING_ON);
+                if (start <= 14) {
+			sprintf(messageText, "16. Just zooming (angle=0), with interpolation (ABGR source)");
+			RotatePicture(screen,picture_again,ROTATE_OFF,FLIP_OFF,SMOOTHING_ON,POSITION_CENTER);
+			RotatePicture(screen,picture_again,ROTATE_OFF,FLIP_OFF,SMOOTHING_ON,POSITION_BOTTOMRIGHT);
+		}
+		if (end == 14) goto done32bit;
 
-		SDL_FreeSurface(picture_again);
 
+		done32bit:
+		
 		/* Free the picture */
 		SDL_FreeSurface(picture);
+		if (picture_again) SDL_FreeSurface(picture_again);
+		
+		if (end <= 16) return;
 	}
 
 	/* -------- 32 bit flip test --------- */
@@ -560,7 +755,7 @@ void Draw (SDL_Surface *screen, int start)
 	if (start<=22) {
 
 		/* Message */
-		printf("Loading 24bit image\n");
+		printf("32 bit flip tests ...\n");
 
 		/* Load the image into a surface */
 		bmpfile = "sample24.bmp";
@@ -571,38 +766,58 @@ void Draw (SDL_Surface *screen, int start)
 			return;
 		}
 
+		/* Add white frame */
+		rectangleColor(picture, 0, 0, picture->w-1, picture->h-1, 0xffffffff);
+
 		/* Excercise flipping functions on 32bit RGBA */
 		printf("Converting 24bit image into 32bit RGBA surface ...\n");
-		picture_again = SDL_CreateRGBSurface(SDL_SWSURFACE, picture->w, picture->h, 32, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000);
+		picture_again = SDL_CreateRGBSurface(SDL_SWSURFACE, picture->w, picture->h, 32, rmask, gmask, bmask, amask);
+		if (picture_again == NULL) goto doneflip;
 		SDL_BlitSurface(picture,NULL,picture_again,NULL);
+			
+                if (start <= 17) {
+			sprintf(messageText, "17. Rotating with x-flip, no interpolation (RGBA source)");
+			RotatePicture(screen,picture_again,ROTATE_ON,FLIP_X,SMOOTHING_OFF,POSITION_CENTER);
+		}
+		if (end == 17) goto doneflip;
 
-		/* Message */
-		sprintf(messageText, "17. Rotating with x-flip, no interpolation");
-		RotatePicture(screen,picture_again,ROTATE_ON,FLIP_X,SMOOTHING_OFF);
+                if (start <= 18) {
+			sprintf(messageText, "18. Rotating with y-flip, no interpolation");
+			RotatePicture(screen,picture_again,ROTATE_ON,FLIP_Y,SMOOTHING_OFF,POSITION_CENTER);
+		}
+		if (end == 18) goto doneflip;
 
-		/* Message */
-		sprintf(messageText, "18. Rotating with y-flip, no interpolation");
-		RotatePicture(screen,picture_again,ROTATE_ON,FLIP_Y,SMOOTHING_OFF);
+                if (start <= 19) {
+			sprintf(messageText, "19. Rotating with xy-flip, no interpolation");
+			RotatePicture(screen,picture_again,ROTATE_ON,FLIP_XY,SMOOTHING_OFF,POSITION_CENTER);
+		}
+		if (end == 19) goto doneflip;
 
-		/* Message */
-		sprintf(messageText, "19. Rotating with xy-flip, no interpolation");
-		RotatePicture(screen,picture_again,ROTATE_ON,FLIP_XY,SMOOTHING_OFF);
+                if (start <= 20) {
+			sprintf(messageText, "20. Rotating with x-flip, with interpolation");
+			RotatePicture(screen,picture_again,ROTATE_ON,FLIP_X,SMOOTHING_ON,POSITION_CENTER);
+		}
+		if (end == 20) goto doneflip;
 
-		/* Message */
-		sprintf(messageText, "20. Rotating with x-flip, with interpolation");
-		RotatePicture(screen,picture_again,ROTATE_ON,FLIP_X,SMOOTHING_ON);
+                if (start <= 21) {
+			sprintf(messageText, "21. Rotating with y-flip, with interpolation");
+			RotatePicture(screen,picture_again,ROTATE_ON,FLIP_Y,SMOOTHING_ON,POSITION_CENTER);
+		}
+		if (end == 21) goto doneflip;
 
-		/* Message */
-		sprintf(messageText, "21. Rotating with y-flip, with interpolation");
-		RotatePicture(screen,picture_again,ROTATE_ON,FLIP_Y,SMOOTHING_ON);
+                if (start <= 22) {
+			sprintf(messageText, "22. Rotating with xy-flip, with interpolation");
+			RotatePicture(screen,picture_again,ROTATE_ON,FLIP_XY,SMOOTHING_ON,POSITION_CENTER);
+		}
+		if (end == 22) goto doneflip;
 
-		/* Message */
-		sprintf(messageText, "22. Rotating with xy-flip, with interpolation");
-		RotatePicture(screen,picture_again,ROTATE_ON,FLIP_XY,SMOOTHING_ON);
-
+		doneflip:
+		
 		/* Free the pictures */
 		SDL_FreeSurface(picture);
-		SDL_FreeSurface(picture_again);
+		if (picture_again) SDL_FreeSurface(picture_again);
+		
+		if (end <= 22) return;
 	}
 
 	if (start<=24) {
@@ -619,9 +834,12 @@ void Draw (SDL_Surface *screen, int start)
 			return;
 		}
 
+		/* Add white frame */
+		rectangleColor(picture, 0, 0, picture->w-1, picture->h-1, 0xffffffff);
+
 		/* Excercise flipping functions on 32bit RGBA */
 		fprintf(stderr,"Converting 24bit image into 32bit RGBA surface ...\n");
-		picture_again = SDL_CreateRGBSurface(SDL_SWSURFACE, picture->w, picture->h, 32, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000);
+		picture_again = SDL_CreateRGBSurface(SDL_SWSURFACE, picture->w, picture->h, 32, rmask, gmask, bmask, amask);
 		SDL_BlitSurface(picture,NULL,picture_again,NULL);
 
 		sprintf(messageText, "23. CustomTest, values from commandline (32bit)");
@@ -649,6 +867,8 @@ void Draw (SDL_Surface *screen, int start)
 
 		/* Free the picture */
 		SDL_FreeSurface(picture);
+		
+		if (end <= 24) return;
 	}
 
 	if (start<=25) {
@@ -665,36 +885,98 @@ void Draw (SDL_Surface *screen, int start)
 			return;
 		}
 
+		/* Add white frame */
+		rectangleColor(picture, 0, 0, picture->w-1, picture->h-1, 0xffffffff);
+
 		/* New source surface is 32bit with defined RGBA ordering */
 		printf("Converting 24bit image into 32bit RGBA surface ...\n");
-		picture_again = SDL_CreateRGBSurface(SDL_SWSURFACE, picture->w, picture->h, 32, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000);
+		picture_again = SDL_CreateRGBSurface(SDL_SWSURFACE, picture->w, picture->h, 32, rmask, gmask, bmask, amask);
+		if (picture_again == NULL) goto donerotate90;
 		SDL_BlitSurface(picture,NULL,picture_again,NULL);
 
 		/* Excercise rotate90 function on 32bit RGBA */
 		sprintf(messageText, "25.  rotate90: Rotate 90 degrees clockwise (32bit)");
 		RotatePicture90Degrees(screen, picture_again);
 
+		donerotate90:
+		
 		/* Free the pictures */
 		SDL_FreeSurface(picture);
-		SDL_FreeSurface(picture_again);
+		if (picture_again) SDL_FreeSurface(picture_again);
+
+		if (end <= 25) return;
 	}
 
 	if (start<=26) {
 		/* Run accuracy test */
 		sprintf(messageText, "26.  accuracy: zoom by factor of 2");
-		AccuracyTest(screen);
+		AccuracyTest1(screen);
+
+		if (end <= 26) return;
 	}
 
+	if (start <= 27) {
+		/* Load the image into a surface */
+		bmpfile = "sample2x2.bmp";
+		printf("Loading picture: %s\n", bmpfile);
+		picture = SDL_LoadBMP(bmpfile);
+		if ( picture == NULL ) {
+			fprintf(stderr, "Couldn't load %s: %s\n", bmpfile, SDL_GetError());
+			return;
+		}
+
+		sprintf(messageText, "27a.  zoom accuracy: zoom 2x2 bitmap");		
+		AccuracyTest2(screen, picture);
+
+		/* Free the pictures */
+		SDL_FreeSurface(picture);
+
+		/* Load the image into a surface */
+		bmpfile = "sample3x3.bmp";
+		printf("Loading picture: %s\n", bmpfile);
+		picture = SDL_LoadBMP(bmpfile);
+		if ( picture == NULL ) {
+			fprintf(stderr, "Couldn't load %s: %s\n", bmpfile, SDL_GetError());
+			return;
+		}		
+		
+		sprintf(messageText, "27b.  zoom accuracy: zoom 3x3 bitmap");		
+		AccuracyTest2(screen, picture);
+
+		/* Free the pictures */
+		SDL_FreeSurface(picture);
+
+		/* Load the image into a surface */
+		bmpfile = "sample16x16.bmp";
+		printf("Loading picture: %s\n", bmpfile);
+		picture = SDL_LoadBMP(bmpfile);
+		if ( picture == NULL ) {
+			fprintf(stderr, "Couldn't load %s: %s\n", bmpfile, SDL_GetError());
+			return;
+		}		
+		
+		sprintf(messageText, "27c.  zoom accuracy: zoom 16x16 bitmap");		
+		AccuracyTest2(screen, picture);
+
+		/* Free the pictures */
+		SDL_FreeSurface(picture);
+	
+		if (end <= 27) return;
+	}
+	
 	return;
 }
 
+/*!
+ \brief SDL_rotozoom test
+*/
 int main ( int argc, char *argv[] )
 {
 	SDL_Surface *screen;
 	int w, h;
 	int desired_bpp;
 	Uint32 video_flags;
-	int start;
+	int start, end;
 
 	/* Title */
 	fprintf(stderr,"SDL_rotozoom test\n");
@@ -706,6 +988,7 @@ int main ( int argc, char *argv[] )
 	desired_bpp = 0;
 	video_flags = 0;
 	start = 1;
+	end = 9999;
 	delay = 0;
 	while ( argc > 1 ) {
 		if ( strcmp(argv[1], "-start") == 0 ) {
@@ -714,11 +997,23 @@ int main ( int argc, char *argv[] )
 				argc -= 2;
 			} else {
 				fprintf(stderr,
-					"The -start option requires an argument\n");
+					"The -start option requires a numeric argument\n");
 				exit(1);
 			}
-		} else
-			if ( strcmp(argv[1], "-delay") == 0 ) {
+		}
+		else if ( strcmp(argv[1], "-end") == 0 ) {
+			if ( argv[2] && ((end = atoi(argv[2])) > 0) ) {
+				argv += 2;
+				argc -= 2;
+			} else {
+				fprintf(stderr,
+					"The -end option requires a numeric argument\n");
+				exit(1);
+			}
+
+		} 
+		else 
+		if ( strcmp(argv[1], "-delay") == 0 ) {
 				if ( argv[2] && ((delay = atoi(argv[2])) > 0) ) {
 					argv += 2;
 					argc -= 2;
@@ -727,8 +1022,8 @@ int main ( int argc, char *argv[] )
 						"The -delay option requires an argument\n");
 					exit(1);
 				}
-			} else
-				if ( strcmp(argv[1], "-width") == 0 ) {
+		} else 
+		if ( strcmp(argv[1], "-width") == 0 ) {
 					if ( argv[2] && ((w = atoi(argv[2])) > 0) ) {
 						argv += 2;
 						argc -= 2;
@@ -737,8 +1032,8 @@ int main ( int argc, char *argv[] )
 							"The -width option requires an argument\n");
 						exit(1);
 					}
-				} else
-					if ( strcmp(argv[1], "-height") == 0 ) {
+		} else
+		if ( strcmp(argv[1], "-height") == 0 ) {
 						if ( argv[2] && ((h = atoi(argv[2])) > 0) ) {
 							argv += 2;
 							argc -= 2;
@@ -843,7 +1138,7 @@ int main ( int argc, char *argv[] )
 	SDL_WM_SetCaption("SDL_rotozoom test", "rotozoom");
 
 	/* Do all the drawing work */
-	Draw(screen, start);	
+	Draw(screen, start, end);	
 	free(messageText);
 
 	return(0);

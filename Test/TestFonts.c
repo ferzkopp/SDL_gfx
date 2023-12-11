@@ -1,10 +1,8 @@
 /* 
 
-TestFonts
+TestFonts.c: test dynamic font loading code
 
-Test dynamic font loading code
-
-Copyright (C) A. Schiffler, August 2001, GPL
+(C) A. Schiffler, August 2001, zlib License
 
 */
 

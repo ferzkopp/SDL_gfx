@@ -1,10 +1,8 @@
 /* 
 
-TestShrink
+TestShrink.c: test program for shrink routines
 
-Test program for shrink routines
-
-Copyright (C) A. Schiffler, July 2006, GPL
+(C) A. Schiffler, July 2006, zlib License
 
 */
 

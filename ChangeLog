@@ -1,13 +1,56 @@
 CHANGES/VERSION
 ===============
 
-Ver 2.0.23 - in progress
+Ver 2.0.27 - Sun, Dec 10, 2023  4:04:12 PM
+* Updated version numbers for next release
+* fixed printf bug in test program
+* fixed VS code analysis warnings
+* fixed rotozoom locking bug (thanks Dave)
+* fixed rotozoom colorkey bug (thanks Alberto)
+* updated VS2015 solution files to VS2022 solution files and rename
+* deprecated VS2008 and VS2010 solution files
+* updated .vcxproj files for SDL-1.2 source and release path
+* moved ChangeLog to solution items
+
+Ver 2.0.26 - Mon, Feb 20, 2017  8:31:57 PM
+* Updated version numbers for next release
+* Included patch for CMake builds against SDL2 (contributed by 
+  Carles Pages - thanks Carles)
+* Fixed bug in rotozoomSurfaceSizeTrig (thanks hydren)
+* added VS2015 solution files.
+
+Ver 2.0.25 - Sun, Oct 27, 2013  3:08:15 PM
+* Added patch for 32- and 64-bit GCC-compiled MMX support
+  (contributed by Sylvain Beucler, backported from SDL2_gfx)
+* Fixed bug in _aaline when x1>x2 and dy==0 (found by Yannick 
+  Guesnet - thanks!)
+* Updated documentation.
+* Fixed header in SDL_gfxBlitFunc.h (reported by Jaders77 on
+  sourceforge - thanks!)
+
+Ver 2.0.24 - Sun, Jul 22, 2012  9:27:29 AM
+* Removed some missed LGPL references
+* Fixed thick line swap bug (patch contributed by Thien-Thi)
+  and added accuracy test for thick line
+* Improved interface to SDL_framerateDelay (idea contributed by
+  Neil)
+* Fixed dramerate modules dependency on SDL_GetTicks returning a 
+  value >0 (issue report contributed by Douglas)
+* Fixed 32bpp blending function for BGRA (thanks for the test code
+  and contributing a fix sabbetts/Jay)
+* Updated VS2010 solution file to use SDL-1.2 sources
+* Fix for pixel blend routine (patch contributes by Mitjia)
+
+Ver 2.0.23 - Sat Dec  3 22:55:04 PST 2011
 * Updated sources to resolve some splint (static code analysis)
   issues
 * Updates for OpenSDK (WinCE6/ARM) build target (patch contributed
   itsnotabigtruck)
 * Added OSX Xcode3+ template files to Other Builds collection
   (contributed by Vasyl)
+* Added various fixes and improvements contributed by folks on 
+  sourceforge (thanks contributors).
+* Switched library and test code to zlib license.
 
 Ver 2.0.22 - Sat Sep 11 23:26:42 EDT 2010
 * Fixed line width calculation for normal and textured polygons

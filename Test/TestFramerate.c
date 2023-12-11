@@ -1,24 +1,8 @@
 /* 
 
-TestFramerate
+TestFramerate.c: test/sample program for framerate manager 
 
-Test/Sample program for framerate manager 
-
-Copyright (C) A. Schiffler, August 2001
-
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2 of the License, or (at your option) any later version.
-
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+(C) A. Schiffler, August 2001, zlib License
 
 */
 
@@ -78,8 +62,10 @@ void ClearScreen(SDL_Surface *screen)
 void Draw(SDL_Surface *screen)
 {
 	int i,rate,x,y,dx,dy,r,g,b;
+	Uint32 time_passed = 0;
 	FPSmanager fpsm;
 	char message[64];
+	char message2[64];
 
 	/* Initialize variables */
 	srand((int)time(NULL));
@@ -115,8 +101,13 @@ void Draw(SDL_Surface *screen)
 
 		/* Black screen */
 		ClearScreen(screen);
-
-		stringRGBA (screen, WIDTH/2-4*strlen(message),HEIGHT-12,message,255,255,255,255);
+		
+		/* Messages */
+		stringRGBA (screen, WIDTH/2-4*(Sint16)strlen(message),HEIGHT-12,message,255,255,255,255);
+		if (time_passed > 0) {
+			sprintf(message2, "Delay is %i ms / Measured framerate %i Hz ...", time_passed, 1000 / time_passed); 
+			stringRGBA (screen, WIDTH/2-4*(Sint16)strlen(message2),HEIGHT-24,message2,255,255,255,255);
+		}
 
 		/* Move */
 		x += dx;
@@ -137,7 +128,7 @@ void Draw(SDL_Surface *screen)
 		HandleEvent();
 
 		/* Delay to fix rate */                   
-		SDL_framerateDelay(&fpsm);  
+		time_passed = SDL_framerateDelay(&fpsm);  
 	}
 }
 

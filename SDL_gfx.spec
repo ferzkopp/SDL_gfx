@@ -1,5 +1,5 @@
 %define prefix  %{_prefix}
-%define version 2.0.23
+%define version 2.0.26
 %define release 1
 %define _unpackaged_files_terminate_build 0
 
@@ -7,10 +7,10 @@ Summary: SDL graphics drawing primitives and other support functions
 Name: SDL_gfx
 Version: %{version}
 Release: %{release}
-License: LGPL
+License: ZLIB
 Group: System Environment/Libraries
 Prefix: %{prefix}
-Source: http://www.ferzkopp.net/Software/SDL_gfx-2.0/SDL_gfx-2.0.23.tar.gz
+Source: http://www.ferzkopp.net/Software/SDL_gfx-2.0/SDL_gfx-2.0.26.tar.gz
 Packager: Danny Sung <dannys at mail.com>
 Vendor: Andreas Schiffler <aschiffler at ferzkopp.net>
 BuildRoot: /tmp/%{name}-root-%{version}
@@ -23,7 +23,7 @@ surfaces.
 
 The current components of the SDL_gfx library are:
 
-   * Graphic Primitives (SDL_gfxPrimitves.h)
+   * Graphic Primitives (SDL_gfxPrimitives.h)
    * Rotozoomer (SDL_rotozoom.h)
    * Framerate control (SDL_framerate.h)
    * MMX image filters (SDL_imageFilter.h)
@@ -44,7 +44,7 @@ surfaces.
 
 The current components of the SDL_gfx library are:
 
-   * Graphic Primitives (SDL_gfxPrimitves.h)
+   * Graphic Primitives (SDL_gfxPrimitives.h)
    * Rotozoomer (SDL_rotozoom.h)
    * Framerate control (SDL_framerate.h)
    * MMX image filters (SDL_imageFilter.h)
@@ -65,12 +65,13 @@ SDL_gfx demo applications and source code.
 
 %build
 ./autogen.sh
-# aclocal
 %define _includedir /usr/include
 %configure
 CFLAGS=$RPM_OPT_FLAGS make
+CFLAGS=$RPM_OPT_FLAGS make install
 
 cd Test 
+./autogen.sh
 CFLAGS="-I../" LDFLAGS="-L../.libs/" ./configure
 make
 cd ..
@@ -79,7 +80,8 @@ cd ..
 %makeinstall
 
 install -m755 -d $RPM_BUILD_ROOT%{_datadir}/SDL_gfx-demos
-cp Test/* $RPM_BUILD_ROOT%{_datadir}/SDL_gfx-demos
+cp Test/*.bmp $RPM_BUILD_ROOT%{_datadir}/SDL_gfx-demos
+for i in TestABGR TestFonts TestFramerate TestGfxBlit TestGfxPrimitives TestGfxTexture TestImageFilter TestRotozoom TestShrink; do cp Test/$i $RPM_BUILD_ROOT%{_datadir}/SDL_gfx-demos; done
 
 %clean
 rm -rf $RPM_BUILD_ROOT

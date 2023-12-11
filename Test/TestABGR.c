@@ -1,10 +1,8 @@
 /* 
 
-TestABGR
+TestABGR.c: test GFX behavior on byteordering
 
-Test GFX behavior on byteordering
-
-(C) 2005, GPL
+(C) A. Schiffler, 2005, zlib License
 
 */
 
@@ -197,7 +195,7 @@ int main(int argc, char *argv[])
 	r.x = 300; r.y = 300;
 	SDL_BlitSurface(s, 0, SDL_GetVideoSurface(), &r);
 
-	stringRGBA (screen, WIDTH/2-4*strlen(message),HEIGHT-12,message,255,255,255,255);
+	stringRGBA (screen, WIDTH/2-4*(Sint16)strlen(message),HEIGHT-12,message,255,255,255,255);
 
 	SDL_Flip(SDL_GetVideoSurface());
 	
