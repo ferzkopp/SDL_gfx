@@ -5993,7 +5993,7 @@ int characterColor(SDL_Surface * dst, Sint16 x, Sint16 y, char c, Uint32 color)
 	*/
 	if (gfxPrimitivesFont[ci] == NULL) {
 		gfxPrimitivesFont[ci] =
-			SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_HWSURFACE | SDL_SRCALPHA,
+			SDL_CreateRGBSurface(0,
 			charWidth, charHeight, 32,
 			0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
 		/*
@@ -6017,7 +6017,7 @@ int characterColor(SDL_Surface * dst, Sint16 x, Sint16 y, char c, Uint32 color)
 		/*
 		* Redraw character 
 		*/
-		SDL_SetAlpha(gfxPrimitivesFont[ci], SDL_SRCALPHA, 255);
+		SDL_SetSurfaceAlphaMod(gfxPrimitivesFont[ci], 255);
 		gfxPrimitivesFontColor[ci] = color;
 
 		/* Lock font-surface */
